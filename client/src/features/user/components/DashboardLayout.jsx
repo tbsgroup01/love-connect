@@ -33,14 +33,14 @@ export default function DashboardLayout({ activeTab, customRightSidebar, childre
   const [verifiedOnly, setVerifiedOnly] = useState(true)
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] antialiased relative overflow-x-hidden pt-[65px]">
+    <div className="h-screen w-full bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] antialiased relative overflow-hidden pt-[65px]">
 
       {/* Brand Color Ambient Glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl pointer-events-none rounded-full" />
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/40 to-transparent blur-3xl pointer-events-none rounded-full" />
 
       {/* LOGGED IN USER NAVBAR HEADER (PERMANENTLY FIXED ON TOP) */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#FFFFFF]/95 backdrop-blur-xl border-b border-[#FFE7F0] px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full h-[65px] bg-[#FFFFFF]/95 backdrop-blur-xl border-b border-[#FFE7F0] px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
 
         {/* Brand Logo */}
         <Link to="/" title="LoveConnect Home" className="flex items-center gap-2 group shrink-0">
@@ -110,13 +110,12 @@ export default function DashboardLayout({ activeTab, customRightSidebar, childre
       {/* ========================================================= */}
       {/* MAIN CONTAINER: 3-Column SaaS Workspace Dashboard          */}
       {/* ========================================================= */}
-      <div className="flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-5 p-3 sm:p-5 lg:p-6 items-start relative z-10">
+      <div className="flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-5 px-3 sm:px-5 lg:px-6 py-4 h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10">
 
         {/* ------------------------------------------------------- */}
-        {/* COLUMN 1: LEFT NAVIGATION SIDEBAR                      */}
+        {/* COLUMN 1: LEFT NAVIGATION SIDEBAR (FIXED VIEWPORT)      */}
         {/* ------------------------------------------------------- */}
-        <aside className="sticky top-[80px] z-30 hidden w-full h-[calc(100vh-95px)] flex-col justify-between overflow-y-auto bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs lg:flex [&_button]:text-sm scrollbar-none">
-
+        <aside className="hidden lg:flex w-full h-full flex-col justify-between overflow-y-auto bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs [&_button]:text-sm scrollbar-none shrink-0">
           {/* Main Navigation List */}
           <div className="space-y-2">
             <div className="mb-3 flex items-center justify-between px-3 pt-1">
@@ -275,16 +274,16 @@ export default function DashboardLayout({ activeTab, customRightSidebar, childre
         </aside>
 
         {/* ------------------------------------------------------- */}
-        {/* COLUMN 2: CENTER WORKSPACE CANVAS                       */}
+        {/* COLUMN 2: CENTER WORKSPACE CANVAS (SCROLLABLE AREA)     */}
         {/* ------------------------------------------------------- */}
-        <main className="lg:col-start-2 flex flex-col w-full min-h-[calc(100vh-147px)]">
+        <main className="lg:col-start-2 flex flex-col w-full h-full overflow-y-auto pr-1">
           {children}
         </main>
 
         {/* ------------------------------------------------------- */}
-        {/* COLUMN 3: RIGHT SIDEBAR                                 */}
+        {/* COLUMN 3: RIGHT SIDEBAR (FIXED VIEWPORT)               */}
         {/* ------------------------------------------------------- */}
-        <aside className="hidden lg:col-start-3 lg:flex flex-col gap-4 sticky top-[80px]">
+        <aside className="hidden lg:col-start-3 lg:flex flex-col gap-4 h-full overflow-y-auto scrollbar-none shrink-0">
           {customRightSidebar ? (
             customRightSidebar
           ) : (
