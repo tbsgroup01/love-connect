@@ -32,12 +32,12 @@ export default function ForgotPassword() {
 
       {/* Main SaaS Card (28px border radius, clean white, soft shadow) */}
       <div className="relative z-10 w-full max-w-[880px] h-auto bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300 my-auto">
-        
+
         {/* ========================================================= */}
         {/* LEFT COLUMN: Form Section                                */}
         {/* ========================================================= */}
         <div className="lg:col-span-7 order-1 lg:order-1 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
-          
+
           {/* Top Brand Logo */}
           <div className="mb-6 sm:mb-8">
             <Link
@@ -114,11 +114,10 @@ export default function ForgotPassword() {
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className={`w-full px-4 py-3 rounded-xl border text-xs sm:text-sm text-[#17151A] placeholder-slate-400 bg-[#FAFAFC] focus:bg-white transition-all shadow-2xs outline-none ${
-                      isFocused
+                    className={`w-full px-4 py-3 rounded-xl border text-xs sm:text-sm text-[#17151A] placeholder-slate-400 bg-[#FAFAFC] focus:bg-white transition-all shadow-2xs outline-none ${isFocused
                         ? "border-[#FF2D72] ring-3 ring-[#FFE7F0]"
                         : "border-slate-200 hover:border-slate-300"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -152,7 +151,7 @@ export default function ForgotPassword() {
         {/* RIGHT COLUMN: 3D Isometric Envelope Illustration          */}
         {/* ========================================================= */}
         <div className="lg:col-span-5 order-2 lg:order-2 bg-gradient-to-tr from-purple-50/50 via-pink-50/30 to-white flex items-center justify-center p-6 sm:p-8 relative overflow-hidden border-t lg:border-t-0 lg:border-l border-[#FFE7F0]/60">
-          
+
           {/* Subtle Ambient Radial Highlight */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#FFE7F0]/30 via-transparent to-[#7C3AED]/5 pointer-events-none" />
 
@@ -161,7 +160,7 @@ export default function ForgotPassword() {
             <img
               src={envelopeIllustration}
               alt="Forgot Password Love Letter"
-              className="w-full h-full object-contain rounded-2xl transition-transform duration-700 group-hover:scale-105 drop-shadow-sm"
+              className="w-full h-full object-contain rounded-2xl transition-transform duration-700 group-hover:scale-105 "
             />
           </div>
 
