@@ -24,7 +24,7 @@ import priyaImg from "../../../assets/priya_profile.jpg"
 import ananyaImg from "../../../assets/hero_woman.jpg"
 import rheaImg from "../../../assets/hero_woman_exact.png"
 
-export default function DashboardLayout({ activeTab, customRightSidebar, children }) {
+export default function DashboardLayout({ activeTab, customRightSidebar, hideRightSidebar = false, children }) {
   const navigate = useNavigate()
 
   // Filter Controls state in Right Sidebar
@@ -107,10 +107,8 @@ export default function DashboardLayout({ activeTab, customRightSidebar, childre
         </div>
       </header>
 
-      {/* ========================================================= */}
-      {/* MAIN CONTAINER: 3-Column SaaS Workspace Dashboard          */}
-      {/* ========================================================= */}
-      <div className="flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-5 px-3 sm:px-5 lg:px-6 py-4 h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10">
+      {/* MAIN CONTAINER: Dynamic 2 or 3-Column SaaS Workspace Dashboard */}
+      <div className={`flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 ${hideRightSidebar ? "lg:grid-cols-[280px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)_320px]"} gap-5 px-3 sm:px-5 lg:px-6 py-4 h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10`}>
 
         {/* ------------------------------------------------------- */}
         {/* COLUMN 1: LEFT NAVIGATION SIDEBAR (FIXED VIEWPORT)      */}
