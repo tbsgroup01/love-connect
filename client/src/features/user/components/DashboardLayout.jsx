@@ -276,7 +276,7 @@ export default function DashboardLayout({ activeTab, customRightSidebar, childre
         {/* ------------------------------------------------------- */}
         {/* COLUMN 2: CENTER WORKSPACE CANVAS (SCROLLABLE AREA)     */}
         {/* ------------------------------------------------------- */}
-        <main className="lg:col-start-2 flex flex-col w-full h-full overflow-y-auto pr-1">
+        <main className="lg:col-start-2 flex flex-col w-full h-full overflow-y-auto scrollbar-none pr-1">
           {children}
         </main>
 

@@ -116,3 +116,17 @@ textarea::placeholder {
 .animate-pulse-soft {
   animation: pulseSoft 4s ease-in-out infinite;
 }
+
+/* Hide scrollbars completely while keeping scroll functionality */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
