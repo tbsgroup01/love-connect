@@ -10,14 +10,14 @@ import snehaImg from "../../../assets/hero_woman.jpg"
 export default function MessagesPage() {
   const [activeChat, setActiveChat] = useState(1)
   const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: "them", text: "Hey Ananya! Loved your travel photos from Goa ✈️", time: "10:14 AM" },
+    { id: 1, sender: "them", text: "Hey Ananya! Loved your travel photos from Goa ", time: "10:14 AM" },
     { id: 2, sender: "me", text: "Thanks Priya! Goa is my absolute favorite place. Do you travel often?", time: "10:16 AM" },
-    { id: 3, sender: "them", text: "Yes! Planning a trip next month. Would love to get coffee this weekend to chat more? ☕", time: "10:18 AM" },
+    { id: 3, sender: "them", text: "Yes! Planning a trip next month. Would love to get coffee this weekend to chat more? ", time: "10:18 AM" },
   ])
   const [inputMessage, setInputMessage] = useState("")
 
   const conversations = [
-    { id: 1, name: "Priya", age: 25, lastMsg: "Would love to get coffee this weekend... ☕", time: "10:18 AM", unread: 0, online: true, img: priyaImg },
+    { id: 1, name: "Priya", age: 25, lastMsg: "Would love to get coffee this weekend... ", time: "10:18 AM", unread: 0, online: true, img: priyaImg },
     { id: 2, name: "Meera", age: 23, lastMsg: "That architecture design was stunning!", time: "Yesterday", unread: 2, online: true, img: meeraImg },
     { id: 3, name: "Rhea", age: 24, lastMsg: "Haha totally agree! See you soon.", time: "2 days ago", unread: 0, online: false, img: rheaImg },
     { id: 4, name: "Sneha", age: 24, lastMsg: "Are you free this Friday evening?", time: "3 days ago", unread: 1, online: false, img: snehaImg },
@@ -60,9 +60,8 @@ export default function MessagesPage() {
               <div
                 key={chat.id}
                 onClick={() => setActiveChat(chat.id)}
-                className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${
-                  activeChat === chat.id ? "bg-[#FFE7F0]/40 border-l-4 border-[#FF2D72]" : "hover:bg-slate-50"
-                }`}
+                className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${activeChat === chat.id ? "bg-[#FFE7F0]/40 border-l-4 border-[#FF2D72]" : "hover:bg-slate-50"
+                  }`}
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-2xs">
                   <img src={chat.img} alt={chat.name} className="w-full h-full object-cover" />
@@ -146,11 +145,10 @@ export default function MessagesPage() {
                 className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max-w-[75%] p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-2xs ${
-                    msg.sender === "me"
-                      ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] rounded-br-none"
-                      : "bg-[#FFFFFF] text-[#17151A] border border-slate-200/80 rounded-bl-none"
-                  }`}
+                  className={`max-w-[75%] p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-2xs ${msg.sender === "me"
+                    ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] rounded-br-none"
+                    : "bg-[#FFFFFF] text-[#17151A] border border-slate-200/80 rounded-bl-none"
+                    }`}
                 >
                   {msg.text}
                 </div>
@@ -165,7 +163,7 @@ export default function MessagesPage() {
           {/* Quick Suggestion Pills */}
           <div className="px-4 py-2 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
             <span className="text-[10px] font-extrabold uppercase text-slate-400 shrink-0">Quick React:</span>
-            {["☕ Coffee date?", "✨ Loved your photos!", "😍 You look amazing", "🍕 Foodie hangout?"].map((pill, idx) => (
+            {["☕ Coffee date?", "✨ Loved your photos!", "😍 You look amazing"].map((pill, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -217,6 +215,6 @@ export default function MessagesPage() {
         </div>
 
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   )
 }

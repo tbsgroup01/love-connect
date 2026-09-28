@@ -445,6 +445,41 @@ export default function DashboardLayout({ activeTab, customRightSidebar, hideRig
         </aside>
 
       </div>
+
+      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-[#FFE7F0] px-2 py-2 flex items-center justify-around shadow-lg">
+        {[
+          { id: "discover", label: "Discover", icon: Flame, path: "/discover" },
+          { id: "likes", label: "Likes", icon: Heart, path: "/likes", badge: "24" },
+          { id: "matches", label: "Matches", icon: Users, path: "/matches", badge: "12" },
+          { id: "messages", label: "Messages", icon: MessageSquare, path: "/messages", badge: "5" },
+          { id: "profile", label: "Profile", icon: User, path: "/profile" },
+          { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
+        ].map((item) => {
+          const Icon = item.icon
+          const isActive = activeTab === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 relative rounded-xl transition-all ${
+                isActive ? "text-[#FF2D72] font-black" : "text-slate-400 font-semibold hover:text-slate-600"
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5px]" : "stroke-2"}`} />
+                {item.badge && (
+                  <span className="absolute -top-1 -right-2 bg-[#FF2D72] text-white text-[9px] font-extrabold px-1 rounded-full leading-tight">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] tracking-tight">{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
     </div>
   )
 }

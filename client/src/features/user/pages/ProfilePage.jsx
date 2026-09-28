@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import DashboardLayout from "../components/DashboardLayout"
 import {
   Camera,
@@ -14,6 +14,18 @@ import {
   User,
   Sparkles,
   SlidersHorizontal,
+  ShieldCheck,
+  Lock,
+  Bell,
+  HelpCircle,
+  Share2,
+  LogOut,
+  Crown,
+  ImagePlus,
+  UserCheck,
+  ChevronRight,
+  Shield,
+  Compass
 } from "lucide-react"
 
 import rheaImg from "../../../assets/hero_woman_exact.png"
@@ -27,7 +39,7 @@ export default function ProfilePage() {
       <div className="w-full space-y-6 animate-fadeIn">
 
         {/* 1. HERO PROFILE CARD WITH COVER PHOTO & AVATAR */}
-        <div className="bg-[#FFFFFF] rounded-3xl overflow-hidden border border-slate-200/80 shadow-xl relative">
+        <div className="bg-[#FFFFFF] rounded-3xl overflow-hidden border border-slate-200/80  relative">
           {/* Cover Banner */}
           <div className="relative h-48 sm:h-56 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 overflow-hidden">
             <img
@@ -39,7 +51,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => alert("Edit Cover Photo")}
-              className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur-md text-[#FFFFFF] text-xs font-bold px-3.5 py-2 rounded-xl border border-white/20 flex items-center gap-2 transition-all cursor-pointer shadow-md"
+              className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur-md text-[#FFFFFF] text-xs font-bold px-3.5 py-2 rounded-xl border border-white/20 flex items-center gap-2 transition-all cursor-pointer "
             >
               <Camera className="w-3.5 h-3.5" />
               <span>Edit Cover Photo</span>
@@ -50,7 +62,7 @@ export default function ProfilePage() {
           <div className="px-6 pb-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20 mb-4">
               {/* Avatar with Badges */}
-              <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full p-1 bg-[#FFFFFF] shadow-xl shrink-0">
+              <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full p-1 bg-[#FFFFFF] shrink-0">
                 <img
                   src={rheaImg}
                   alt="Ananya Verma"
@@ -167,6 +179,27 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* PROFILE COMPLETION PERCENTAGE BAR (Requirement 17) */}
+            <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#FF2D72]" />
+                  <span className="font-extrabold text-sm text-[#17151A]">Profile 85% Complete</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFE7F0] text-[#FF2D72]">+15% for ID Verification</span>
+                </div>
+                <p className="text-xs text-slate-500">Profiles with 100% completion receive up to 300% more match recommendations.</p>
+              </div>
+              <div className="w-full sm:w-56 space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold text-slate-600">
+                  <span>Completion Score</span>
+                  <span className="text-[#FF2D72]">85%</span>
+                </div>
+                <div className="w-full bg-white h-2.5 rounded-full border border-pink-200 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] rounded-full transition-all" style={{ width: '85%' }} />
+                </div>
+              </div>
+            </div>
+
             {/* 3. SUB-NAVIGATION TABS */}
             <div className="flex items-center gap-6 mt-6 border-b border-slate-100 pb-0 overflow-x-auto scrollbar-none">
               {[
@@ -180,11 +213,10 @@ export default function ProfilePage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setProfileSubTab(tab.id)}
-                  className={`pb-3 text-xs font-black transition-all cursor-pointer relative shrink-0 ${
-                    profileSubTab === tab.id
-                      ? "text-[#FF2D72]"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
+                  className={`pb-3 text-xs font-black transition-all cursor-pointer relative shrink-0 ${profileSubTab === tab.id
+                    ? "text-[#FF2D72]"
+                    : "text-slate-400 hover:text-slate-600"
+                    }`}
                 >
                   <span>{tab.label}</span>
                   {profileSubTab === tab.id && (
@@ -201,7 +233,7 @@ export default function ProfilePage() {
           {/* LEFT SUB-COLUMN (7 / 12) */}
           <div className="md:col-span-7 space-y-6">
             {/* CARD 1: ABOUT ME */}
-            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
+            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80   space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
@@ -241,7 +273,7 @@ export default function ProfilePage() {
             </div>
 
             {/* CARD 2: INTERESTS */}
-            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
+            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80   space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
@@ -325,7 +357,7 @@ export default function ProfilePage() {
           {/* RIGHT SUB-COLUMN (5 / 12) */}
           <div className="md:col-span-5 space-y-6">
             {/* CARD 3: BASIC INFORMATION */}
-            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
+            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80   space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
@@ -389,7 +421,7 @@ export default function ProfilePage() {
             </div>
 
             {/* CARD 4: LIFESTYLE */}
-            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
+            <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80   space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
@@ -437,6 +469,79 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* SECTION 17: COMPLETE PROFILE DASHBOARD & SETTINGS MENU */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
+                <SlidersHorizontal className="w-5 h-5 text-[#FF2D72]" />
+                <span>Profile Management & Account Menu</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">Quick access to all profile controls, privacy options, and security settings.</p>
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-pink-50 text-[#FF2D72]">
+              14 Options
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { title: "Edit Profile", desc: "Update bio, profession, education, height", path: "/edit-profile", icon: Pencil },
+              { title: "Manage Photos", desc: "Reorder photos, upload new angles, delete", path: "/manage-photos", icon: ImagePlus },
+              { title: "Profile Preview", desc: "See how your profile appears to other singles", path: "/profile-details", icon: Eye },
+              { title: "Personal Information", desc: "Name, DOB, gender, and contact details", path: "/edit-profile", icon: User },
+              { title: "Lifestyle & Interests", desc: "Smoking, drinking, pets, fitness, diet", path: "/filters", icon: Heart },
+              { title: "Relationship Preferences", desc: "Relationship, casual dating, or friendship", path: "/filters", icon: Compass },
+              { title: "Verification Center", desc: "Selfie scan, phone, email & identity badge", path: "/verification", icon: ShieldCheck, badge: "Pending" },
+              { title: "Profile Visibility", desc: "Public, Only Matches, or Hidden mode", path: "/visibility", icon: Eye },
+              { title: "Account Settings", desc: "Password, linked accounts, devices", path: "/settings", icon: SlidersHorizontal },
+              { title: "Privacy & Safety", desc: "Blocked users, muted conversations, safety tips", path: "/privacy-safety", icon: Shield },
+              { title: "Premium Subscription", desc: "Upgrade to Gold VIP, rewind swipes, boosts", path: "/premium", icon: Crown, badge: "Save 33%" },
+              { title: "Notifications", desc: "Manage push alerts, emails, and reminders", path: "/notifications", icon: Bell },
+              { title: "Help & Support", desc: "24/7 dedicated assistance, FAQs, live chat", path: "/privacy-policy", icon: HelpCircle },
+              { title: "Invite Friends", desc: "Share LoveConnect & earn 3 free Super Likes", path: "/discover", icon: Share2 },
+              { title: "Log Out", desc: "Securely sign out of this device session", path: "/login", icon: LogOut, danger: true },
+            ].map((item, idx) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={idx}
+                  to={item.path}
+                  className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 group hover:shadow-sm ${
+                    item.danger
+                      ? 'border-red-100 hover:border-red-300 bg-red-50/20'
+                      : 'border-slate-100 hover:border-pink-200 bg-slate-50/40 hover:bg-white'
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      item.danger
+                        ? 'bg-red-100 text-red-600'
+                        : 'bg-[#FFE7F0] text-[#FF2D72]'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 stroke-[2.2]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-xs font-black truncate ${item.danger ? 'text-red-600' : 'text-[#17151A]'}`}>
+                        {item.title}
+                      </span>
+                      {item.badge && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#FFE7F0] text-[#FF2D72]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{item.desc}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#FF2D72] group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
+                </Link>
+              )
+            })}
           </div>
         </div>
 
