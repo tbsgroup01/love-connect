@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  CreditCard,
+  Crown,
   Users,
   IndianRupee,
   Tag,
@@ -8,17 +8,14 @@ import {
   Edit,
   Check,
   X,
-  Search,
-  Filter,
-  Download,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Crown,
+  CheckCircle2,
+  Percent,
+  Power,
   Sparkles,
-  Zap,
-  Star
+  Settings2,
+  ShieldCheck,
+  AlertCircle,
+  HelpCircle
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
@@ -36,317 +33,411 @@ const COLORS = {
   blue: '#3B82F6',
 };
 
+// Available features repository for plans
+const DEFAULT_FEATURES_LIST = [
+  { id: 'profile', name: 'Create & Edit Profile' },
+  { id: 'browse', name: 'Browse & Discover Matches' },
+  { id: 'likes', name: 'Likes (Daily or Unlimited)' },
+  { id: 'chat', name: 'Chat Messaging' },
+  { id: 'video', name: 'Video Calling' },
+  { id: 'likes_you', name: 'See Who Likes You' },
+  { id: 'filters', name: 'Advanced Match Filters' },
+  { id: 'boost', name: 'Profile Boosts' },
+  { id: 'read_receipts', name: 'Read Receipts' },
+  { id: 'priority_support', name: 'VIP Priority Support' },
+];
+
 export default function SubscriptionPlans() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Subscription Plans');
-  const [selectedTabFilter, setSelectedTabFilter] = useState('All');
 
-  // Top 4 KPI Metric Cards matching reference image
+  // Core 4 Subscription Plans required by user
+  const [plans, setPlans] = useState([
+    {
+      id: 'free',
+      name: 'Free',
+      subtitle: 'Basic access for all new registered users',
+      billingCycle: 'Forever',
+      periodText: '/ forever',
+      basePrice: 0,
+      discountPercent: 0,
+      finalPrice: 0,
+      badge: 'Starter',
+      badgeColor: '#6B7280',
+      badgeBg: '#F3F4F6',
+      isActive: true,
+      cardBg: '#FFFFFF',
+      borderStyle: 'border-gray-200',
+      features: [
+        { id: 'profile', name: 'Create & Edit Profile', included: true },
+        { id: 'browse', name: 'Browse & Discover Matches', included: true },
+        { id: 'likes', name: 'Limited Likes (10 per day)', included: true },
+        { id: 'chat', name: 'Basic Chat Messaging', included: true },
+        { id: 'video', name: 'Video Calling', included: false },
+        { id: 'likes_you', name: 'See Who Likes You', included: false },
+        { id: 'filters', name: 'Advanced Match Filters', included: false },
+        { id: 'boost', name: 'Profile Boosts', included: false },
+        { id: 'read_receipts', name: 'Read Receipts', included: false },
+        { id: 'priority_support', name: 'VIP Priority Support', included: false },
+      ],
+    },
+    {
+      id: 'monthly',
+      name: 'Monthly Premium',
+      subtitle: 'Popular monthly flexibility for active daters',
+      billingCycle: 'Monthly',
+      periodText: '/ month',
+      basePrice: 499,
+      discountPercent: 0,
+      finalPrice: 499,
+      badge: 'Popular',
+      badgeColor: '#FFFFFF',
+      badgeBg: '#FF2D72',
+      isActive: true,
+      cardBg: '#FFF5F8',
+      borderStyle: 'border-pink-300',
+      features: [
+        { id: 'profile', name: 'Create & Edit Profile', included: true },
+        { id: 'browse', name: 'Browse & Discover Matches', included: true },
+        { id: 'likes', name: 'Unlimited Likes', included: true },
+        { id: 'chat', name: 'Unlimited Chat Messaging', included: true },
+        { id: 'video', name: 'Video Calling (30 mins/day)', included: true },
+        { id: 'likes_you', name: 'See Who Likes You', included: true },
+        { id: 'filters', name: 'Advanced Match Filters', included: true },
+        { id: 'boost', name: 'Profile Boosts', included: false },
+        { id: 'read_receipts', name: 'Read Receipts', included: true },
+        { id: 'priority_support', name: 'VIP Priority Support', included: false },
+      ],
+    },
+    {
+      id: 'quarterly',
+      name: 'Quarterly Premium',
+      subtitle: 'Quarterly savings with extended features',
+      billingCycle: 'Quarterly',
+      periodText: '/ 3 months',
+      basePrice: 1499,
+      discountPercent: 20,
+      finalPrice: 1199,
+      badge: 'Save 20%',
+      badgeColor: '#7C3AED',
+      badgeBg: '#F3E8FF',
+      isActive: true,
+      cardBg: '#FFFFFF',
+      borderStyle: 'border-purple-200',
+      features: [
+        { id: 'profile', name: 'Create & Edit Profile', included: true },
+        { id: 'browse', name: 'Browse & Discover Matches', included: true },
+        { id: 'likes', name: 'Unlimited Likes', included: true },
+        { id: 'chat', name: 'Unlimited Chat Messaging', included: true },
+        { id: 'video', name: 'Unlimited Video Calling', included: true },
+        { id: 'likes_you', name: 'See Who Likes You', included: true },
+        { id: 'filters', name: 'Advanced Match Filters', included: true },
+        { id: 'boost', name: '1 Free Profile Boost / month', included: true },
+        { id: 'read_receipts', name: 'Read Receipts', included: true },
+        { id: 'priority_support', name: 'VIP Priority Support', included: false },
+      ],
+    },
+    {
+      id: 'yearly',
+      name: 'Yearly Premium',
+      subtitle: 'Best value for long-term relationships',
+      billingCycle: 'Yearly',
+      periodText: '/ year',
+      basePrice: 5999,
+      discountPercent: 35,
+      finalPrice: 3899,
+      badge: 'Best Value',
+      badgeColor: '#D97706',
+      badgeBg: '#FEF3C7',
+      isActive: true,
+      cardBg: '#FFFFFF',
+      borderStyle: 'border-amber-200',
+      features: [
+        { id: 'profile', name: 'Create & Edit Profile', included: true },
+        { id: 'browse', name: 'Browse & Discover Matches', included: true },
+        { id: 'likes', name: 'Unlimited Likes', included: true },
+        { id: 'chat', name: 'Unlimited Chat Messaging', included: true },
+        { id: 'video', name: 'Unlimited Video Calling', included: true },
+        { id: 'likes_you', name: 'See Who Likes You', included: true },
+        { id: 'filters', name: 'Advanced Match Filters', included: true },
+        { id: 'boost', name: '5 Free Profile Boosts / month', included: true },
+        { id: 'read_receipts', name: 'Read Receipts', included: true },
+        { id: 'priority_support', name: 'VIP Priority Support', included: true },
+      ],
+    },
+  ]);
+
+  // Modal State for Create / Edit Plan
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    subtitle: '',
+    billingCycle: 'Monthly',
+    periodText: '/ month',
+    basePrice: 499,
+    discountPercent: 0,
+    finalPrice: 499,
+    badge: '',
+    isActive: true,
+    features: DEFAULT_FEATURES_LIST.map((f) => ({ ...f, included: true })),
+  });
+  const [customFeatureName, setCustomFeatureName] = useState('');
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
+
+  // KPI calculations
+  const totalPlans = plans.length;
+  const activePlansCount = plans.filter((p) => p.isActive).length;
+  const disabledPlansCount = plans.filter((p) => !p.isActive).length;
+  const activeSubscribersCount = '8,432';
+
   const kpiCards = [
     {
       title: 'Total Plans',
-      value: '6',
-      change: '+20% this month',
-      changeColor: '#22C55E',
+      value: totalPlans.toString(),
       bgColor: '#FF2D72',
       icon: Crown,
     },
     {
+      title: 'Active Plans',
+      value: `${activePlansCount} Active`,
+      bgColor: '#22C55E',
+      icon: ShieldCheck,
+    },
+    {
+      title: 'Disabled Plans',
+      value: `${disabledPlansCount} Inactive`,
+      bgColor: '#EF4444',
+      icon: Power,
+    },
+    {
       title: 'Active Subscribers',
-      value: '8,432',
-      change: '+28% this month',
-      changeColor: '#22C55E',
+      value: activeSubscribersCount,
       bgColor: '#3B82F6',
       icon: Users,
     },
-    {
-      title: 'Monthly Revenue',
-      value: '₹3,12,450',
-      change: '+32% this month',
-      changeColor: '#22C55E',
-      bgColor: '#7C3AED',
-      icon: IndianRupee,
-    },
-    {
-      title: 'Conversion Rate',
-      value: '24.8%',
-      change: '+12% this month',
-      changeColor: '#22C55E',
-      bgColor: '#F59E0B',
-      icon: Tag,
-    },
   ];
 
-  // 4 Subscription Plan Cards Data matching reference image exactly
-  const planCards = [
-    {
-      id: 1,
-      title: 'Free Plan',
-      subtitle: 'Basic Access',
-      price: '₹0',
-      period: '/ month',
-      badge: null,
-      cardBg: '#FFFFFF',
-      borderStyle: 'border-gray-100',
-      btnStyle: { bg: '#FFFFFF', color: '#17151A', border: 'border border-gray-200' },
-      features: [
-        { text: 'Create Profile', included: true },
-        { text: 'Browse Matches', included: true },
-        { text: 'Send Limited Likes (10/day)', included: true },
-        { text: 'Basic Chat', included: true },
-        { text: 'Video Calls', included: false },
-        { text: 'See Who Likes You', included: false },
-      ],
-    },
-    {
-      id: 2,
-      title: 'Premium Monthly',
-      subtitle: 'Best for Getting Started',
-      price: '₹499',
-      period: '/ month',
-      badge: 'Popular',
-      badgeBg: '#FF2D72',
-      cardBg: '#FFE7F0',
-      borderStyle: 'border-pink-200',
-      btnStyle: { bg: '#FF2D72', color: '#FFFFFF', border: 'border-transparent' },
-      features: [
-        { text: 'Unlimited Likes', included: true },
-        { text: 'Chat with Matches', included: true },
-        { text: 'See Who Likes You', included: true },
-        { text: 'Advanced Filters', included: true },
-        { text: 'Video Calls', included: true },
-        { text: 'Priority Support', included: true },
-      ],
-    },
-    {
-      id: 3,
-      title: 'Premium Quarterly',
-      subtitle: 'Save 20%',
-      price: '₹1,299',
-      period: '/ 3 months',
-      calculatedMonthly: '(₹433/month)',
-      badge: null,
-      cardBg: '#FFFFFF',
-      borderStyle: 'border-purple-200',
-      btnStyle: { bg: '#FFFFFF', color: '#7C3AED', border: 'border border-purple-300' },
-      features: [
-        { text: 'All Premium Features', included: true },
-        { text: 'Priority in Search', included: true },
-        { text: 'Advanced Filters', included: true },
-        { text: 'Video Calls', included: true },
-        { text: 'Read Receipts', included: true },
-        { text: 'Priority Support', included: true },
-      ],
-    },
-    {
-      id: 4,
-      title: 'Premium Yearly',
-      subtitle: 'Best Value',
-      price: '₹3,999',
-      period: '/ year',
-      calculatedMonthly: '(₹333/month)',
-      badge: null,
-      cardBg: '#FFFFFF',
-      borderStyle: 'border-amber-200',
-      btnStyle: { bg: '#FFFFFF', color: '#D97706', border: 'border border-amber-300' },
-      features: [
-        { text: 'All Premium Features', included: true },
-        { text: 'Top Profile Placement', included: true },
-        { text: '5 Profile Boosts/Month', included: true },
-        { text: 'Advanced Filters', included: true },
-        { text: 'Video Calls', included: true },
-        { text: 'Priority Support', included: true },
-      ],
-    },
-  ];
+  // Action: Enable / Disable Plan
+  const handleTogglePlanStatus = (planId) => {
+    setPlans((prev) =>
+      prev.map((plan) => {
+        if (plan.id === planId) {
+          const updatedStatus = !plan.isActive;
+          showToast(
+            `Plan "${plan.name}" has been ${updatedStatus ? 'enabled' : 'disabled'}`
+          );
+          return { ...plan, isActive: updatedStatus };
+        }
+        return plan;
+      })
+    );
+  };
 
-  // Plan Comparison Matrix Rows matching reference image right panel
-  const comparisonMatrix = [
-    { feature: 'Create Profile', free: true, monthly: true, quarterly: true, yearly: true },
-    { feature: 'Browse Matches', free: true, monthly: true, quarterly: true, yearly: true },
-    { feature: 'Send Likes', free: '10/day', monthly: 'Unlimited', quarterly: 'Unlimited', yearly: 'Unlimited' },
-    { feature: 'Chat Messaging', free: 'Limited', monthly: true, quarterly: true, yearly: true },
-    { feature: 'Video Calls', free: false, monthly: true, quarterly: true, yearly: true },
-    { feature: 'See Who Likes You', free: false, monthly: true, quarterly: true, yearly: true },
-    { feature: 'Advanced Filters', free: false, monthly: true, quarterly: true, yearly: true },
-    { feature: 'Profile Boost', free: false, monthly: false, quarterly: false, yearly: '5/month' },
-    { feature: 'Priority Support', free: false, monthly: false, quarterly: true, yearly: true },
-    { feature: 'Top Placement', free: false, monthly: false, quarterly: false, yearly: true },
-  ];
+  // Open Create Plan Modal
+  const handleOpenCreateModal = () => {
+    setModalMode('create');
+    setFormData({
+      id: `plan_${Date.now()}`,
+      name: '',
+      subtitle: '',
+      billingCycle: 'Monthly',
+      periodText: '/ month',
+      basePrice: 499,
+      discountPercent: 0,
+      finalPrice: 499,
+      badge: '',
+      isActive: true,
+      features: DEFAULT_FEATURES_LIST.map((f) => ({
+        ...f,
+        included: f.id === 'profile' || f.id === 'browse' || f.id === 'likes' || f.id === 'chat',
+      })),
+    });
+    setCustomFeatureName('');
+    setModalOpen(true);
+  };
 
-  // Subscribers Table Mock Data matching reference image
-  const subscribersData = [
-    {
-      id: 1,
-      user: {
-        name: 'Aaradhya Sharma',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'aaradhya@gmail.com',
-      plan: 'Premium Monthly',
-      planBg: '#FFE7F0',
-      planColor: '#FF2D72',
-      amount: '₹499',
-      startDate: '15 Sep 2026',
-      expiryDate: '15 Oct 2026',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-    {
-      id: 2,
-      user: {
-        name: 'Rohit Mehta',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'rohit@gmail.com',
-      plan: 'Premium Yearly',
-      planBg: '#FEF3C7',
-      planColor: '#D97706',
-      amount: '₹3,999',
-      startDate: '14 Sep 2026',
-      expiryDate: '14 Sep 2027',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-    {
-      id: 3,
-      user: {
-        name: 'Priya Singh',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'priya@gmail.com',
-      plan: 'Premium Quarterly',
-      planBg: '#F3E8FF',
-      planColor: '#7C3AED',
-      amount: '₹1,299',
-      startDate: '12 Sep 2026',
-      expiryDate: '12 Dec 2026',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-    {
-      id: 4,
-      user: {
-        name: 'Karan Verma',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'karan@gmail.com',
-      plan: 'Premium Monthly',
-      planBg: '#FFE7F0',
-      planColor: '#FF2D72',
-      amount: '₹499',
-      startDate: '10 Sep 2026',
-      expiryDate: '10 Oct 2026',
-      status: 'Expired',
-      statusBg: '#FEE2E2',
-      statusColor: '#EF4444',
-    },
-    {
-      id: 5,
-      user: {
-        name: 'Neha Patel',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'neha@gmail.com',
-      plan: 'Free Plan',
-      planBg: '#F3F4F6',
-      planColor: '#6B7280',
-      amount: '₹0',
-      startDate: '09 Sep 2026',
-      expiryDate: '-',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-    {
-      id: 6,
-      user: {
-        name: 'Amit Kumar',
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'amit@gmail.com',
-      plan: 'Premium Yearly',
-      planBg: '#FEF3C7',
-      planColor: '#D97706',
-      amount: '₹3,999',
-      startDate: '08 Sep 2026',
-      expiryDate: '08 Sep 2027',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-    {
-      id: 7,
-      user: {
-        name: 'Sneha Reddy',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'sneha@gmail.com',
-      plan: 'Premium Quarterly',
-      planBg: '#F3E8FF',
-      planColor: '#7C3AED',
-      amount: '₹1,299',
-      startDate: '05 Sep 2026',
-      expiryDate: '05 Dec 2026',
-      status: 'Cancelled',
-      statusBg: '#E0E7FF',
-      statusColor: '#4338CA',
-    },
-    {
-      id: 8,
-      user: {
-        name: 'Vikram Singh',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80',
-      },
-      email: 'vikram@gmail.com',
-      plan: 'Premium Monthly',
-      planBg: '#FFE7F0',
-      planColor: '#FF2D72',
-      amount: '₹499',
-      startDate: '02 Sep 2026',
-      expiryDate: '02 Oct 2026',
-      status: 'Active',
-      statusBg: '#DCFCE7',
-      statusColor: '#16A34A',
-    },
-  ];
+  // Open Edit Plan Modal
+  const handleOpenEditModal = (plan) => {
+    setModalMode('edit');
+    // Ensure all features in DEFAULT_FEATURES_LIST exist in plan.features
+    const existingFeaturesMap = new Map(plan.features.map((f) => [f.id, f]));
+    const mergedFeatures = DEFAULT_FEATURES_LIST.map((df) => {
+      if (existingFeaturesMap.has(df.id)) {
+        return existingFeaturesMap.get(df.id);
+      }
+      return { ...df, included: false };
+    });
 
-  // Filter subscribers based on pill tab
-  const filteredSubscribers = subscribersData.filter((sub) => {
-    if (selectedTabFilter === 'All') return true;
-    return sub.status.toLowerCase() === selectedTabFilter.toLowerCase();
-  });
+    // Also include any extra custom features from plan
+    plan.features.forEach((f) => {
+      if (!DEFAULT_FEATURES_LIST.some((df) => df.id === f.id)) {
+        mergedFeatures.push(f);
+      }
+    });
+
+    setFormData({
+      id: plan.id,
+      name: plan.name,
+      subtitle: plan.subtitle || '',
+      billingCycle: plan.billingCycle || 'Monthly',
+      periodText: plan.periodText || '/ month',
+      basePrice: plan.basePrice,
+      discountPercent: plan.discountPercent || 0,
+      finalPrice: plan.finalPrice,
+      badge: plan.badge || '',
+      isActive: plan.isActive,
+      features: mergedFeatures,
+    });
+    setCustomFeatureName('');
+    setModalOpen(true);
+  };
+
+  // Handle Form Price / Discount Changes
+  const handlePriceChange = (basePriceValue, discountPercentValue) => {
+    const base = Math.max(0, Number(basePriceValue) || 0);
+    const discount = Math.min(100, Math.max(0, Number(discountPercentValue) || 0));
+    const calculatedFinal = Math.round(base * (1 - discount / 100));
+
+    setFormData((prev) => ({
+      ...prev,
+      basePrice: base,
+      discountPercent: discount,
+      finalPrice: calculatedFinal,
+    }));
+  };
+
+  // Toggle feature in form
+  const handleToggleFormFeature = (featureId) => {
+    setFormData((prev) => ({
+      ...prev,
+      features: prev.features.map((feat) =>
+        feat.id === featureId ? { ...feat, included: !feat.included } : feat
+      ),
+    }));
+  };
+
+  // Add custom feature
+  const handleAddCustomFeature = (e) => {
+    e.preventDefault();
+    if (!customFeatureName.trim()) return;
+    const newId = `feat_${Date.now()}`;
+    setFormData((prev) => ({
+      ...prev,
+      features: [
+        ...prev.features,
+        { id: newId, name: customFeatureName.trim(), included: true },
+      ],
+    }));
+    setCustomFeatureName('');
+  };
+
+  // Save Plan (Create or Edit)
+  const handleSavePlan = (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      alert('Please enter a valid plan name.');
+      return;
+    }
+
+    if (modalMode === 'create') {
+      const newPlan = {
+        ...formData,
+        id: formData.id || `plan_${Date.now()}`,
+        cardBg: '#FFFFFF',
+        borderStyle: 'border-gray-200',
+        badgeBg: formData.badge ? COLORS.pink : '',
+        badgeColor: '#FFFFFF',
+      };
+      setPlans((prev) => [...prev, newPlan]);
+      showToast(`Plan "${newPlan.name}" has been created successfully.`);
+    } else {
+      setPlans((prev) =>
+        prev.map((p) => {
+          if (p.id === formData.id) {
+            return {
+              ...p,
+              ...formData,
+              badgeBg: formData.badge ? p.badgeBg || COLORS.pink : '',
+            };
+          }
+          return p;
+        })
+      );
+      showToast(`Plan "${formData.name}" has been updated successfully.`);
+    }
+
+    setModalOpen(false);
+  };
+
+  // Direct Feature Matrix Toggle
+  const handleToggleFeatureInMatrix = (planId, featureId) => {
+    setPlans((prev) =>
+      prev.map((plan) => {
+        if (plan.id === planId) {
+          const updatedFeatures = plan.features.map((f) =>
+            f.id === featureId ? { ...f, included: !f.included } : f
+          );
+          return { ...plan, features: updatedFeatures };
+        }
+        return plan;
+      })
+    );
+    showToast('Plan feature configuration updated.');
+  };
 
   return (
-    <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
+    <div
+      style={{ backgroundColor: COLORS.background, color: COLORS.dark }}
+      className="h-screen font-sans flex flex-col overflow-hidden"
+    >
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* TOP NAVBAR HEADER */}
       <AdminNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* SIDEBAR NAVIGATION */}
-        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} />
+        <AdminSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {/* PAGE TITLE & ACTION HEADER */}
+          {/* PAGE TITLE & HEADER */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
-                Subscription Plans
+                Subscription Management
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
-                Create and manage subscription plans, features and pricing
+              <p className="text-sm text-gray-400 mt-1">
+                Create, edit, change pricing, configure discounts and features for subscription plans
               </p>
             </div>
             <button
+              onClick={handleOpenCreateModal}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-sm transition-all hover:opacity-90 self-start sm:self-auto cursor-pointer"
               style={{ backgroundColor: COLORS.pink }}
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Add New Plan</span>
+              <span>Create Plan</span>
             </button>
           </div>
 
@@ -357,531 +448,439 @@ export default function SubscriptionPlans() {
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between"
+                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
+                  style={{ borderLeftColor: kpi.bgColor }}
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                      style={{ backgroundColor: kpi.bgColor }}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-gray-400 block">{kpi.title}</span>
-                      <span className="text-xl font-extrabold tracking-tight" style={{ color: COLORS.dark }}>
-                        {kpi.value}
-                      </span>
-                      <span
-                        className="text-[11px] font-bold block mt-0.5 flex items-center gap-1"
-                        style={{ color: kpi.changeColor }}
-                      >
-                        ↑ {kpi.change}
-                      </span>
-                    </div>
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
+                    style={{ backgroundColor: kpi.bgColor }}
+                  >
+                    <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">
+                      {kpi.title}
+                    </span>
+                    <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
+                      {kpi.value}
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* MIDDLE SECTION: 4 PLAN CARDS & PLAN COMPARISON TABLE SPLIT */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* 4 PLAN CARDS (3 Cols wide on XL) */}
-            <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {planCards.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`rounded-2xl p-5 border shadow-sm flex flex-col justify-between relative transition-all hover:shadow-md ${plan.borderStyle}`}
-                  style={{ backgroundColor: plan.cardBg }}
-                >
-                  {/* Popular Badge */}
-                  {plan.badge && (
-                    <span
-                      className="absolute -top-3 right-4 px-3 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-2xs"
-                      style={{ backgroundColor: plan.badgeBg }}
-                    >
-                      {plan.badge}
-                    </span>
-                  )}
-
-                  <div>
-                    <h3 className="font-extrabold text-base text-gray-900">{plan.title}</h3>
-                    <p className="text-[11px] text-pink-600 font-medium mb-3">{plan.subtitle}</p>
-
-                    <div className="mb-4">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black text-gray-900">{plan.price}</span>
-                        <span className="text-xs text-gray-400 font-semibold">{plan.period}</span>
-                      </div>
-                      {plan.calculatedMonthly && (
-                        <span className="text-[10px] text-gray-400 font-medium block">
-                          {plan.calculatedMonthly}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Features List */}
-                    <div className="space-y-2.5 text-xs">
-                      {plan.features.map((feat, fIdx) => (
-                        <div key={fIdx} className="flex items-center gap-2">
-                          {feat.included ? (
-                            <div className="w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-[10px] shrink-0">
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          ) : (
-                            <div className="w-4 h-4 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-[10px] shrink-0">
-                              <X className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          )}
-                          <span
-                            className={`text-[11px] font-medium ${
-                              feat.included ? 'text-gray-700' : 'text-gray-400 line-through'
-                            }`}
-                          >
-                            {feat.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Edit Plan Button */}
-                  <button
-                    className={`mt-6 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all hover:opacity-90 cursor-pointer ${plan.btnStyle.border}`}
-                    style={{ backgroundColor: plan.btnStyle.bg, color: plan.btnStyle.color }}
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                    <span>Edit Plan</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* PLAN COMPARISON MATRIX (1 Col wide on XL) */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between overflow-x-auto">
-              <h3 className="font-extrabold text-xs text-gray-900 mb-3">Plan Comparison</h3>
-              <table className="w-full text-left text-[11px] min-w-[300px]">
-                <thead>
-                  <tr className="border-b border-gray-100 text-gray-400 font-bold">
-                    <th className="pb-2">Feature</th>
-                    <th className="pb-2 text-center">Free</th>
-                    <th className="pb-2 text-center">Monthly</th>
-                    <th className="pb-2 text-center">Quarterly</th>
-                    <th className="pb-2 text-center">Yearly</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {comparisonMatrix.map((row, rIdx) => (
-                    <tr key={rIdx} className="hover:bg-gray-50/50">
-                      <td className="py-2 font-medium text-gray-700">{row.feature}</td>
-                      <td className="py-2 text-center">
-                        {typeof row.free === 'boolean' ? (
-                          row.free ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 mx-auto stroke-[3]" />
-                          ) : (
-                            <X className="w-3.5 h-3.5 text-gray-300 mx-auto stroke-[3]" />
-                          )
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-600">{row.free}</span>
-                        )}
-                      </td>
-                      <td className="py-2 text-center">
-                        {typeof row.monthly === 'boolean' ? (
-                          row.monthly ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 mx-auto stroke-[3]" />
-                          ) : (
-                            <X className="w-3.5 h-3.5 text-gray-300 mx-auto stroke-[3]" />
-                          )
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-600">{row.monthly}</span>
-                        )}
-                      </td>
-                      <td className="py-2 text-center">
-                        {typeof row.quarterly === 'boolean' ? (
-                          row.quarterly ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 mx-auto stroke-[3]" />
-                          ) : (
-                            <X className="w-3.5 h-3.5 text-gray-300 mx-auto stroke-[3]" />
-                          )
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-600">{row.quarterly}</span>
-                        )}
-                      </td>
-                      <td className="py-2 text-center">
-                        {typeof row.yearly === 'boolean' ? (
-                          row.yearly ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 mx-auto stroke-[3]" />
-                          ) : (
-                            <X className="w-3.5 h-3.5 text-gray-300 mx-auto stroke-[3]" />
-                          )
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-600">{row.yearly}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* BOTTOM SECTION: SUBSCRIBERS TABLE & REVENUE DONUT CHART */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* SUBSCRIBERS TABLE (2 Cols wide on XL) */}
-            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
-              {/* Header Filters */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 overflow-x-auto">
-                  {[
-                    { label: 'All Subscribers (8,432)', key: 'All' },
-                    { label: 'Active (6,231)', key: 'Active' },
-                    { label: 'Expired (1,204)', key: 'Expired' },
-                    { label: 'Cancelled (997)', key: 'Cancelled' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setSelectedTabFilter(tab.key)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                        selectedTabFilter === tab.key
-                          ? 'text-white shadow-2xs'
-                          : 'text-gray-500 hover:bg-gray-50'
-                      }`}
-                      style={{
-                        backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="relative w-48">
-                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Search by name, email or plan..."
-                      className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                    />
-                  </div>
-                  <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-600 bg-gray-50 border border-gray-200 font-bold text-xs cursor-pointer">
-                    <Filter className="w-3.5 h-3.5" />
-                    <span>Filter</span>
-                  </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white font-bold text-xs shadow-2xs cursor-pointer"
-                    style={{ backgroundColor: COLORS.pink }}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Export CSV</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[700px]">
-                  <thead>
-                    <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
-                      <th className="pb-3 w-8">#</th>
-                      <th className="pb-3 font-semibold">User</th>
-                      <th className="pb-3 font-semibold">Email</th>
-                      <th className="pb-3 font-semibold">Plan</th>
-                      <th className="pb-3 font-semibold">Amount</th>
-                      <th className="pb-3 font-semibold">Start Date</th>
-                      <th className="pb-3 font-semibold">Expiry Date</th>
-                      <th className="pb-3 font-semibold">Status</th>
-                      <th className="pb-3 font-semibold text-center">Actions</th>
-                      <th className="pb-3 w-6"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredSubscribers.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-gray-50/50">
-                        <td className="py-3 font-bold text-gray-400">{idx + 1}</td>
-                        <td className="py-3">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src={item.user.avatar}
-                              alt={item.user.name}
-                              className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                            />
-                            <span className="font-bold text-gray-900">{item.user.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 text-gray-500 font-medium">{item.email}</td>
-                        <td className="py-3">
-                          <span
-                            className="px-2.5 py-1 rounded-md font-bold text-[10px] inline-block"
-                            style={{
-                              backgroundColor: item.planBg,
-                              color: item.planColor,
-                            }}
-                          >
-                            {item.plan}
-                          </span>
-                        </td>
-                        <td className="py-3 font-extrabold text-gray-900">{item.amount}</td>
-                        <td className="py-3 text-gray-600 font-medium">{item.startDate}</td>
-                        <td className="py-3 text-gray-600 font-medium">{item.expiryDate}</td>
-                        <td className="py-3">
-                          <span
-                            className="px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-block"
-                            style={{
-                              backgroundColor: item.statusBg,
-                              color: item.statusColor,
-                            }}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="py-3 text-center">
-                          <button className="p-1.5 rounded-lg text-gray-500 hover:text-[#FF2D72] hover:bg-pink-50 transition-colors">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </td>
-                        <td className="py-3 text-right">
-                          <button className="text-gray-400 hover:text-gray-600 p-1">
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
-                <span>Showing 1 to 8 of 8,432 subscribers</span>
-                <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
-                  </select>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
-                    >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      3
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      4
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      5
-                    </button>
-                    <span className="text-gray-400">...</span>
-                    <button className="w-7 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      844
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* REVENUE BY PLAN DONUT & RECENT SUBSCRIPTIONS (1 Col wide on XL) */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-5">
+          {/* SUBSCRIPTION PLANS SECTION */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-extrabold text-sm text-gray-900">Revenue by Plan</h3>
-                  <select className="bg-gray-50 border border-gray-200 text-[11px] font-semibold text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>Last 30 Days</option>
-                  </select>
-                </div>
+                <h2 className="text-base font-bold text-gray-900">Configured Subscription Plans</h2>
+                <p className="text-xs text-gray-400">
+                  Manage availability, edit prices, set discounts, and configure features
+                </p>
+              </div>
+            </div>
 
-                {/* Revenue Donut Visualization matching reference image */}
-                <div className="flex items-center justify-between my-2">
-                  <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#F3F4F6"
-                        strokeWidth="4"
-                      />
-                      {/* Monthly 42% (Pink) */}
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#FF2D72"
-                        strokeWidth="4"
-                        strokeDasharray="42, 100"
-                      />
-                      {/* Quarterly 28% (Purple) */}
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#7C3AED"
-                        strokeWidth="4"
-                        strokeDasharray="28, 100"
-                        strokeDashoffset="-42"
-                      />
-                      {/* Yearly 20% (Blue) */}
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#3B82F6"
-                        strokeWidth="4"
-                        strokeDasharray="20, 100"
-                        strokeDashoffset="-70"
-                      />
-                      {/* Free 8% (Green) */}
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#22C55E"
-                        strokeWidth="4"
-                        strokeDasharray="8, 100"
-                        strokeDashoffset="-90"
-                      />
-                      {/* Other 2% (Amber) */}
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#F59E0B"
-                        strokeWidth="4"
-                        strokeDasharray="2, 100"
-                        strokeDashoffset="-98"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                      <span className="text-sm font-black text-gray-900">₹4,26,890</span>
-                      <span className="text-[9px] text-gray-400 font-semibold">Total Revenue</span>
-                    </div>
-                  </div>
+            {/* 4 PLAN CARDS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+              {plans.map((plan) => {
+                const isFree = plan.basePrice === 0;
+                const hasDiscount = plan.discountPercent > 0;
 
-                  {/* Donut Legend */}
-                  <div className="space-y-1.5 text-[11px] font-semibold text-gray-600 flex-1 pl-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#FF2D72]"></span>
-                        <span>Monthly</span>
-                      </div>
-                      <span className="text-gray-400">42%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#7C3AED]"></span>
-                        <span>Quarterly</span>
-                      </div>
-                      <span className="text-gray-400">28%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]"></span>
-                        <span>Yearly</span>
-                      </div>
-                      <span className="text-gray-400">20%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E]"></span>
-                        <span>Free</span>
-                      </div>
-                      <span className="text-gray-400">8%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span>
-                        <span>Other</span>
-                      </div>
-                      <span className="text-gray-400">2%</span>
-                    </div>
-                  </div>
-                </div>
+                return (
+                  <div
+                    key={plan.id}
+                    className={`rounded-2xl p-5 border shadow-sm flex flex-col justify-between relative transition-all duration-200 hover:shadow-md ${plan.borderStyle || 'border-gray-200'
+                      } ${!plan.isActive ? 'opacity-70 bg-gray-50/80 grayscale-30' : ''}`}
+                    style={{ backgroundColor: plan.isActive ? plan.cardBg : '#F9FAFB' }}
+                  >
+                    {/* Badge */}
+                    {plan.badge && (
+                      <span
+                        className="absolute -top-3 right-4 px-3 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-2xs"
+                        style={{
+                          backgroundColor: plan.badgeBg || COLORS.pink,
+                          color: plan.badgeColor || '#FFFFFF',
+                        }}
+                      >
+                        {plan.badge}
+                      </span>
+                    )}
 
-                {/* Recent Subscriptions Mini Feed */}
-                <div className="pt-4 border-t border-gray-100 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-extrabold text-xs text-gray-900">Recent Subscriptions</h4>
-                    <button className="text-[11px] font-bold" style={{ color: COLORS.pink }}>
-                      View All
-                    </button>
-                  </div>
+                    <div>
+                      {/* Top Header: Title, Subtitle & Enable/Disable Toggle */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <h3 className="font-extrabold text-base text-gray-900 flex items-center gap-1.5">
+                            {plan.name}
+                            {!plan.isActive && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">
+                                Disabled
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-[11px] text-gray-500 font-medium leading-relaxed mt-0.5">
+                            {plan.subtitle}
+                          </p>
+                        </div>
 
-                  <div className="space-y-2.5">
-                    {[
-                      {
-                        name: 'Aaradhya Sharma',
-                        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-                        plan: 'Premium Monthly',
-                        planBg: '#FFE7F0',
-                        planColor: '#FF2D72',
-                        amount: '₹499',
-                        time: '2 mins ago',
-                      },
-                      {
-                        name: 'Rohit Mehta',
-                        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-                        plan: 'Premium Yearly',
-                        planBg: '#FEF3C7',
-                        planColor: '#D97706',
-                        amount: '₹3,999',
-                        time: '1 hour ago',
-                      },
-                      {
-                        name: 'Priya Singh',
-                        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-                        plan: 'Premium Quarterly',
-                        planBg: '#F3E8FF',
-                        planColor: '#7C3AED',
-                        amount: '₹1,299',
-                        time: '2 hours ago',
-                      },
-                      {
-                        name: 'Karan Verma',
-                        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-                        plan: 'Premium Monthly',
-                        planBg: '#FFE7F0',
-                        planColor: '#FF2D72',
-                        amount: '₹499',
-                        time: '5 hours ago',
-                      },
-                    ].map((item, rIdx) => (
-                      <div key={rIdx} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={item.avatar}
-                            alt={item.name}
-                            className="w-7 h-7 rounded-full object-cover border border-gray-200"
+                        {/* Enable / Disable Toggle Switch */}
+                        <button
+                          onClick={() => handleTogglePlanStatus(plan.id)}
+                          title={plan.isActive ? 'Click to Disable Plan' : 'Click to Enable Plan'}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shrink-0 focus:outline-none ${plan.isActive ? 'bg-[#22C55E]' : 'bg-gray-300'
+                            }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${plan.isActive ? 'translate-x-6' : 'translate-x-1'
+                              }`}
                           />
-                          <div>
-                            <div className="font-bold text-gray-900 text-[11px]">{item.name}</div>
-                            <span
-                              className="px-1.5 py-0.5 rounded text-[9px] font-bold inline-block"
-                              style={{ backgroundColor: item.planBg, color: item.planColor }}
-                            >
-                              {item.plan}
+                        </button>
+                      </div>
+
+                      {/* Pricing & Discount Display */}
+                      <div className="my-4 p-3 bg-white/90 rounded-xl border border-gray-100/90 shadow-2xs">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-gray-900 tracking-tight">
+                            ₹{plan.finalPrice}
+                          </span>
+                          <span className="text-xs text-gray-500 font-bold">{plan.periodText}</span>
+                        </div>
+
+                        {/* Discount Information */}
+                        {hasDiscount && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-400 line-through font-semibold">
+                              ₹{plan.basePrice}
+                            </span>
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-green-100 text-green-700 flex items-center gap-0.5">
+                              <Percent className="w-2.5 h-2.5" />
+                              {plan.discountPercent}% OFF
                             </span>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-black text-gray-900 block text-[11px]">{item.amount}</span>
-                          <span className="text-[9px] text-gray-400 font-medium">{item.time}</span>
-                        </div>
+                        )}
+
+                        {isFree && (
+                          <div className="mt-1">
+                            <span className="text-[10px] font-bold text-gray-400">
+                              Free forever for all standard accounts
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    ))}
+
+                      {/* Configured Features Header */}
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          Included Features
+                        </span>
+                        <span className="text-[10px] font-semibold text-gray-500">
+                          {plan.features.filter((f) => f.included).length} active
+                        </span>
+                      </div>
+
+                      {/* Features List */}
+                      <div className="space-y-2 text-xs">
+                        {plan.features.slice(0, 7).map((feat, fIdx) => (
+                          <div key={fIdx} className="flex items-center gap-2">
+                            {feat.included ? (
+                              <div className="w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-[10px] shrink-0">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </div>
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-[10px] shrink-0">
+                                <X className="w-3 h-3 stroke-[3]" />
+                              </div>
+                            )}
+                            <span
+                              className={`text-[11px] font-medium truncate ${feat.included ? 'text-gray-700' : 'text-gray-400 line-through'
+                                }`}
+                            >
+                              {feat.name}
+                            </span>
+                          </div>
+                        ))}
+                        {plan.features.length > 7 && (
+                          <div className="text-[10px] text-gray-400 font-semibold pl-6 pt-0.5">
+                            + {plan.features.length - 7} more configured features
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action: Edit Plan Button */}
+                    <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(plan)}
+                        className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all hover:opacity-90 cursor-pointer text-white"
+                        style={{ backgroundColor: COLORS.pink }}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit Plan</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleTogglePlanStatus(plan.id)}
+                        className={`p-2.5 rounded-xl border font-bold text-xs flex items-center justify-center transition-colors cursor-pointer ${plan.isActive
+                            ? 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                            : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
+                          }`}
+                        title={plan.isActive ? 'Disable Plan' : 'Enable Plan'}
+                      >
+                        <Power className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+
+        </main>
+      </div>
+
+      {/* CREATE / EDIT PLAN MODAL */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-lg text-gray-900">
+                  {modalMode === 'create' ? 'Create New Subscription Plan' : `Edit Plan: ${formData.name}`}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Configure plan details, pricing, discount percentages, and feature access
+                </p>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSavePlan} className="flex-1 overflow-y-auto p-5 space-y-5">
+              {/* Row 1: Plan Name & Subtitle */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Plan Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g. Monthly Premium"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Badge / Tag (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.badge}
+                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                    placeholder="e.g. Popular, Save 20%, Best Value"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Plan Subtitle / Description</label>
+                <input
+                  type="text"
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="e.g. Best for getting started with full unlimited features"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                />
+              </div>
+
+              {/* Row 2: Billing Cycle & Enable/Disable Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Billing Cycle</label>
+                  <select
+                    value={formData.billingCycle}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      let pText = '/ month';
+                      if (val === 'Quarterly') pText = '/ 3 months';
+                      if (val === 'Yearly') pText = '/ year';
+                      if (val === 'Forever') pText = '/ forever';
+                      setFormData({
+                        ...formData,
+                        billingCycle: val,
+                        periodText: pText,
+                      });
+                    }}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                  >
+                    <option value="Forever">Free / Forever</option>
+                    <option value="Monthly">Monthly (/ month)</option>
+                    <option value="Quarterly">Quarterly (/ 3 months)</option>
+                    <option value="Yearly">Yearly (/ year)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Plan Status</label>
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${formData.isActive ? 'bg-[#22C55E]' : 'bg-gray-300'
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                      />
+                    </button>
+                    <span className="text-xs font-bold text-gray-700">
+                      {formData.isActive ? 'Enabled (Active for Users)' : 'Disabled (Hidden from Users)'}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
+
+              {/* Row 3: Pricing & Discount Configuration */}
+              <div className="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/80 space-y-3">
+                <div className="flex items-center gap-1.5">
+                  <IndianRupee className="w-4 h-4 text-[#FF2D72]" />
+                  <span className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">
+                    Price & Discount Configuration
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Regular Price */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                      Regular Base Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.basePrice}
+                      onChange={(e) => handlePriceChange(e.target.value, formData.discountPercent)}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                    />
+                  </div>
+
+                  {/* Discount % */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                      Discount Percentage (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.discountPercent}
+                      onChange={(e) => handlePriceChange(formData.basePrice, e.target.value)}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#FF2D72]"
+                    />
+                  </div>
+
+                  {/* Calculated Final Price */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                      Final Price (₹)
+                    </label>
+                    <div className="w-full bg-pink-50/60 border border-pink-200 rounded-xl px-3 py-2 text-xs font-black text-[#FF2D72]">
+                      ₹{formData.finalPrice} {formData.periodText}
+                    </div>
+                  </div>
+                </div>
+
+                {formData.discountPercent > 0 && (
+                  <p className="text-[11px] text-green-600 font-semibold">
+                    ✓ Users save ₹{formData.basePrice - formData.finalPrice} ({formData.discountPercent}% discount applied)
+                  </p>
+                )}
+              </div>
+
+              {/* Row 4: Feature Configuration */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-gray-900 uppercase tracking-wider block">
+                    Configure Included Features
+                  </label>
+                  <span className="text-[11px] text-gray-400 font-medium">
+                    Check the features that apply to this plan
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-100 rounded-xl bg-gray-50/40">
+                  {formData.features.map((feat) => (
+                    <label
+                      key={feat.id}
+                      className="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-gray-100 hover:border-pink-200 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={feat.included}
+                        onChange={() => handleToggleFormFeature(feat.id)}
+                        className="rounded text-[#FF2D72] focus:ring-0 w-4 h-4 cursor-pointer"
+                      />
+                      <span
+                        className={`text-xs font-medium truncate ${feat.included ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                          }`}
+                      >
+                        {feat.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Add Custom Feature */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={customFeatureName}
+                    onChange={(e) => setCustomFeatureName(e.target.value)}
+                    placeholder="Add custom feature (e.g. 10 Free Boosts)"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#FF2D72]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomFeature}
+                    className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Add Feature
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-xs hover:bg-gray-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-sm hover:opacity-90 cursor-pointer"
+                  style={{ backgroundColor: COLORS.pink }}
+                >
+                  {modalMode === 'create' ? 'Create Plan' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
-        </main>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

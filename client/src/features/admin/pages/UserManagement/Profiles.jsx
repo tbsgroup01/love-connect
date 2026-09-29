@@ -53,32 +53,24 @@ export default function ProfilesManagement() {
     {
       title: 'Total Profiles',
       value: '22,840',
-      change: '+14% this month',
-      changeColor: '#22C55E',
       bgColor: '#FF2D72',
       icon: UserCheck,
     },
     {
       title: 'Complete Profiles',
       value: '18,520',
-      change: '+10% this month',
-      changeColor: '#22C55E',
       bgColor: '#22C55E',
       icon: CheckCircle2,
     },
     {
       title: 'Incomplete',
       value: '3,890',
-      change: '+4% this month',
-      changeColor: '#F59E0B',
       bgColor: '#F59E0B',
       icon: Clock,
     },
     {
       title: 'Flagged / Moderation',
       value: '430',
-      change: '-2% this month',
-      changeColor: '#22C55E',
       bgColor: '#EF4444',
       icon: AlertCircle,
     },
@@ -316,17 +308,11 @@ export default function ProfilesManagement() {
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                 Profiles Management
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Inspect, moderate and review user dating profiles & bio content
               </p>
             </div>
-            <button
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-xs shadow-sm transition-all hover:opacity-90 self-start sm:self-auto cursor-pointer"
-              style={{ backgroundColor: COLORS.pink }}
-            >
-              <Download className="w-4 h-4" />
-              <span>Export Profiles</span>
-            </button>
+
           </div>
 
           {/* TOP 4 KPI CARDS */}
@@ -346,7 +332,7 @@ export default function ProfilesManagement() {
                     <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>
@@ -356,84 +342,81 @@ export default function ProfilesManagement() {
             })}
           </div>
 
-          {/* FILTER TABS & SEARCH BAR */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
-              {[
-                { label: 'All Profiles', count: '22,840', key: 'All' },
-                { label: 'Active', count: '18,520', key: 'Active' },
-                { label: 'Verified Only', count: '14,210', key: 'Verified' },
-                { label: 'Incomplete', count: '3,890', key: 'Incomplete' },
-                { label: 'Under Review', count: '430', key: 'Under Review' },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setSelectedTabFilter(tab.key)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                    selectedTabFilter === tab.key
+          {/* TABLE AND RIGHT PREVIEW PANEL SPLIT */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            {/* PROFILES TABLE & INTEGRATED FILTERS (2 Cols wide on XL) */}
+            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+              {/* Filter Pills */}
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
+                {[
+                  { label: 'All Profiles', count: '22,840', key: 'All' },
+                  { label: 'Active', count: '18,520', key: 'Active' },
+                  { label: 'Verified Only', count: '14,210', key: 'Verified' },
+                  { label: 'Incomplete', count: '3,890', key: 'Incomplete' },
+                  { label: 'Under Review', count: '430', key: 'Under Review' },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setSelectedTabFilter(tab.key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${selectedTabFilter === tab.key
                       ? 'text-white shadow-xs'
                       : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                  style={{
-                    backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
-                  }}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
-
-            {/* Filter Inputs & Controls */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              <div className="relative w-full md:w-80">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search by name, location or bio keywords..."
-                  className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                />
+                      }`}
+                    style={{
+                      backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
+                    }}
+                  >
+                    {tab.label} ({tab.count})
+                  </button>
+                ))}
               </div>
 
-              <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Gender</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>All Genders</option>
-                    <option>Female</option>
-                    <option>Male</option>
-                  </select>
+              {/* Filter Inputs & Controls */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                <div className="relative w-full md:w-80">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, location or bio keywords..."
+                    className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
+                  />
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Completeness</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>All</option>
-                    <option>&gt; 80% Complete</option>
-                    <option>&lt; 50% Incomplete</option>
-                  </select>
+                <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                    <span className="text-xs font-medium text-gray-400 hidden sm:inline">Gender</span>
+                    <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
+                      <option>All Genders</option>
+                      <option>Female</option>
+                      <option>Male</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                    <span className="text-xs font-medium text-gray-400 hidden sm:inline">Completeness</span>
+                    <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
+                      <option>All</option>
+                      <option>&gt; 80% Complete</option>
+                      <option>&lt; 50% Incomplete</option>
+                    </select>
+                  </div>
+
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
+                    style={{ backgroundColor: COLORS.pink }}
+                  >
+                    <Filter className="w-3.5 h-3.5" />
+                    <span>Filter</span>
+                  </button>
+
+                  <button className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5 cursor-pointer">
+                    Reset
+                  </button>
                 </div>
-
-                <button
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
-                  style={{ backgroundColor: COLORS.pink }}
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Filter</span>
-                </button>
-
-                <button className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5 cursor-pointer">
-                  Reset
-                </button>
               </div>
-            </div>
-          </div>
 
-          {/* TABLE AND RIGHT PREVIEW PANEL SPLIT */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* PROFILES TABLE (2 Cols wide on XL) */}
-            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[700px]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[700px]">
                 <thead>
                   <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
                     <th className="pb-3 w-8">
@@ -458,9 +441,8 @@ export default function ProfilesManagement() {
                           setSelectedProfile(item);
                           setActivePhotoIdx(0);
                         }}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
-                        }`}
+                        className={`cursor-pointer transition-colors ${isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
+                          }`}
                       >
                         <td className="py-3.5">
                           <input type="checkbox" className="rounded text-[#FF2D72] focus:ring-0" />
@@ -557,6 +539,7 @@ export default function ProfilesManagement() {
                   })}
                 </tbody>
               </table>
+              </div>
 
               {/* Pagination */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
@@ -588,7 +571,7 @@ export default function ProfilesManagement() {
             </div>
 
             {/* RIGHT PROFILE PREVIEW CARD */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-5">
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5 h-fit sticky top-6">
               <div>
                 <h2 className="text-base font-bold mb-4" style={{ color: COLORS.dark }}>
                   Profile Card Preview
@@ -631,9 +614,8 @@ export default function ProfilesManagement() {
                         src={photoUrl}
                         alt="Thumb"
                         onClick={() => setActivePhotoIdx(pIdx)}
-                        className={`w-11 h-11 rounded-lg object-cover cursor-pointer border-2 transition-all ${
-                          activePhotoIdx === pIdx ? 'border-[#FF2D72] scale-105' : 'border-transparent opacity-60'
-                        }`}
+                        className={`w-11 h-11 rounded-lg object-cover cursor-pointer border-2 transition-all ${activePhotoIdx === pIdx ? 'border-[#FF2D72] scale-105' : 'border-transparent opacity-60'
+                          }`}
                       />
                     ))}
                   </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Heart, Menu, Smartphone, ExternalLink } from 'lucide-react';
+import { Bell, Heart, Menu, ExternalLink } from 'lucide-react';
 import logo from "../../../assets/loveconnect.png"
 
 const COLORS = {
@@ -13,7 +13,7 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
     const navigate = useNavigate();
 
     return (
-        <header className="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between sticky top-0 z-40">
             <div className="flex items-center gap-4">
                 {setSidebarOpen && (
                     <button
@@ -33,27 +33,8 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
                 </Link>
             </div>
 
-            {/* Right Section: Search + Switch to Mobile App + Notifications + Profile */}
+            {/* Right Section: Notifications + Profile */}
             <div className="flex items-center gap-3 sm:gap-5">
-                {/* Search Input */}
-                <div className="relative hidden md:block w-48 sm:w-64">
-                    <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="text"
-                        placeholder="Search users, matches, reports..."
-                        className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400 transition-colors"
-                    />
-                </div>
-
-                {/* Quick Link to Mobile App */}
-                <Link
-                    to="/discover"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-[#FF2D72] hover:text-[#FF2D72] text-xs font-bold transition-all shadow-2xs"
-                    title="Open Mobile Dating App"
-                >
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Mobile App View</span>
-                </Link>
 
                 {/* Notifications */}
                 <Link

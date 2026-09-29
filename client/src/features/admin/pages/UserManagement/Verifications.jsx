@@ -48,31 +48,24 @@ export default function Verifications() {
         {
             title: 'Total Requests',
             value: '1,256',
-            change: '+12% this month',
             bgColor: '#FF2D72',
             icon: FileText,
         },
         {
             title: 'Pending Review',
             value: '248',
-            change: '+8% this month',
-            changeColor: '#F59E0B',
             bgColor: '#3B82F6',
             icon: Clock,
         },
         {
             title: 'Verified',
             value: '892',
-            change: '+18% this month',
-            changeColor: '#22C55E',
             bgColor: '#22C55E',
             icon: ShieldCheck,
         },
         {
             title: 'Rejected',
             value: '116',
-            change: '+5% this month',
-            changeColor: '#EF4444',
             bgColor: '#EF4444',
             icon: XCircle,
         },
@@ -348,7 +341,7 @@ export default function Verifications() {
                             <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                                 Verifications
                             </h1>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-sm text-gray-400 mt-1">
                                 Manage and review user verification requests
                             </p>
                         </div>
@@ -378,7 +371,7 @@ export default function Verifications() {
                                         <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                                        <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                                         <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                                             {kpi.value}
                                         </span>
@@ -388,93 +381,91 @@ export default function Verifications() {
                         })}
                     </div>
 
-                    {/* FILTER TABS & SEARCH BAR */}
-                    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4">
-                        {/* Status Filter Pills */}
-                        <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
-                            {[
-                                { label: 'All Requests', count: '1,256', key: 'All' },
-                                { label: 'Pending', count: '248', key: 'Pending' },
-                                { label: 'Verified', count: '892', key: 'Verified' },
-                                { label: 'Rejected', count: '116', key: 'Rejected' },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => setSelectedTabFilter(tab.key)}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedTabFilter === tab.key
-                                        ? 'text-white shadow-xs'
-                                        : 'text-gray-500 hover:bg-gray-50'
-                                        }`}
-                                    style={{
-                                        backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
-                                    }}
-                                >
-                                    {tab.label} ({tab.count})
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Filter Inputs & Dropdowns */}
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-                            <div className="relative w-full md:w-80">
-                                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name, email or phone..."
-                                    className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                                />
+                    {/* TABLE AND RIGHT PREVIEW PANEL SPLIT */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                        {/* VERIFICATIONS TABLE & INTEGRATED FILTERS (2 Cols wide on XL) */}
+                        <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+                            {/* Status Filter Pills */}
+                            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
+                                {[
+                                    { label: 'All Requests', count: '1,256', key: 'All' },
+                                    { label: 'Pending', count: '248', key: 'Pending' },
+                                    { label: 'Verified', count: '892', key: 'Verified' },
+                                    { label: 'Rejected', count: '116', key: 'Rejected' },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setSelectedTabFilter(tab.key)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${selectedTabFilter === tab.key
+                                            ? 'text-white shadow-xs'
+                                            : 'text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                        style={{
+                                            backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
+                                        }}
+                                    >
+                                        {tab.label} ({tab.count})
+                                    </button>
+                                ))}
                             </div>
 
-                            <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
-                                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                                    <span className="text-xs font-medium text-gray-400 hidden sm:inline">Verification Type</span>
-                                    <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                                        <option>All Types</option>
-                                        <option>Identity Verification</option>
-                                        <option>Photo Verification</option>
-                                        <option>Phone Verification</option>
-                                        <option>Email Verification</option>
-                                    </select>
+                            {/* Filter Inputs & Dropdowns */}
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                                <div className="relative w-full md:w-80">
+                                    <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, email or phone..."
+                                        className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
+                                    />
                                 </div>
 
-                                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                                    <span className="text-xs font-medium text-gray-400 hidden sm:inline">Status</span>
-                                    <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                                        <option>All Status</option>
-                                        <option>Pending</option>
-                                        <option>Verified</option>
-                                        <option>Rejected</option>
-                                    </select>
-                                </div>
+                                <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                                    <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                                        <span className="text-xs font-medium text-gray-400 hidden sm:inline">Verification Type</span>
+                                        <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
+                                            <option>All Types</option>
+                                            <option>Identity Verification</option>
+                                            <option>Photo Verification</option>
+                                            <option>Phone Verification</option>
+                                            <option>Email Verification</option>
+                                        </select>
+                                    </div>
 
-                                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                                    <span className="text-xs font-medium text-gray-400 hidden sm:inline">Date Range</span>
-                                    <button className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl px-3 py-2.5 flex items-center gap-2 focus:outline-none w-full md:w-auto">
-                                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                        <span>Select Date</span>
+                                    <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                                        <span className="text-xs font-medium text-gray-400 hidden sm:inline">Status</span>
+                                        <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
+                                            <option>All Status</option>
+                                            <option>Pending</option>
+                                            <option>Verified</option>
+                                            <option>Rejected</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                                        <span className="text-xs font-medium text-gray-400 hidden sm:inline">Date Range</span>
+                                        <button className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl px-3 py-2.5 flex items-center gap-2 focus:outline-none w-full md:w-auto cursor-pointer">
+                                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                            <span>Select Date</span>
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
+                                        style={{ backgroundColor: COLORS.pink }}
+                                    >
+                                        <Filter className="w-3.5 h-3.5" />
+                                        <span>Filter</span>
+                                    </button>
+
+                                    <button className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5 cursor-pointer">
+                                        Reset
                                     </button>
                                 </div>
-
-                                <button
-                                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs"
-                                    style={{ backgroundColor: COLORS.pink }}
-                                >
-                                    <Filter className="w-3.5 h-3.5" />
-                                    <span>Filter</span>
-                                </button>
-
-                                <button className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5">
-                                    Reset
-                                </button>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* TABLE AND RIGHT PREVIEW PANEL SPLIT */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        {/* VERIFICATIONS TABLE (2 Cols wide on XL) */}
-                        <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between overflow-x-auto">
-                            <table className="w-full text-left text-xs min-w-[700px]">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs min-w-[700px]">
                                 <thead>
                                     <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
                                         <th className="pb-3 w-8">
@@ -607,6 +598,7 @@ export default function Verifications() {
                                     })}
                                 </tbody>
                             </table>
+                            </div>
 
                             {/* Pagination matching reference UI */}
                             <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
@@ -651,7 +643,7 @@ export default function Verifications() {
                         </div>
 
                         {/* RIGHT VERIFICATION PREVIEW PANEL */}
-                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-5">
+                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5 h-fit sticky top-6">
                             <div>
                                 <h2 className="text-base font-bold mb-4" style={{ color: COLORS.dark }}>
                                     Verification Preview

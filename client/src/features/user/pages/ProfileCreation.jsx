@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import React, { useState, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
   Plus,
@@ -26,19 +26,19 @@ import {
   Sparkles,
   Eye,
   ShieldCheck,
-} from "lucide-react"
-import loveConnectLogo from "../../../assets/loveconnect.png"
-import profileImg1 from "../../../assets/hero_woman.jpg"
-import profileImg2 from "../../../assets/priya_profile.jpg"
-import profileImg3 from "../../../assets/signup_hero_woman.jpg"
-import profileImg4 from "../../../assets/hero_woman_exact.png"
+} from "lucide-react";
+import loveConnectLogo from "../../../assets/loveconnect.png";
+import profileImg1 from "../../../assets/hero_woman.jpg";
+import profileImg2 from "../../../assets/priya_profile.jpg";
+import profileImg3 from "../../../assets/signup_hero_woman.jpg";
+import profileImg4 from "../../../assets/hero_woman_exact.png";
 
 export default function ProfileCreation() {
-  const navigate = useNavigate()
-  const fileInputRef = useRef(null)
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   // Active step: 1 (Photo), 2 (Basic Info), 3 (Interests), 4 (Relationship)
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Step 1: Photos
   const [photos, setPhotos] = useState([
@@ -46,7 +46,7 @@ export default function ProfileCreation() {
     profileImg2,
     profileImg3,
     profileImg4,
-  ])
+  ]);
 
   // Step 2: Basic Information
   const [basicInfo, setBasicInfo] = useState({
@@ -54,7 +54,7 @@ export default function ProfileCreation() {
     dob: "1999-08-15",
     gender: "Woman",
     location: "Mumbai, India",
-  })
+  });
 
   // Step 3: Interests
   const [selectedInterests, setSelectedInterests] = useState([
@@ -62,13 +62,14 @@ export default function ProfileCreation() {
     "Photography",
     "Fitness",
     "Music",
-  ])
+  ]);
 
   // Step 4: Relationship Preference
-  const [relationshipPreference, setRelationshipPreference] = useState("Relationship")
+  const [relationshipPreference, setRelationshipPreference] =
+    useState("Relationship");
 
   // Completed State
-  const [isCompleted, setIsCompleted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const interestOptions = [
     { name: "Travel", icon: Heart },
@@ -83,7 +84,7 @@ export default function ProfileCreation() {
     { name: "Cooking", icon: ChefHat },
     { name: "Nature", icon: Trees },
     { name: "Pets", icon: Cat },
-  ]
+  ];
 
   const relationshipOptions = [
     {
@@ -104,69 +105,71 @@ export default function ProfileCreation() {
       subtitle: "Make new friends",
       icon: Users,
     },
-  ]
+  ];
 
   // Photo handlers
   const handleFileUpload = (e) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         if (uploadEvent.target?.result) {
-          setPhotos((prev) => [...prev, uploadEvent.target.result])
+          setPhotos((prev) => [...prev, uploadEvent.target.result]);
         }
-      }
-      reader.readAsDataURL(file)
-    })
-  }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleRemovePhoto = (index, e) => {
-    e.stopPropagation()
-    if (photos.length <= 1) return
-    setPhotos((prev) => prev.filter((_, i) => i !== index))
-  }
+    e.stopPropagation();
+    if (photos.length <= 1) return;
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSetPrimary = (index) => {
-    if (index === 0) return
+    if (index === 0) return;
     setPhotos((prev) => {
-      const updated = [...prev]
-      const [selected] = updated.splice(index, 1)
-      updated.unshift(selected)
-      return updated
-    })
-  }
+      const updated = [...prev];
+      const [selected] = updated.splice(index, 1);
+      updated.unshift(selected);
+      return updated;
+    });
+  };
 
   const toggleInterest = (interestName) => {
     if (selectedInterests.includes(interestName)) {
-      setSelectedInterests((prev) => prev.filter((item) => item !== interestName))
+      setSelectedInterests((prev) =>
+        prev.filter((item) => item !== interestName),
+      );
     } else {
-      setSelectedInterests((prev) => [...prev, interestName])
+      setSelectedInterests((prev) => [...prev, interestName]);
     }
-  }
+  };
 
   const handleNext = () => {
     if (currentStep < 4) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     } else {
-      navigate("/discover")
+      navigate("/discover");
     }
-  }
+  };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1)
+      setCurrentStep((prev) => prev - 1);
     }
-  }
+  };
 
   const handleSkip = () => {
     if (currentStep < 4) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     } else {
-      navigate("/discover")
+      navigate("/discover");
     }
-  }
+  };
 
   // Stepper Header data
   const stepTitles = {
@@ -174,7 +177,7 @@ export default function ProfileCreation() {
     2: { stepNum: 2, label: "Step 2 of 8", progress: "35%" },
     3: { stepNum: 6, label: "Step 6 of 8", progress: "75%" },
     4: { stepNum: 8, label: "Step 8 of 8", progress: "100%" },
-  }
+  };
 
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-3 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-sans select-none">
@@ -184,14 +187,18 @@ export default function ProfileCreation() {
 
       {/* Top Header Logo */}
       <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-3 sm:pb-4 border-b border-[#FFE7F0]/80 mb-2">
-        <Link to="/" title="Return to LoveConnect Home" className="inline-flex items-center group">
+        <Link
+          to="/"
+          title="Return to LoveConnect Home"
+          className="inline-flex items-center group"
+        >
           <img
             src={loveConnectLogo}
             alt="LoveConnect"
             className="h-9 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
-        
+
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
           <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
           <span>Profile Verification Active</span>
@@ -201,12 +208,10 @@ export default function ProfileCreation() {
       {/* Main SaaS Stage: Full-Width 2-Column Desktop Experience */}
       <main className="relative z-10 w-full max-w-7xl mx-auto my-auto flex-1 flex flex-col justify-center">
         <div className="bg-white rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:h-[76vh] max-h-[780px] transition-all duration-300">
-          
           {/* ========================================================= */}
           {/* LEFT COLUMN: The Interactive 4-Step Form Wizard           */}
           {/* ========================================================= */}
           <div className="lg:col-span-7 p-6 sm:p-9 lg:p-10 flex flex-col justify-between overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            
             <div>
               {/* Stepper Progress Bar */}
               <div className="mb-6">
@@ -236,7 +241,8 @@ export default function ProfileCreation() {
                       Add Your Photos
                     </h1>
                     <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      Upload clear photos of yourself. First photo will be your main profile picture.
+                      Upload clear photos of yourself. First photo will be your
+                      main profile picture.
                     </p>
                   </div>
 
@@ -259,7 +265,9 @@ export default function ProfileCreation() {
                     <p className="text-sm font-bold text-[#17151A] group-hover:text-[#FF2D72]">
                       Tap to upload
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">or drag and drop</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      or drag and drop
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -315,25 +323,33 @@ export default function ProfileCreation() {
 
                   <div className="space-y-3.5 pt-1">
                     <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">Name *</label>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1">
+                        Name *
+                      </label>
                       <input
                         type="text"
                         placeholder="Enter your name"
                         value={basicInfo.name}
-                        onChange={(e) => setBasicInfo({ ...basicInfo, name: e.target.value })}
+                        onChange={(e) =>
+                          setBasicInfo({ ...basicInfo, name: e.target.value })
+                        }
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white hover:border-slate-300 focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0] outline-none shadow-2xs"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">Date of Birth *</label>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1">
+                        Date of Birth *
+                      </label>
                       <div className="relative">
                         <input
                           type="text"
                           placeholder="Select date"
                           value={basicInfo.dob}
                           onFocus={(e) => (e.target.type = "date")}
-                          onChange={(e) => setBasicInfo({ ...basicInfo, dob: e.target.value })}
+                          onChange={(e) =>
+                            setBasicInfo({ ...basicInfo, dob: e.target.value })
+                          }
                           className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs"
                         />
                         <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -341,11 +357,18 @@ export default function ProfileCreation() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">Gender *</label>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1">
+                        Gender *
+                      </label>
                       <div className="relative">
                         <select
                           value={basicInfo.gender}
-                          onChange={(e) => setBasicInfo({ ...basicInfo, gender: e.target.value })}
+                          onChange={(e) =>
+                            setBasicInfo({
+                              ...basicInfo,
+                              gender: e.target.value,
+                            })
+                          }
                           className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs appearance-none cursor-pointer"
                         >
                           <option value="Woman">Woman</option>
@@ -357,13 +380,20 @@ export default function ProfileCreation() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">Location *</label>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1">
+                        Location *
+                      </label>
                       <div className="relative">
                         <input
                           type="text"
                           placeholder="Enter your location"
                           value={basicInfo.location}
-                          onChange={(e) => setBasicInfo({ ...basicInfo, location: e.target.value })}
+                          onChange={(e) =>
+                            setBasicInfo({
+                              ...basicInfo,
+                              location: e.target.value,
+                            })
+                          }
                           className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs"
                         />
                         <MapPin className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -387,8 +417,8 @@ export default function ProfileCreation() {
 
                   <div className="flex flex-wrap gap-2.5 pt-1">
                     {interestOptions.map((item) => {
-                      const isSelected = selectedInterests.includes(item.name)
-                      const IconComponent = item.icon
+                      const isSelected = selectedInterests.includes(item.name);
+                      const IconComponent = item.icon;
                       return (
                         <button
                           key={item.name}
@@ -403,7 +433,7 @@ export default function ProfileCreation() {
                           <IconComponent className="w-3.5 h-3.5 text-[#FF2D72]" />
                           <span>{item.name}</span>
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -423,8 +453,8 @@ export default function ProfileCreation() {
 
                   <div className="space-y-3">
                     {relationshipOptions.map((opt) => {
-                      const isSelected = relationshipPreference === opt.id
-                      const IconComponent = opt.icon
+                      const isSelected = relationshipPreference === opt.id;
+                      const IconComponent = opt.icon;
                       return (
                         <div
                           key={opt.id}
@@ -440,8 +470,12 @@ export default function ProfileCreation() {
                               <IconComponent className="w-5 h-5 fill-[#FF2D72]" />
                             </div>
                             <div>
-                              <h3 className="text-sm font-bold text-[#17151A]">{opt.title}</h3>
-                              <p className="text-xs text-[#64748b] mt-0.5">{opt.subtitle}</p>
+                              <h3 className="text-sm font-bold text-[#17151A]">
+                                {opt.title}
+                              </h3>
+                              <p className="text-xs text-[#64748b] mt-0.5">
+                                {opt.subtitle}
+                              </p>
                             </div>
                           </div>
                           {isSelected && (
@@ -450,7 +484,7 @@ export default function ProfileCreation() {
                             </div>
                           )}
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -486,14 +520,12 @@ export default function ProfileCreation() {
                 <span>{currentStep === 4 ? "Complete" : "Next"}</span>
               </button>
             </div>
-
           </div>
 
           {/* ========================================================= */}
           {/* RIGHT COLUMN: Live Match Profile Card Preview             */}
           {/* ========================================================= */}
           <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-purple-50/60 via-[#FFE7F0]/30 to-pink-50/40 p-6 flex-col items-center justify-center relative border-l border-[#FFE7F0]/60">
-            
             <div className="mb-3 text-center">
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md text-[11px] font-bold text-[#FF2D72] border border-[#FFE7F0] shadow-2xs">
                 <Eye className="w-3.5 h-3.5" />
@@ -543,9 +575,8 @@ export default function ProfileCreation() {
               This is how your card appears to nearby singles
             </p>
           </div>
-
         </div>
       </main>
     </div>
-  )
+  );
 }

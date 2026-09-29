@@ -32,7 +32,6 @@ export default function Discover() {
       age: 24,
       image: ananyaImg,
       distance: "2 km away",
-      online: true,
       profession: "Product Designer at Google",
       education: "Delhi University",
       location: "Noida, India",
@@ -48,7 +47,6 @@ export default function Discover() {
       age: 25,
       image: priyaImg,
       distance: "4 km away",
-      online: true,
       profession: "Senior Software Engineer at Microsoft",
       education: "IIT Delhi",
       location: "Gurugram, India",
@@ -64,7 +62,6 @@ export default function Discover() {
       age: 23,
       image: meeraImg,
       distance: "6 km away",
-      online: false,
       profession: "Architect at Design Studio",
       education: "School of Planning & Architecture",
       location: "New Delhi, India",
@@ -80,7 +77,6 @@ export default function Discover() {
       age: 24,
       image: rheaImg,
       distance: "3 km away",
-      online: true,
       profession: "Content Strategist at Zomato",
       education: "St. Xavier's College",
       location: "South Delhi, India",
@@ -210,13 +206,6 @@ export default function Discover() {
               className="w-full h-full object-cover object-top"
             />
 
-            {/* Top Floating Badges */}
-            <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20 pointer-events-auto">
-              <div className="px-3 py-1 rounded-full bg-[#17151A]/60 backdrop-blur-md text-[#FFFFFF] text-[11px] font-bold flex items-center gap-1.5 border border-[#FFFFFF]/20">
-                <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                <span>Online</span>
-              </div>
-            </div>
 
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/95 via-[#17151A]/40 to-transparent pointer-events-none" />

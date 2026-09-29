@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
 import {
   Heart,
-  Users,
   Sparkles,
-  MessageSquare,
-  Download,
+  CheckCircle2,
+  HeartOff,
   Search,
-  Filter,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
-  MapPin,
-  Calendar,
   Eye,
-  Star,
-  UserPlus,
-  MoreHorizontal,
+  Download,
+  Copy,
+  Check,
   X,
-  Clock,
-  ShieldCheck,
-  CheckCircle2,
-  AlertCircle
+  Trash2
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
@@ -41,312 +33,351 @@ const COLORS = {
 export default function AdminMatches() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Matches');
-  const [selectedTabFilter, setSelectedTabFilter] = useState('All');
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [copiedId, setCopiedId] = useState(false);
 
-  // Top 4 KPI Cards matching exact reference image
+  // Top 4 KPI Metric Cards specified by user:
+  // Total Matches, Daily Matches, Successful Matches, Unmatches
   const kpiCards = [
     {
       title: 'Total Matches',
-      value: '12,346',
-      change: '+18% this month',
-      changeColor: '#22C55E',
+      value: '24,580',
       bgColor: '#FF2D72',
       icon: Heart,
     },
     {
-      title: 'Active Matches',
-      value: '8,432',
-      change: '+22% this month',
-      changeColor: '#22C55E',
+      title: 'Daily Matches',
+      value: '1,280',
       bgColor: '#3B82F6',
-      icon: Users,
-    },
-    {
-      title: 'New Matches',
-      value: '1,245',
-      change: '+12% this month',
-      changeColor: '#22C55E',
-      bgColor: '#7C3AED',
       icon: Sparkles,
     },
     {
-      title: 'Messages Exchanged',
-      value: '56,789',
-      change: '+28% this month',
-      changeColor: '#22C55E',
-      bgColor: '#F59E0B',
-      icon: MessageSquare,
+      title: 'Successful Matches',
+      value: '18,420',
+      bgColor: '#22C55E',
+      icon: CheckCircle2,
+    },
+    {
+      title: 'Unmatches',
+      value: '3,140',
+      bgColor: '#EF4444',
+      icon: HeartOff,
     },
   ];
 
-  // Mock Matches Grid Data matching reference image cards
-  const matchesData = [
+  // Mock Matches Table Data matching user requirements:
+  // User A, User B, Match Date, Status, Actions
+  const initialMatchesData = [
     {
       id: 1,
-      name: 'Aaradhya Sharma',
-      age: 25,
-      location: 'Delhi',
-      fullLocation: 'Delhi, India',
-      matchScore: '92% Match',
-      matchScoreColor: '#FF2D72',
-      isOnline: true,
-      lastSeen: 'Online now',
-      timeAgo: '12 Photos',
-      matchedDate: '12 Sep 2026',
-      lastMessage: '2 days ago',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Looking for a kind, honest and fun-loving partner who enjoys travel and meaningful conversations.',
-      height: "5'5\" (165 cm)",
-      profession: 'Marketing Manager',
-      education: 'Delhi University',
-      religion: 'Hindu',
-      lookingFor: 'Relationship',
-      maritalStatus: 'Never Married',
-      languages: 'Hindi, English',
-      smoking: 'Non Smoker',
-      drinking: 'Social Drinker',
-      interests: ['Travel', 'Music', 'Photography', 'Fitness', 'Food', 'Reading'],
-      photos: [
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 4,
+      matchId: 'MCH-009241',
+      userA: {
+        name: 'Rohan Mehta',
+        age: 28,
+        location: 'Mumbai, India',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+        interests: ['Travel', 'Photography', 'Fitness'],
+      },
+      userB: {
+        name: 'Aaradhya Sharma',
+        age: 25,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+        interests: ['Music', 'Coffee', 'Yoga'],
+      },
+      matchDate: '15 Sep 2026',
+      matchTime: '10:24 AM',
+      matchScore: '94% Compatibility',
+      status: 'Successful',
+      statusBg: '#DCFCE7',
+      statusColor: '#16A34A',
+      messagesCount: 142,
+      lastInteraction: '10 mins ago',
     },
     {
       id: 2,
-      name: 'Priya Singh',
-      age: 28,
-      location: 'Mumbai',
-      fullLocation: 'Mumbai, India',
-      matchScore: '88% Match',
-      matchScoreColor: '#7C3AED',
-      isOnline: false,
-      lastSeen: '8 days ago',
-      timeAgo: '36 Photos',
-      matchedDate: '10 Sep 2026',
-      lastMessage: '3 days ago',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'UI/UX Designer who loves watercolors, indie music and pet cafes 🐶🎨',
-      height: "5'4\" (162 cm)",
-      profession: 'UI/UX Designer',
-      education: 'NIFT Bangalore',
-      religion: 'Hindu',
-      lookingFor: 'Dating',
-      maritalStatus: 'Never Married',
-      languages: 'English, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Social Drinker',
-      interests: ['Art', 'Design', 'Pets', 'Music', 'Cafes'],
-      photos: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009240',
+      userA: {
+        name: 'Karan Verma',
+        age: 29,
+        location: 'Bangalore, India',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+        interests: ['Startups', 'Badminton', 'Movies'],
+      },
+      userB: {
+        name: 'Priya Singh',
+        age: 26,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+        interests: ['Cooking', 'Art', 'Dogs'],
+      },
+      matchDate: '15 Sep 2026',
+      matchTime: '09:18 AM',
+      matchScore: '89% Compatibility',
+      status: 'Daily Matches',
+      statusBg: '#DBEAFE',
+      statusColor: '#2563EB',
+      messagesCount: 68,
+      lastInteraction: '1 hour ago',
     },
     {
       id: 3,
-      name: 'Neha Patel',
-      age: 26,
-      location: 'Bangalore',
-      fullLocation: 'Bangalore, India',
-      matchScore: '85% Match',
-      matchScoreColor: '#3B82F6',
-      isOnline: true,
-      lastSeen: 'Online now',
-      timeAgo: '42 Photos',
-      matchedDate: '08 Sep 2026',
-      lastMessage: '1 day ago',
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Classical dancer & financial analyst. Living life one step at a time.',
-      height: "5'6\" (167 cm)",
-      profession: 'Financial Analyst',
-      education: 'Loyola College',
-      religion: 'Hindu',
-      lookingFor: 'Long-term',
-      maritalStatus: 'Never Married',
-      languages: 'English, Tamil, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Non Drinker',
-      interests: ['Dance', 'Yoga', 'Finance', 'Cooking'],
-      photos: [
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009239',
+      userA: {
+        name: 'Rahul Mehta',
+        age: 32,
+        location: 'Gurgaon, India',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+        interests: ['Reading', 'Cricket', 'Finance'],
+      },
+      userB: {
+        name: 'Neha Patel',
+        age: 28,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+        interests: ['Travel', 'Writing', 'Pets'],
+      },
+      matchDate: '14 Sep 2026',
+      matchTime: '08:55 PM',
+      matchScore: '91% Compatibility',
+      status: 'Successful',
+      statusBg: '#DCFCE7',
+      statusColor: '#16A34A',
+      messagesCount: 215,
+      lastInteraction: 'Yesterday',
     },
     {
       id: 4,
-      name: 'Sneha Reddy',
-      age: 27,
-      location: 'Hyderabad',
-      fullLocation: 'Hyderabad, India',
-      matchScore: '82% Match',
-      matchScoreColor: '#F59E0B',
-      isOnline: false,
-      lastSeen: 'Last seen 1 hour ago',
-      timeAgo: '21 days ago',
-      matchedDate: '05 Sep 2026',
-      lastMessage: '5 hours ago',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Software engineer passionate about AI, weekend roadtrips and good coffee.',
-      height: "5'5\" (165 cm)",
-      profession: 'Software Engineer',
-      education: 'IIIT Hyderabad',
-      religion: 'Hindu',
-      lookingFor: 'Relationship',
-      maritalStatus: 'Never Married',
-      languages: 'English, Telugu, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Social Drinker',
-      interests: ['AI', 'Coding', 'Roadtrips', 'Coffee'],
-      photos: [
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009238',
+      userA: {
+        name: 'Amit Kumar',
+        age: 29,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
+        interests: ['Gaming', 'Tech', 'Music'],
+      },
+      userB: {
+        name: 'Sneha Reddy',
+        age: 27,
+        location: 'Hyderabad, India',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
+        interests: ['Dancing', 'Design', 'Anime'],
+      },
+      matchDate: '14 Sep 2026',
+      matchTime: '07:42 PM',
+      matchScore: '86% Compatibility',
+      status: 'Daily Matches',
+      statusBg: '#DBEAFE',
+      statusColor: '#2563EB',
+      messagesCount: 42,
+      lastInteraction: '2 hours ago',
     },
     {
       id: 5,
-      name: 'Karan Verma',
-      age: 29,
-      location: 'Pune',
-      fullLocation: 'Pune, India',
-      matchScore: '78% Match',
-      matchScoreColor: '#7C3AED',
-      isOnline: true,
-      lastSeen: 'Online now',
-      timeAgo: '15 days ago',
-      matchedDate: '02 Sep 2026',
-      lastMessage: 'Just now',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80',
-      isVerified: false,
-      aboutMe: 'Architect who loves photography, urban sketch & filter coffee.',
-      height: "5'10\" (178 cm)",
-      profession: 'Architect',
-      education: 'COEP Pune',
-      religion: 'Hindu',
-      lookingFor: 'Casual / Dating',
-      maritalStatus: 'Never Married',
-      languages: 'English, Hindi, Marathi',
-      smoking: 'Occasional',
-      drinking: 'Social Drinker',
-      interests: ['Architecture', 'Photography', 'Sketching'],
-      photos: [
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009237',
+      userA: {
+        name: 'Vikram Singh',
+        age: 31,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80',
+        interests: ['Gym', 'Biking', 'Rock Music'],
+      },
+      userB: {
+        name: 'Pooja Verma',
+        age: 29,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+        interests: ['Baking', 'Yoga', 'Podcasts'],
+      },
+      matchDate: '14 Sep 2026',
+      matchTime: '05:21 PM',
+      matchScore: '78% Compatibility',
+      status: 'Unmatches',
+      statusBg: '#FFE4E6',
+      statusColor: '#E11D48',
+      messagesCount: 14,
+      lastInteraction: 'Unmatched 14 Sep',
     },
     {
       id: 6,
-      name: 'Amit Kumar',
-      age: 30,
-      location: 'Noida',
-      fullLocation: 'Noida, India',
-      matchScore: '75% Match',
-      matchScoreColor: '#3B82F6',
-      isOnline: false,
-      lastSeen: 'Last seen 2 hours ago',
-      timeAgo: '24 Photos',
-      matchedDate: '30 Aug 2026',
-      lastMessage: 'Yesterday',
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Investment banker, fitness fanatic and avid reader.',
-      height: "5'11\" (180 cm)",
-      profession: 'Investment Banker',
-      education: 'IIM Ahmedabad',
-      religion: 'Hindu',
-      lookingFor: 'Marriage',
-      maritalStatus: 'Never Married',
-      languages: 'English, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Non Drinker',
-      interests: ['Finance', 'Fitness', 'Reading'],
-      photos: [
-        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009236',
+      userA: {
+        name: 'Alisha Verma',
+        age: 25,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+        interests: ['Fashion', 'Singing', 'Travel'],
+      },
+      userB: {
+        name: 'Riya Malhotra',
+        age: 26,
+        location: 'Noida, India',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+        interests: ['Poetry', 'Coffee', 'Nature'],
+      },
+      matchDate: '14 Sep 2026',
+      matchTime: '03:12 PM',
+      matchScore: '96% Compatibility',
+      status: 'Successful',
+      statusBg: '#DCFCE7',
+      statusColor: '#16A34A',
+      messagesCount: 310,
+      lastInteraction: 'Active now',
     },
     {
       id: 7,
-      name: 'Rahul Mehta',
-      age: 32,
-      location: 'Gurgaon',
-      fullLocation: 'Gurgaon, India',
-      matchScore: '72% Match',
-      matchScoreColor: '#22C55E',
-      isOnline: true,
-      lastSeen: 'Online now',
-      timeAgo: '11 days ago',
-      matchedDate: '28 Aug 2026',
-      lastMessage: '3 hours ago',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Startup founder & technology enthusiast.',
-      height: "6'0\" (183 cm)",
-      profession: 'Founder & CEO',
-      education: 'IIT Delhi',
-      religion: 'Hindu',
-      lookingFor: 'Long-term',
-      maritalStatus: 'Never Married',
-      languages: 'English, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Social Drinker',
-      interests: ['Startups', 'Tech', 'Tennis'],
-      photos: [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009235',
+      userA: {
+        name: 'Karan Sharma',
+        age: 30,
+        location: 'Bangalore, India',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+        interests: ['Hiking', 'Guitar', 'Dogs'],
+      },
+      userB: {
+        name: 'Simran Kaur',
+        age: 28,
+        location: 'Chandigarh, India',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+        interests: ['Literature', 'Cafes', 'Bhangra'],
+      },
+      matchDate: '13 Sep 2026',
+      matchTime: '11:24 AM',
+      matchScore: '84% Compatibility',
+      status: 'Daily Matches',
+      statusBg: '#DBEAFE',
+      statusColor: '#2563EB',
+      messagesCount: 55,
+      lastInteraction: 'Yesterday',
     },
     {
       id: 8,
-      name: 'Pooja Verma',
-      age: 27,
-      location: 'Chennai',
-      fullLocation: 'Chennai, India',
-      matchScore: '70% Match',
-      matchScoreColor: '#FF2D72',
-      isOnline: false,
-      lastSeen: 'Last seen 5 hours ago',
-      timeAgo: '7 days ago',
-      matchedDate: '25 Aug 2026',
-      lastMessage: '4 days ago',
-      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80',
-      isVerified: true,
-      aboutMe: 'Fashion designer who loves music festivals and exploring new cities.',
-      height: "5'5\" (165 cm)",
-      profession: 'Fashion Designer',
-      education: 'NIFT Chennai',
-      religion: 'Hindu',
-      lookingFor: 'Relationship',
-      maritalStatus: 'Never Married',
-      languages: 'English, Tamil, Hindi',
-      smoking: 'Non Smoker',
-      drinking: 'Social Drinker',
-      interests: ['Fashion', 'Music', 'Travel'],
-      photos: [
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
-      ],
-      extraPhotoCount: 0,
+      matchId: 'MCH-009234',
+      userA: {
+        name: 'Tanya Gupta',
+        age: 24,
+        location: 'Lucknow, India',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
+        interests: ['Painting', 'Food', 'Cinema'],
+      },
+      userB: {
+        name: 'Vikram Singh',
+        age: 31,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80',
+        interests: ['Fitness', 'Adventure', 'Music'],
+      },
+      matchDate: '13 Sep 2026',
+      matchTime: '10:10 AM',
+      matchScore: '92% Compatibility',
+      status: 'Successful',
+      statusBg: '#DCFCE7',
+      statusColor: '#16A34A',
+      messagesCount: 184,
+      lastInteraction: '3 hours ago',
+    },
+    {
+      id: 9,
+      matchId: 'MCH-009233',
+      userA: {
+        name: 'Dev Malhotra',
+        age: 32,
+        location: 'Noida, India',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+        interests: ['Running', 'Podcasts', 'Cars'],
+      },
+      userB: {
+        name: 'Nisha Kapoor',
+        age: 28,
+        location: 'Chennai, India',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+        interests: ['Coding', 'Board Games', 'Cats'],
+      },
+      matchDate: '12 Sep 2026',
+      matchTime: '08:36 PM',
+      matchScore: '72% Compatibility',
+      status: 'Unmatches',
+      statusBg: '#FFE4E6',
+      statusColor: '#E11D48',
+      messagesCount: 8,
+      lastInteraction: 'Unmatched 12 Sep',
+    },
+    {
+      id: 10,
+      matchId: 'MCH-009232',
+      userA: {
+        name: 'Rahul Das',
+        age: 27,
+        location: 'Kolkata, India',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+        interests: ['Football', 'Street Food', 'Philosophy'],
+      },
+      userB: {
+        name: 'Sneha Reddy',
+        age: 27,
+        location: 'Hyderabad, India',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+        interests: ['Design', 'Reading', 'Travel'],
+      },
+      matchDate: '12 Sep 2026',
+      matchTime: '06:14 PM',
+      matchScore: '88% Compatibility',
+      status: 'Daily Matches',
+      statusBg: '#DBEAFE',
+      statusColor: '#2563EB',
+      messagesCount: 76,
+      lastInteraction: '12 Sep 2026',
     },
   ];
 
-  const currentSelected = selectedMatch || matchesData[0];
+  const [matchesData, setMatchesData] = useState(initialMatchesData);
+  const [selectedMatchIds, setSelectedMatchIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter items based on active pill
   const filteredMatches = matchesData.filter((item) => {
-    if (selectedTabFilter === 'All') return true;
-    if (selectedTabFilter === 'New') return item.matchedDate.includes('12 Sep');
-    if (selectedTabFilter === 'Active') return item.isOnline;
-    return true;
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      item.userA.name.toLowerCase().includes(term) ||
+      item.userB.name.toLowerCase().includes(term) ||
+      item.matchId.toLowerCase().includes(term) ||
+      item.status.toLowerCase().includes(term)
+    );
   });
+
+  const currentSelected =
+    selectedMatch && matchesData.some((m) => m.id === selectedMatch.id)
+      ? selectedMatch
+      : matchesData[0] || null;
+
+  const isAllSelected =
+    filteredMatches.length > 0 &&
+    filteredMatches.every((item) => selectedMatchIds.includes(item.id));
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedMatchIds([]);
+    } else {
+      setSelectedMatchIds(filteredMatches.map((item) => item.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedMatchIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedMatchIds.length === 0) return;
+    setMatchesData((prev) => prev.filter((item) => !selectedMatchIds.includes(item.id)));
+    setSelectedMatchIds([]);
+  };
+
+  const handleDeleteMatch = (id) => {
+    setMatchesData((prev) => prev.filter((item) => item.id !== id));
+    setSelectedMatchIds((prev) => prev.filter((item) => item !== id));
+  };
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -355,7 +386,7 @@ export default function AdminMatches() {
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* SIDEBAR NAVIGATION */}
-        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} />
+        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -363,22 +394,15 @@ export default function AdminMatches() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
-                Matches Management
+                Match Management
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
-                Manage and monitor user matches, compatibility and activity
+              <p className="text-sm text-gray-400 mt-1">
+                Monitor user matches, daily match rates, successful connections, and unmatches
               </p>
             </div>
-            <button
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-xs shadow-sm transition-all hover:opacity-90 self-start sm:self-auto cursor-pointer"
-              style={{ backgroundColor: COLORS.pink }}
-            >
-              <Download className="w-4 h-4" />
-              <span>Export Matches</span>
-            </button>
           </div>
 
-          {/* TOP 4 KPI CARDS */}
+          {/* TOP 4 KPI CARDS (Total Matches, Daily Matches, Successful Matches, Unmatches) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpiCards.map((kpi, idx) => {
               const Icon = kpi.icon;
@@ -395,7 +419,7 @@ export default function AdminMatches() {
                     <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>
@@ -405,202 +429,169 @@ export default function AdminMatches() {
             })}
           </div>
 
-          {/* FILTER TABS & SEARCH CONTROLS */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
-              {[
-                { label: 'All Matches', count: '12,346', key: 'All' },
-                { label: 'New', count: '1,245', key: 'New' },
-                { label: 'Active', count: '8,432', key: 'Active' },
-                { label: 'Favorites', count: '892', key: 'Favorites' },
-                { label: 'Blocked', count: '86', key: 'Blocked' },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setSelectedTabFilter(tab.key)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                    selectedTabFilter === tab.key
-                      ? 'text-white shadow-xs'
-                      : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                  style={{
-                    backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
-                  }}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
-
-            {/* Filter Inputs & Dropdowns */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              <div className="relative w-full md:w-72">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email or location..."
-                  className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Gender</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>All</option>
-                    <option>Female</option>
-                    <option>Male</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Age Range</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>18 - 60</option>
-                    <option>18 - 25</option>
-                    <option>26 - 35</option>
-                    <option>36+</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Location</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>All Locations</option>
-                    <option>Delhi</option>
-                    <option>Mumbai</option>
-                    <option>Bangalore</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Match Type</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>All Types</option>
-                    <option>Mutual Match</option>
-                    <option>Super Like</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <span className="text-xs font-medium text-gray-400 hidden sm:inline">Sort By</span>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none w-full md:w-auto">
-                    <option>Latest Match</option>
-                    <option>Highest Match %</option>
-                  </select>
-                </div>
-
-                <button
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
-                  style={{ backgroundColor: COLORS.pink }}
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Filter</span>
-                </button>
-
-                <button className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5 cursor-pointer">
-                  Reset
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* MAIN MATCHES GRID AND RIGHT USER DETAIL PREVIEW SPLIT */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* MATCH CARDS GRID (2 Cols wide on XL) */}
-            <div className="xl:col-span-2 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredMatches.map((item) => {
-                  const isSelected = currentSelected.id === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedMatch(item);
-                        setActivePhotoIdx(0);
-                      }}
-                      className={`bg-white rounded-2xl overflow-hidden border shadow-sm transition-all cursor-pointer flex flex-col justify-between ${
-                        isSelected ? 'ring-2 ring-[#FF2D72] border-transparent shadow-md' : 'border-gray-100 hover:border-pink-200'
-                      }`}
+          {/* TABLE AND RIGHT MATCH DETAILS PANEL SPLIT */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            {/* MATCHES TABLE (2 Cols wide on XL) */}
+            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+              {/* Table Header & Search Bar */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-700">All Matches</span>
+                  {selectedMatchIds.length > 0 && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
-                      {/* Card Image Header */}
-                      <div className="relative h-44 w-full bg-gray-100">
-                        <img
-                          src={item.avatar}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                        {/* Heart Icon Floating Badge */}
-                        <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#FF2D72] shadow-xs">
-                          <Heart className="w-3.5 h-3.5 fill-[#FF2D72]" />
-                        </div>
-                      </div>
-
-                      {/* Card Content Details */}
-                      <div className="p-3.5 space-y-2">
-                        <div>
-                          <h3 className="font-extrabold text-sm text-gray-900 leading-tight">
-                            {item.name}
-                          </h3>
-                          <p className="text-[11px] text-gray-400 font-medium">
-                            📍 {item.age}, {item.location}
-                          </p>
-                        </div>
-
-                        {/* Match Percentage Badge */}
-                        <div
-                          className="font-extrabold text-xs"
-                          style={{ color: item.matchScoreColor }}
-                        >
-                          {item.matchScore}
-                        </div>
-
-                        {/* Online status and photo count */}
-                        <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium pt-1">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`w-2 h-2 rounded-full ${
-                                item.isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
-                              }`}
-                            ></span>
-                            <span className={item.isOnline ? 'text-green-600 font-bold' : ''}>
-                              {item.lastSeen}
-                            </span>
-                          </div>
-                          <span className="flex items-center gap-1">
-                            📷 {item.timeAgo}
-                          </span>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedMatch(item);
-                            }}
-                            className="py-1.5 rounded-xl font-bold text-[11px] text-white transition-all shadow-2xs text-center cursor-pointer"
-                            style={{ backgroundColor: COLORS.pink }}
-                          >
-                            View Profile
-                          </button>
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="py-1.5 rounded-xl font-bold text-[11px] text-[#FF2D72] bg-pink-50 transition-all text-center flex items-center justify-center gap-1 cursor-pointer"
-                          >
-                            💬 Message
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Selected ({selectedMatchIds.length})</span>
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedMatchIds.length > 0 && (
+                    <span className="text-xs font-semibold text-gray-500">
+                      {selectedMatchIds.length} of {filteredMatches.length} selected
+                    </span>
+                  )}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search User A or B..."
+                      className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Pagination matching reference UI */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between text-xs text-gray-400">
-                <span>Showing 1 to 8 of 12,346 matches</span>
+              {/* Table with columns: User A, User B, Match Date, Actions */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[650px]">
+                  <thead>
+                    <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
+                      <th className="pb-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={isAllSelected}
+                          onChange={handleSelectAll}
+                          className="rounded text-[#FF2D72] focus:ring-0 cursor-pointer"
+                        />
+                      </th>
+                      <th className="pb-3 font-semibold">User A</th>
+                      <th className="pb-3 font-semibold">User B</th>
+                      <th className="pb-3 font-semibold">Match Date</th>
+                      <th className="pb-3 font-semibold text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredMatches.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="py-8 text-center text-gray-400">
+                          No matches found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredMatches.map((item) => {
+                        const isSelected = currentSelected && currentSelected.id === item.id;
+                        const isChecked = selectedMatchIds.includes(item.id);
+                        return (
+                          <tr
+                            key={item.id}
+                            onClick={() => setSelectedMatch(item)}
+                            className={`cursor-pointer transition-colors ${
+                              isChecked ? 'bg-pink-50/40' : isSelected ? 'bg-pink-50/20' : 'hover:bg-gray-50/50'
+                            }`}
+                          >
+                            <td className="py-3">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSelect(item.id);
+                                }}
+                                className="rounded text-[#FF2D72] focus:ring-0 cursor-pointer"
+                              />
+                            </td>
+
+                            {/* User A */}
+                            <td className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.userA.avatar}
+                                  alt={item.userA.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                />
+                                <div>
+                                  <div className="font-bold text-gray-900">{item.userA.name}</div>
+                                  <div className="text-gray-400 text-[10px]">
+                                    {item.userA.age} yrs • {item.userA.location.split(',')[0]}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* User B */}
+                            <td className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.userB.avatar}
+                                  alt={item.userB.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                />
+                                <div>
+                                  <div className="font-bold text-gray-900">{item.userB.name}</div>
+                                  <div className="text-gray-400 text-[10px]">
+                                    {item.userB.age} yrs • {item.userB.location.split(',')[0]}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Match Date */}
+                            <td className="py-3">
+                              <div className="font-semibold text-gray-800">{item.matchDate}</div>
+                              <div className="text-gray-400 text-[10px]">{item.matchTime}</div>
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedMatch(item);
+                                  }}
+                                  title="View Match Details"
+                                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#FF2D72] hover:bg-pink-50 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteMatch(item.id);
+                                  }}
+                                  title="Delete Match"
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
+                <span>Showing {filteredMatches.length > 0 ? 1 : 0} to {filteredMatches.length} of {matchesData.length} matches</span>
                 <div className="flex items-center gap-2">
                   <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
                     <option>10 per page</option>
@@ -622,15 +613,9 @@ export default function AdminMatches() {
                     <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
                       3
                     </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      4
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      5
-                    </button>
                     <span className="text-gray-400">...</span>
-                    <button className="w-8 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      1,544
+                    <button className="w-7 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
+                      844
                     </button>
                     <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
@@ -640,154 +625,127 @@ export default function AdminMatches() {
               </div>
             </div>
 
-            {/* RIGHT MATCH USER DETAIL PREVIEW PANEL matching reference image */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
-              <div>
-                {/* Image Header with Online badge & close button */}
-                <div className="relative rounded-2xl overflow-hidden h-52 mb-3">
-                  <img
-                    src={currentSelected.photos[activePhotoIdx] || currentSelected.avatar}
-                    alt={currentSelected.name}
-                    className="w-full h-full object-cover"
+            {/* RIGHT MATCH DETAILS PREVIEW PANEL */}
+            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit transition-all">
+              {currentSelected ? (
+                <>
+                  {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full inline-block animate-pulse"
+                    style={{ backgroundColor: currentSelected.statusColor }}
                   />
-                  <button className="absolute top-3 right-3 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                  {currentSelected.isOnline && (
-                    <div className="absolute bottom-3 right-3 bg-green-500 text-white px-2.5 py-0.5 rounded-full font-bold text-[10px] flex items-center gap-1 shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                      Online now
-                    </div>
+                  <h3 className="font-extrabold text-sm text-gray-900">Match Details</h3>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
+                    style={{
+                      backgroundColor: currentSelected.statusBg,
+                      color: currentSelected.statusColor,
+                    }}
+                  >
+                    {currentSelected.status}
+                  </span>
+                  {selectedMatch && (
+                    <button
+                      onClick={() => setSelectedMatch(null)}
+                      title="Reset selection"
+                      className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
+              </div>
 
-                {/* Profile Header Title */}
-                <div>
-                  <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-1.5">
-                    {currentSelected.name}
-                    {currentSelected.isVerified && (
-                      <ShieldCheck className="w-4 h-4 text-sky-500 fill-sky-500" />
-                    )}
-                  </h2>
-                  <p className="text-xs text-gray-400 font-medium">
-                    {currentSelected.age} Years • {currentSelected.fullLocation}
-                  </p>
+              {/* Connected Couple Match Visual Card */}
+              <div className="p-4 bg-gradient-to-r from-pink-50/80 via-rose-50/40 to-purple-50/60 rounded-2xl border border-pink-100/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  {/* User A */}
+                  <div className="flex flex-col items-center text-center">
+                    <img
+                      src={currentSelected.userA.avatar}
+                      alt={currentSelected.userA.name}
+                      className="w-14 h-14 rounded-full object-cover ring-3 ring-white shadow-xs"
+                    />
+                    <span className="font-bold text-xs text-gray-900 mt-1.5">{currentSelected.userA.name}</span>
+                    <span className="text-[10px] text-gray-400">{currentSelected.userA.age} yrs</span>
+                  </div>
+
+                  {/* Connected Heart Indicator */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-white shadow-xs flex items-center justify-center border border-pink-100">
+                      <Heart className="w-4 h-4 text-[#FF2D72] fill-current animate-pulse" />
+                    </div>
+                    <span className="text-[9px] font-bold text-[#FF2D72] mt-1">Matched</span>
+                  </div>
+
+                  {/* User B */}
+                  <div className="flex flex-col items-center text-center">
+                    <img
+                      src={currentSelected.userB.avatar}
+                      alt={currentSelected.userB.name}
+                      className="w-14 h-14 rounded-full object-cover ring-3 ring-white shadow-xs"
+                    />
+                    <span className="font-bold text-xs text-gray-900 mt-1.5">{currentSelected.userB.name}</span>
+                    <span className="text-[10px] text-gray-400">{currentSelected.userB.age} yrs</span>
+                  </div>
                 </div>
+              </div>
 
-                {/* Quick Action Pill Buttons */}
-                <div className="grid grid-cols-4 gap-2 my-3">
-                  <button
-                    className="py-2 rounded-xl text-white font-bold text-[11px] flex flex-col items-center justify-center gap-0.5 shadow-2xs cursor-pointer"
-                    style={{ backgroundColor: COLORS.pink }}
-                  >
-                    <span>💬</span>
-                    <span>Message</span>
-                  </button>
-                  <button className="py-2 rounded-xl bg-pink-50 text-[#FF2D72] font-bold text-[11px] flex flex-col items-center justify-center gap-0.5 cursor-pointer">
-                    <span>❤️</span>
-                    <span>Like</span>
-                  </button>
-                  <button className="py-2 rounded-xl bg-purple-50 text-purple-600 font-bold text-[10px] flex flex-col items-center justify-center gap-0.5 cursor-pointer">
-                    <span>⭐</span>
-                    <span>Add to Favorites</span>
-                  </button>
-                  <button className="py-2 rounded-xl bg-gray-50 text-gray-600 font-bold text-[11px] flex flex-col items-center justify-center gap-0.5 cursor-pointer">
-                    <MoreHorizontal className="w-3.5 h-3.5" />
-                    <span>More</span>
-                  </button>
-                </div>
-
-                {/* About Me Section */}
-                <div className="space-y-3 text-xs border-t border-gray-100 pt-3">
-                  <h4 className="font-bold text-gray-900 text-xs">About Me</h4>
-                  <p className="text-gray-600 leading-relaxed text-[11px]">
-                    {currentSelected.aboutMe}
-                  </p>
-
-                  {/* 2-Column Info Grid matching exact layout in image */}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] text-gray-600 pt-1">
-                    <div><span className="text-gray-400 font-medium">📏 Height:</span> <span className="font-semibold text-gray-800">{currentSelected.height}</span></div>
-                    <div><span className="text-gray-400 font-medium">📍 Location:</span> <span className="font-semibold text-gray-800">{currentSelected.location}, India</span></div>
-                    <div><span className="text-gray-400 font-medium">💼 Profession:</span> <span className="font-semibold text-gray-800">{currentSelected.profession}</span></div>
-                    <div><span className="text-gray-400 font-medium">💍 Marital Status:</span> <span className="font-semibold text-gray-800">{currentSelected.maritalStatus}</span></div>
-                    <div><span className="text-gray-400 font-medium">🎓 Education:</span> <span className="font-semibold text-gray-800">{currentSelected.education}</span></div>
-                    <div><span className="text-gray-400 font-medium">🗣️ Languages:</span> <span className="font-semibold text-gray-800">{currentSelected.languages}</span></div>
-                    <div><span className="text-gray-400 font-medium">🕉️ Religion:</span> <span className="font-semibold text-gray-800">{currentSelected.religion}</span></div>
-                    <div><span className="text-gray-400 font-medium">🚭 Smoking:</span> <span className="font-semibold text-gray-800">{currentSelected.smoking}</span></div>
-                    <div><span className="text-gray-400 font-medium">🔎 Looking For:</span> <span className="font-semibold text-gray-800">{currentSelected.lookingFor}</span></div>
-                    <div><span className="text-gray-400 font-medium">🍷 Drinking:</span> <span className="font-semibold text-gray-800">{currentSelected.drinking}</span></div>
+              {/* Match Key Information Breakdown */}
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Match ID</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-gray-800 text-[11px]">{currentSelected.matchId}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard?.writeText(currentSelected.matchId);
+                        setCopiedId(true);
+                        setTimeout(() => setCopiedId(false), 2000);
+                      }}
+                      className="text-gray-400 hover:text-gray-700 p-0.5 rounded cursor-pointer transition-colors"
+                      title="Copy Match ID"
+                    >
+                      {copiedId ? (
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Interests */}
-                <div className="pt-3 border-t border-gray-100">
-                  <h4 className="font-bold text-gray-900 text-xs mb-2">Interests</h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentSelected.interests.map((interest, iIdx) => (
+                <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Match Date & Time</span>
+                  <span className="font-medium text-gray-700 text-[11px]">
+                    {currentSelected.matchDate}, {currentSelected.matchTime}
+                  </span>
+                </div>
+
+                <div className="py-1.5">
+                  <span className="text-gray-400 font-medium block mb-1.5">Common Interests</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {currentSelected.userA.interests.map((interest, iIdx) => (
                       <span
                         key={iIdx}
-                        className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700"
+                        className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-100"
                       >
                         {interest}
                       </span>
                     ))}
                   </div>
                 </div>
-
-                {/* Photos Grid */}
-                <div className="pt-3 border-t border-gray-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-bold text-gray-900 text-xs">Photos ({currentSelected.photos.length + currentSelected.extraPhotoCount})</h4>
-                    <button className="text-[11px] font-bold" style={{ color: COLORS.pink }}>
-                      View All
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {currentSelected.photos.map((pUrl, pIdx) => (
-                      <div
-                        key={pIdx}
-                        onClick={() => setActivePhotoIdx(pIdx)}
-                        className={`relative rounded-lg overflow-hidden h-14 cursor-pointer border-2 ${
-                          activePhotoIdx === pIdx ? 'border-[#FF2D72]' : 'border-transparent'
-                        }`}
-                      >
-                        <img src={pUrl} alt="Photo" className="w-full h-full object-cover" />
-                        {pIdx === currentSelected.photos.length - 1 && currentSelected.extraPhotoCount > 0 && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-extrabold text-xs">
-                            +{currentSelected.extraPhotoCount}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="pt-3 border-t border-gray-100 space-y-2 text-xs">
-                  <h4 className="font-bold text-gray-900 text-xs mb-1">Recent Activity</h4>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-2 text-gray-600 font-medium">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      <span>Online now</span>
-                    </div>
-                    <span className="text-gray-400">Just now</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-2 text-gray-600 font-medium">
-                      <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                      <span>Last message</span>
-                    </div>
-                    <span className="text-gray-400">{currentSelected.lastMessage}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-2 text-gray-600 font-medium">
-                      <Heart className="w-3.5 h-3.5 text-[#FF2D72] fill-[#FF2D72]" />
-                      <span>Matched on</span>
-                    </div>
-                    <span className="text-gray-400">{currentSelected.matchedDate}</span>
-                  </div>
-                </div>
               </div>
+                </>
+              ) : (
+                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
+                  No match selected
+                </div>
+              )}
             </div>
           </div>
         </main>

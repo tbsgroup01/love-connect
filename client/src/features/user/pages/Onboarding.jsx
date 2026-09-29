@@ -1,5 +1,5 @@
-import React, { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Heart,
   ChevronRight,
@@ -13,15 +13,15 @@ import {
   Flame,
   ArrowRight,
   MessageCircle,
-} from "lucide-react"
-import loveConnectLogo from "../../../assets/loveconnect.png"
-import step1CoupleImg from "../../../assets/hero_couple.jpg"
-import step2WomanImg from "../../../assets/hero_woman.jpg"
-import step3RomanticImg from "../../../assets/hero_couple_romantic.jpg"
+} from "lucide-react";
+import loveConnectLogo from "../../../assets/loveconnect.png";
+import step1CoupleImg from "../../../assets/hero_couple.jpg";
+import step2WomanImg from "../../../assets/hero_woman.jpg";
+import step3RomanticImg from "../../../assets/hero_couple_romantic.jpg";
 
 export default function Onboarding() {
-  const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(0)
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
     {
@@ -114,27 +114,27 @@ export default function Onboarding() {
       ],
       buttonText: "Get Started — Create Profile",
     },
-  ]
+  ];
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     } else {
-      navigate("/create-profile")
+      navigate("/create-profile");
     }
-  }
+  };
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1)
+      setCurrentStep((prev) => prev - 1);
     }
-  }
+  };
 
   const handleSkip = () => {
-    navigate("/create-profile")
-  }
+    navigate("/create-profile");
+  };
 
-  const step = steps[currentStep]
+  const step = steps[currentStep];
 
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-sans select-none">
@@ -155,7 +155,11 @@ export default function Onboarding() {
       {/* TOP HEADER: Logo & Step Progression Pills                 */}
       {/* ========================================================= */}
       <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-3 sm:pb-4 border-b border-[#FFE7F0]/80">
-        <Link to="/" title="Return to Home" className="flex items-center gap-2 group cursor-pointer">
+        <Link
+          to="/"
+          title="Return to Home"
+          className="flex items-center gap-2 group cursor-pointer"
+        >
           <img
             src={loveConnectLogo}
             alt="LoveConnect"
@@ -174,11 +178,13 @@ export default function Onboarding() {
                 currentStep === idx
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#ff4a86] text-white shadow-xs shadow-[#FF2D72]/30 scale-102"
                   : currentStep > idx
-                  ? "bg-[#FFE7F0] text-[#FF2D72]"
-                  : "text-slate-400 hover:text-slate-700"
+                    ? "bg-[#FFE7F0] text-[#FF2D72]"
+                    : "text-slate-400 hover:text-slate-700"
               }`}
             >
-              {currentStep > idx && <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />}
+              {currentStep > idx && (
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+              )}
               <span>{s.pillTitle}</span>
             </button>
           ))}
@@ -197,12 +203,10 @@ export default function Onboarding() {
       {/* ========================================================= */}
       <main className="relative z-10 w-full max-w-7xl mx-auto my-auto flex-1 flex flex-col justify-center py-2 sm:py-4">
         <div className="bg-white/95 backdrop-blur-xl rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:h-[78vh] transition-all duration-500">
-          
           {/* ------------------------------------------------------- */}
           {/* LEFT COLUMN: Storytelling, Features & Step Navigation   */}
           {/* ------------------------------------------------------- */}
           <div className="lg:col-span-6 p-6 sm:p-10 lg:p-12 flex flex-col justify-between order-2 lg:order-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            
             <div>
               {/* Step Tag & Live Chemistry Pill */}
               <div className="flex items-center gap-2 mb-3">
@@ -231,7 +235,7 @@ export default function Onboarding() {
               {/* Feature Perks List */}
               <div className="space-y-3.5 mt-6 sm:mt-8">
                 {step.perks.map((perk, i) => {
-                  const Icon = perk.icon
+                  const Icon = perk.icon;
                   return (
                     <div
                       key={i}
@@ -249,7 +253,7 @@ export default function Onboarding() {
                         </p>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -296,14 +300,12 @@ export default function Onboarding() {
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* ------------------------------------------------------- */}
           {/* RIGHT COLUMN: Big Visual Showcase & Floating Badges     */}
           {/* ------------------------------------------------------- */}
           <div className="lg:col-span-6 relative min-h-[300px] sm:min-h-[380px] lg:min-h-0 order-1 lg:order-2 overflow-hidden bg-[#17151A] group">
-            
             {/* Main Stage Image with smooth cross-fade */}
             <img
               key={currentStep}
@@ -347,9 +349,7 @@ export default function Onboarding() {
                 </div>
               </div>
             </div>
-
           </div>
-
         </div>
       </main>
 
@@ -370,5 +370,5 @@ export default function Onboarding() {
         </p>
       </footer>
     </div>
-  )
+  );
 }

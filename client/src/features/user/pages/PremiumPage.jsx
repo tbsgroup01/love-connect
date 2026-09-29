@@ -26,7 +26,7 @@ const FEATURES = [
   { icon: Heart, title: 'Unlimited Likes', desc: 'Send as many likes as you want without daily cooldown limits.' },
   { icon: Eye, title: 'See Who Likes You', desc: 'Instant grid access to every user who has already swiped right on you.' },
   { icon: Sliders, title: 'Advanced Filters', desc: 'Filter profiles by exact height, education, verified badges, and habits.' },
-  { icon: Zap, title: '1 Free Profile Boost / Week', desc: 'Get up to 10x more profile views by spotlighting to top of local deck.' },
+  { icon: Zap, title: '1 Free Profile Boost / Week', desc: 'Get up to 10x more profile visibility by spotlighting to top of local deck.' },
   { icon: RotateCcw, title: 'Unlimited Rewind Swipe', desc: 'Accidentally swiped left? Tap rewind anytime to bring them back.' },
   { icon: Sparkles, title: '5 Free Super Likes / Week', desc: 'Stand out from the crowd with highlighted notifications and glowing cards.' },
   { icon: ShieldCheck, title: 'Priority Verified Badge', desc: 'Fast-track identity verification and display the royal VIP checkmark.' },

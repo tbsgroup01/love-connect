@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-
   Mail,
   Lock,
   Eye,
@@ -12,26 +11,26 @@ import {
   Users,
   User,
   Sparkles,
-  LockKeyhole
-} from "lucide-react"
-import loginCoupleImg from "../../../assets/login_couple.jpg"
-import loveConnectLogo from "../../../assets/loveconnect.png"
+  LockKeyhole,
+} from "lucide-react";
+import loginCoupleImg from "../../../assets/login_couple.jpg";
+import loveConnectLogo from "../../../assets/loveconnect.png";
 
 export default function Login({ initialMode = "login" }) {
-  const [mode, setMode] = useState(initialMode) // "login" | "signup"
+  const [mode, setMode] = useState(initialMode); // "login" | "signup"
 
   useEffect(() => {
-    setMode(initialMode)
-  }, [initialMode])
-  const [showPassword, setShowPassword] = useState(false)
+    setMode(initialMode);
+  }, [initialMode]);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     identifier: "",
     password: "",
-  })
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [focusedField, setFocusedField] = useState(null)
-  const navigate = useNavigate()
+  });
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [focusedField, setFocusedField] = useState(null);
+  const navigate = useNavigate();
 
   const slides = [
     {
@@ -49,25 +48,25 @@ export default function Login({ initialMode = "login" }) {
       subtitle: "Fall in Love Naturally",
       badge: "45k+ Matches This Week",
     },
-  ]
+  ];
 
   // Auto-advance slides every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [slides.length])
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (mode === "login") {
-      navigate("/")
+      navigate("/");
     } else {
       // Account created -> Proceed to Onboarding flow
-      navigate("/onboarding")
+      navigate("/onboarding");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-sans select-none py-6 lg:py-0">
@@ -92,7 +91,6 @@ export default function Login({ initialMode = "login" }) {
 
       {/* Main SaaS Card (24px border radius, clean white, soft shadow) */}
       <div className="relative z-10 w-full max-w-6xl h-auto lg:max-h-[94vh] bg-white rounded-[28px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300 my-auto">
-
         {/* ========================================================= */}
         {/* LEFT/BOTTOM COLUMN: Visual Hero Banner with Couple       */}
         {/* Order 2 on mobile (below form), Order 1 on desktop (left) */}
@@ -104,7 +102,6 @@ export default function Login({ initialMode = "login" }) {
             alt="Romantic Couple Embrace"
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
           />
-
 
           {/* Deep Dark Gradient Vignette for Text Legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#17151A] via-[#17151A]/60 to-transparent pointer-events-none" />
@@ -131,7 +128,13 @@ export default function Login({ initialMode = "login" }) {
               filter="drop-shadow(0 0 8px rgba(255, 45, 114, 0.8))"
             />
             <defs>
-              <linearGradient id="neonPinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient
+                id="neonPinkGrad"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor="#FF2D72" stopOpacity="0.4" />
                 <stop offset="50%" stopColor="#FF2D72" stopOpacity="1" />
                 <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.9" />
@@ -160,7 +163,6 @@ export default function Login({ initialMode = "login" }) {
 
           {/* Content at Bottom of Left Panel */}
           <div className="relative z-20 flex flex-col items-center text-center">
-
             {/* Official LoveConnect Brand Logo Link */}
             <Link
               to="/"
@@ -220,15 +222,15 @@ export default function Login({ initialMode = "login" }) {
                 <button
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${currentSlide === idx
-                    ? "w-7 bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] shadow-xs"
-                    : "w-1.5 bg-white/30 hover:bg-white/60"
-                    }`}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    currentSlide === idx
+                      ? "w-7 bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] shadow-xs"
+                      : "w-1.5 bg-white/30 hover:bg-white/60"
+                  }`}
                   aria-label={`Slide ${idx + 1}`}
                 />
               ))}
             </div>
-
           </div>
         </div>
 
@@ -237,7 +239,6 @@ export default function Login({ initialMode = "login" }) {
         {/* Order 1 on mobile (form first), Order 2 on desktop       */}
         {/* ========================================================= */}
         <div className="lg:col-span-6 order-1 lg:order-2 p-5 sm:p-7 lg:p-8 flex flex-col justify-center bg-white relative overflow-y-visible lg:overflow-y-auto lg:max-h-[94vh] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
           {/* Subtle Top Right Floating Ambient Heart */}
           <div className="absolute top-4 right-4 text-pink-200/50 pointer-events-none">
             <Heart className="w-8 h-8 fill-pink-100 text-pink-200/60" />
@@ -268,33 +269,41 @@ export default function Login({ initialMode = "login" }) {
             <button
               type="button"
               onClick={() => setMode("login")}
-              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${mode === "login"
-                ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
-                : "text-[#64748b] hover:text-[#17151A]"
-                }`}
+              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                mode === "login"
+                  ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
+                  : "text-[#64748b] hover:text-[#17151A]"
+              }`}
             >
               Login
             </button>
             <button
               type="button"
               onClick={() => setMode("signup")}
-              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${mode === "signup"
-                ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
-                : "text-[#64748b] hover:text-[#17151A]"
-                }`}
+              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                mode === "signup"
+                  ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
+                  : "text-[#64748b] hover:text-[#17151A]"
+              }`}
             >
               Sign Up
             </button>
           </div>
 
           {/* Authentication Form */}
-          <form onSubmit={handleSubmit} className="space-y-2.5 max-w-xs mx-auto w-full">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-2.5 max-w-xs mx-auto w-full"
+          >
             {/* If Sign Up: Name Field */}
             {mode === "signup" && (
               <div className="relative">
                 <div
-                  className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${focusedField === "name" ? "text-[#FF2D72]" : "text-slate-400"
-                    }`}
+                  className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
+                    focusedField === "name"
+                      ? "text-[#FF2D72]"
+                      : "text-slate-400"
+                  }`}
                 >
                   <User className="w-4 h-4" />
                 </div>
@@ -305,7 +314,9 @@ export default function Login({ initialMode = "login" }) {
                   value={formData.name}
                   onFocus={() => setFocusedField("name")}
                   onBlur={() => setFocusedField(null)}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
                 />
               </div>
@@ -314,8 +325,11 @@ export default function Login({ initialMode = "login" }) {
             {/* Email or Mobile Number Input */}
             <div className="relative">
               <div
-                className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${focusedField === "identifier" ? "text-[#FF2D72]" : "text-slate-400"
-                  }`}
+                className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
+                  focusedField === "identifier"
+                    ? "text-[#FF2D72]"
+                    : "text-slate-400"
+                }`}
               >
                 <Mail className="w-4 h-4" />
               </div>
@@ -326,7 +340,9 @@ export default function Login({ initialMode = "login" }) {
                 value={formData.identifier}
                 onFocus={() => setFocusedField("identifier")}
                 onBlur={() => setFocusedField(null)}
-                onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, identifier: e.target.value })
+                }
                 className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
               />
             </div>
@@ -334,8 +350,11 @@ export default function Login({ initialMode = "login" }) {
             {/* Password Input */}
             <div className="relative">
               <div
-                className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${focusedField === "password" ? "text-[#FF2D72]" : "text-slate-400"
-                  }`}
+                className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
+                  focusedField === "password"
+                    ? "text-[#FF2D72]"
+                    : "text-slate-400"
+                }`}
               >
                 <Lock className="w-4 h-4" />
               </div>
@@ -346,7 +365,9 @@ export default function Login({ initialMode = "login" }) {
                 value={formData.password}
                 onFocus={() => setFocusedField("password")}
                 onBlur={() => setFocusedField(null)}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="w-full pl-10 pr-10 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
               />
               <button
@@ -355,7 +376,11 @@ export default function Login({ initialMode = "login" }) {
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-[#FF2D72] transition-colors cursor-pointer"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -425,7 +450,10 @@ export default function Login({ initialMode = "login" }) {
               onClick={() => alert("Apple authentication triggered")}
               className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-[#17151A] font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 170 170">
+              <svg
+                className="w-4 h-4 fill-current shrink-0"
+                viewBox="0 0 170 170"
+              >
                 <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12-14.43-6.2-9.47-11.22-20.08-15.07-31.83-3.84-11.75-5.77-22.75-5.77-33 0-14.7 3.6-26.68 10.79-35.94 7.2-9.26 16.27-13.98 27.22-14.16 4.8 0 10.15 1.25 16.06 3.76 5.91 2.5 9.77 3.82 11.59 3.96 1.45-.14 5.31-1.46 11.59-3.96 6.28-2.51 11.63-3.76 16.06-3.76 8.5 0 16.14 2.37 22.92 7.12 6.78 4.75 11.59 11.16 14.42 19.23-7.53 4.58-12.83 10.75-15.9 18.5-3.07 7.76-3.65 15.82-1.74 24.18 1.91 8.36 6.09 15.24 12.54 20.65 6.45 5.4 13.91 8.71 22.39 9.93-1.63 5.43-3.74 10.77-6.33 16.02zM119.22 31.86c0-7.72 2.76-15.11 8.29-22.18 5.53-7.07 12.39-11.39 20.58-12.96.44 1.5.66 3.01.66 4.54 0 7.82-2.83 15.22-8.5 22.18-5.66 6.96-12.67 11.23-21.03 12.8-.23-1.45-.35-2.91-.35-4.38z" />
               </svg>
               <span>Continue with Apple</span>
@@ -466,10 +494,8 @@ export default function Login({ initialMode = "login" }) {
             <LockKeyhole className="w-3 h-3 text-slate-400" />
             <span>256-bit Encrypted • Privacy Guaranteed</span>
           </div>
-
         </div>
-
       </div>
     </div>
-  )
+  );
 }

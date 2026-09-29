@@ -115,9 +115,8 @@ export default function VideoCall() {
           {/* MUTE MIC */}
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isMuted ? 'bg-[#EF4444] text-white shadow-lg' : 'bg-white/20 hover:bg-white/30 text-white'
-            }`}
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${isMuted ? 'bg-[#EF4444] text-white shadow-lg' : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
             title={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -126,9 +125,8 @@ export default function VideoCall() {
           {/* TOGGLE CAMERA */}
           <button
             onClick={() => setIsCameraOn(!isCameraOn)}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              !isCameraOn ? 'bg-[#EF4444] text-white shadow-lg' : 'bg-white/20 hover:bg-white/30 text-white'
-            }`}
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${!isCameraOn ? 'bg-[#EF4444] text-white shadow-lg' : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
             title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
           >
             {isCameraOn ? <Video className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -146,9 +144,8 @@ export default function VideoCall() {
           {/* SPEAKER TOGGLE */}
           <button
             onClick={() => setIsSpeakerOn(!isSpeakerOn)}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              !isSpeakerOn ? 'bg-amber-500 text-white' : 'bg-white/20 hover:bg-white/30 text-white'
-            }`}
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all cursor-pointer ${!isSpeakerOn ? 'bg-amber-500 text-white' : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
             title={isSpeakerOn ? 'Speaker' : 'Muted Speaker'}
           >
             {isSpeakerOn ? <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" /> : <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -175,7 +172,7 @@ export default function VideoCall() {
 
             <div>
               <h3 className="text-xl font-black">Call Finished</h3>
-              <p className="text-xs text-gray-400 mt-1">Duration: {formatDuration(seconds)} with Priya Sharma</p>
+              <p className="text-sm text-gray-400 mt-1">Duration: {formatDuration(seconds)} with Priya Sharma</p>
             </div>
 
             <div className="p-3 bg-gray-50 rounded-2xl space-y-2">

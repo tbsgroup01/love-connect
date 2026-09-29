@@ -31,7 +31,6 @@ export default function MatchesPage() {
       name: "Priya",
       age: 25,
       score: "96% Match",
-      online: true,
       profession: "Senior Software Engineer",
       distance: "2 km away",
       location: "Noida, India",
@@ -44,7 +43,6 @@ export default function MatchesPage() {
       name: "Meera",
       age: 23,
       score: "95% Match",
-      online: true,
       profession: "Architect",
       distance: "3 km away",
       location: "Noida, India",
@@ -57,7 +55,6 @@ export default function MatchesPage() {
       name: "Rhea",
       age: 24,
       score: "92% Match",
-      online: false,
       profession: "Content Strategist",
       distance: "5 km away",
       location: "Noida, India",
@@ -80,58 +77,8 @@ export default function MatchesPage() {
   // Custom Right Sidebar matching Image 1 exactly!
   const customRightSidebar = (
     <div className="space-y-4 animate-fadeIn">
-      {/* 1. MATCH STATISTICS CARD */}
-      <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h4 className="text-xs font-black uppercase tracking-wider text-[#17151A] flex items-center gap-2">
-            <Heart className="w-4 h-4 text-[#FF2D72] fill-[#FF2D72]" />
-            <span>Match Statistics</span>
-          </h4>
-          <span className="text-[10px] font-bold text-slate-400">Last 30 days</span>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="p-3 rounded-xl bg-[#FFE7F0]/40 border border-[#FFE7F0] flex items-center justify-between">
-            <div>
-              <span className="text-lg font-black text-[#17151A] block leading-tight">12</span>
-              <span className="text-[10px] font-bold text-slate-500">Total Matches</span>
-            </div>
-            <div className="w-7 h-7 rounded-lg bg-[#FF2D72]/10 text-[#FF2D72] flex items-center justify-center">
-              <Users className="w-3.5 h-3.5" />
-            </div>
-          </div>
 
-          <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between">
-            <div>
-              <span className="text-lg font-black text-[#17151A] block leading-tight">8</span>
-              <span className="text-[10px] font-bold text-slate-500">Active Chats</span>
-            </div>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
-              <MessageSquare className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#FFE7F0]/40 border border-[#FFE7F0] flex items-center justify-between">
-            <div>
-              <span className="text-lg font-black text-[#17151A] block leading-tight">24</span>
-              <span className="text-[10px] font-bold text-slate-500">Profile Likes</span>
-            </div>
-            <div className="w-7 h-7 rounded-lg bg-[#FF2D72]/10 text-[#FF2D72] flex items-center justify-center">
-              <Heart className="w-3.5 h-3.5 fill-[#FF2D72]" />
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100 flex items-center justify-between">
-            <div>
-              <span className="text-lg font-black text-[#17151A] block leading-tight">6</span>
-              <span className="text-[10px] font-bold text-slate-500">New Matches</span>
-            </div>
-            <div className="w-7 h-7 rounded-lg bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* 2. GET 10X MORE MATCHES PROMO BANNER CARD */}
       <div className="relative overflow-hidden rounded-2xl border border-[#FFD0E0] bg-gradient-to-br from-[#FFF0F5] via-white to-[#F4F0FF] p-4 sm:p-5 shadow-xs">
@@ -257,7 +204,6 @@ export default function MatchesPage() {
         <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
           {[
             { id: "all", label: "All Matches", icon: null },
-            { id: "online", label: "Online Now", dot: "#22C55E" },
             { id: "new", label: "New Matches", icon: Sparkles },
             { id: "nearby", label: "Nearby", icon: MapPin },
             { id: "verified", label: "Verified", icon: ShieldCheck },
@@ -266,13 +212,11 @@ export default function MatchesPage() {
               key={tab.id}
               type="button"
               onClick={() => setFilterTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                filterTab === tab.id
-                  ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
-                  : "bg-[#FFFFFF] text-slate-600 border border-slate-200/80 hover:bg-slate-50"
-              }`}
+              className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${filterTab === tab.id
+                ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
+                : "bg-[#FFFFFF] text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                }`}
             >
-              {tab.dot && <span className="w-2 h-2 rounded-full bg-[#22C55E]" />}
               {tab.icon && <tab.icon className="w-3.5 h-3.5 text-current" />}
               <span>{tab.label}</span>
             </button>
@@ -333,9 +277,6 @@ export default function MatchesPage() {
                 {/* Avatar Image */}
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 shadow-2xs">
                   <img src={match.img} alt={match.name} className="w-full h-full object-cover" />
-                  {match.online && (
-                    <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#22C55E] border-2 border-white" />
-                  )}
                 </div>
 
                 {/* Profile Details */}
@@ -346,10 +287,6 @@ export default function MatchesPage() {
                     </h3>
                     <span className="px-2.5 py-0.5 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-extrabold">
                       {match.score}
-                    </span>
-                    <span className={`text-xs font-bold flex items-center gap-1 ${match.online ? "text-[#22C55E]" : "text-slate-400"}`}>
-                      <span className={`w-2 h-2 rounded-full ${match.online ? "bg-[#22C55E] animate-pulse" : "bg-slate-300"}`} />
-                      <span>{match.online ? "Online" : "Offline"}</span>
                     </span>
                   </div>
 

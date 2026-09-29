@@ -5,14 +5,11 @@ import {
   Crown,
   Zap,
   RotateCcw,
-  Download,
   Search,
   Filter,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
   Eye,
-  Send,
   User,
   CheckCircle2,
   XCircle,
@@ -21,7 +18,10 @@ import {
   X,
   Building2,
   Smartphone,
-  Wallet
+  Wallet,
+  Copy,
+  Check,
+  Trash2
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
@@ -44,6 +44,7 @@ export default function Transactions() {
   const [activeTab, setActiveTab] = useState('Transactions');
   const [selectedTabFilter, setSelectedTabFilter] = useState('All');
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [copiedId, setCopiedId] = useState(false);
 
   // Top 4 KPI Metric Cards
   const kpiCards = [
@@ -74,7 +75,7 @@ export default function Transactions() {
   ];
 
   // Mock Transactions Table Data matching reference image table rows
-  const transactionsData = [
+  const initialTransactionsData = [
     {
       id: 1,
       txnId: 'TXN0012345',
@@ -327,12 +328,57 @@ export default function Transactions() {
     },
   ];
 
-  const currentSelected = selectedTransaction || transactionsData[0];
+  const [transactionsData, setTransactionsData] = useState(initialTransactionsData);
+  const [selectedTxnIds, setSelectedTxnIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const currentSelected =
+    selectedTransaction && transactionsData.some((t) => t.id === selectedTransaction.id)
+      ? selectedTransaction
+      : transactionsData[0] || null;
 
   const filteredTransactions = transactionsData.filter((item) => {
-    if (selectedTabFilter === 'All') return true;
-    return item.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
+    const matchesTab =
+      selectedTabFilter === 'All' ||
+      item.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      !searchTerm ||
+      item.txnId.toLowerCase().includes(term) ||
+      item.user.name.toLowerCase().includes(term) ||
+      item.user.email.toLowerCase().includes(term) ||
+      item.item.toLowerCase().includes(term);
+    return matchesTab && matchesSearch;
   });
+
+  const isAllSelected =
+    filteredTransactions.length > 0 &&
+    filteredTransactions.every((item) => selectedTxnIds.includes(item.id));
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedTxnIds([]);
+    } else {
+      setSelectedTxnIds(filteredTransactions.map((item) => item.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedTxnIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedTxnIds.length === 0) return;
+    setTransactionsData((prev) => prev.filter((item) => !selectedTxnIds.includes(item.id)));
+    setSelectedTxnIds([]);
+  };
+
+  const handleDeleteTransaction = (id) => {
+    setTransactionsData((prev) => prev.filter((item) => item.id !== id));
+    setSelectedTxnIds((prev) => prev.filter((item) => item !== id));
+  };
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -350,7 +396,7 @@ export default function Transactions() {
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
               Transactions & Payments
             </h1>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 mt-1">
               View and manage all payment transactions
             </p>
           </div>
@@ -372,7 +418,7 @@ export default function Transactions() {
                     <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>
@@ -383,25 +429,26 @@ export default function Transactions() {
           </div>
 
           {/* BOTTOM SECTION: TRANSACTIONS TABLE & RIGHT TRANSACTION DETAILS SPLIT */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
             {/* TRANSACTIONS TABLE (2 Cols wide on XL) */}
             <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
               {/* Header Filters */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 overflow-x-auto">
                   {[
-                    { label: 'All Transactions (8,432)', key: 'All' },
-                    { label: 'Successful (7,856)', key: 'Success' },
-                    { label: 'Pending (324)', key: 'Pending' },
-                    { label: 'Failed (186)', key: 'Failed' },
+                    { label: `All Transactions (${transactionsData.length})`, key: 'All' },
+                    { label: 'Successful', key: 'Success' },
+                    { label: 'Pending', key: 'Pending' },
+                    { label: 'Failed', key: 'Failed' },
                   ].map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setSelectedTabFilter(tab.key)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${selectedTabFilter === tab.key
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                        selectedTabFilter === tab.key
                           ? 'text-white shadow-2xs'
                           : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                      }`}
                       style={{
                         backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
                       }}
@@ -412,11 +459,22 @@ export default function Transactions() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {selectedTxnIds.length > 0 && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete Selected ({selectedTxnIds.length})
+                    </button>
+                  )}
                   <div className="relative w-48">
                     <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Search by user, transaction ID..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search by user, txn ID..."
                       className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
                     />
                   </div>
@@ -429,7 +487,12 @@ export default function Transactions() {
                   <thead>
                     <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
                       <th className="pb-3 w-8">
-                        <input type="checkbox" className="rounded text-[#FF2D72] focus:ring-0" />
+                        <input
+                          type="checkbox"
+                          checked={isAllSelected}
+                          onChange={handleSelectAll}
+                          className="rounded border-gray-300 text-[#FF2D72] focus:ring-[#FF2D72] cursor-pointer"
+                        />
                       </th>
                       <th className="pb-3 font-semibold">Transaction ID</th>
                       <th className="pb-3 font-semibold">User</th>
@@ -438,89 +501,116 @@ export default function Transactions() {
                       <th className="pb-3 font-semibold">Date & Time</th>
                       <th className="pb-3 font-semibold">Status</th>
                       <th className="pb-3 font-semibold text-center">Actions</th>
-                      <th className="pb-3 w-6"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredTransactions.map((item) => {
-                      const isSelected = currentSelected.id === item.id;
-                      return (
-                        <tr
-                          key={item.id}
-                          onClick={() => setSelectedTransaction(item)}
-                          className={`cursor-pointer transition-colors ${isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
+                    {filteredTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">
+                          No transactions found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredTransactions.map((item) => {
+                        const isSelected = currentSelected && currentSelected.id === item.id;
+                        return (
+                          <tr
+                            key={item.id}
+                            onClick={() => setSelectedTransaction(item)}
+                            className={`cursor-pointer transition-colors ${
+                              isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
                             }`}
-                        >
-                          <td className="py-3">
-                            <input type="checkbox" className="rounded text-[#FF2D72] focus:ring-0" />
-                          </td>
-                          <td className="py-3 font-mono font-bold text-gray-700">{item.txnId}</td>
-                          <td className="py-3">
-                            <div className="flex items-center gap-2.5">
-                              <img
-                                src={item.user.avatar}
-                                alt={item.user.name}
-                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                          >
+                            <td className="py-3" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={selectedTxnIds.includes(item.id)}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSelect(item.id);
+                                }}
+                                className="rounded border-gray-300 text-[#FF2D72] focus:ring-[#FF2D72] cursor-pointer"
                               />
-                              <div>
-                                <div className="font-bold text-gray-900">{item.user.name}</div>
-                                <div className="text-gray-400 text-[10px]">{item.user.email}</div>
+                            </td>
+                            <td className="py-3 font-mono font-bold text-gray-700">{item.txnId}</td>
+                            <td className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.user.avatar}
+                                  alt={item.user.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                />
+                                <div>
+                                  <div className="font-bold text-gray-900">{item.user.name}</div>
+                                  <div className="text-gray-400 text-[10px]">{item.user.email}</div>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3">
-                            <span
-                              className="px-2.5 py-1 rounded-md font-bold text-[10px] inline-block"
-                              style={{
-                                backgroundColor: item.planBg,
-                                color: item.planColor,
-                              }}
-                            >
-                              {item.item}
-                            </span>
-                          </td>
-                          <td className="py-3 font-extrabold text-gray-900">{item.amount}</td>
-                          <td className="py-3">
-                            <div className="font-semibold text-gray-700">{item.date}</div>
-                            <div className="text-gray-400 text-[10px]">{item.time}</div>
-                          </td>
-                          <td className="py-3">
-                            <span
-                              className="px-3 py-1 rounded-full font-bold text-[10px] inline-block"
-                              style={{
-                                backgroundColor: item.statusBg,
-                                color: item.statusColor,
-                              }}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="py-3 text-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTransaction(item);
-                              }}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-[#FF2D72] hover:bg-pink-50 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                          <td className="py-3 text-right">
-                            <button className="text-gray-400 hover:text-gray-600 p-1">
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            </td>
+                            <td className="py-3">
+                              <span
+                                className="px-2.5 py-1 rounded-md font-bold text-[10px] inline-block"
+                                style={{
+                                  backgroundColor: item.planBg,
+                                  color: item.planColor,
+                                }}
+                              >
+                                {item.item}
+                              </span>
+                            </td>
+                            <td className="py-3 font-extrabold text-gray-900">{item.amount}</td>
+                            <td className="py-3">
+                              <div className="font-semibold text-gray-700">{item.date}</div>
+                              <div className="text-gray-400 text-[10px]">{item.time}</div>
+                            </td>
+                            <td className="py-3">
+                              <span
+                                className="px-3 py-1 rounded-full font-bold text-[10px] inline-block"
+                                style={{
+                                  backgroundColor: item.statusBg,
+                                  color: item.statusColor,
+                                }}
+                              >
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTransaction(item);
+                                  }}
+                                  title="View Details"
+                                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#FF2D72] hover:bg-pink-50 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteTransaction(item.id);
+                                  }}
+                                  title="Delete Transaction"
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
 
               {/* Pagination */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
-                <span>Showing 1 to 10 of 8,432 transactions</span>
+                <span>
+                  Showing {filteredTransactions.length > 0 ? 1 : 0} to {filteredTransactions.length} of{' '}
+                  {transactionsData.length} transactions
+                </span>
                 <div className="flex items-center gap-2">
                   <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
                     <option>10 per page</option>
@@ -560,108 +650,140 @@ export default function Transactions() {
               </div>
             </div>
 
-            {/* RIGHT TRANSACTION DETAILS PREVIEW PANEL matching reference image */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-extrabold text-sm text-gray-900">Transaction Details</h3>
-                  <button className="text-gray-400 hover:text-gray-600 p-1">
-                    <X className="w-4 h-4" />
-                  </button>
+            {/* RIGHT TRANSACTION DETAILS PREVIEW PANEL */}
+            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit transition-all">
+              {currentSelected ? (
+                <>
+                  {/* Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full inline-block animate-pulse"
+                        style={{ backgroundColor: currentSelected.statusColor }}
+                      />
+                      <h3 className="font-extrabold text-sm text-gray-900">Transaction Details</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
+                        style={{
+                          backgroundColor: currentSelected.statusBg,
+                          color: currentSelected.statusColor,
+                        }}
+                      >
+                        {currentSelected.status}
+                      </span>
+                      {selectedTransaction && (
+                        <button
+                          onClick={() => setSelectedTransaction(null)}
+                          title="Reset selection"
+                          className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Customer Profile Banner */}
+                  <div className="p-3 bg-gradient-to-r from-pink-50/70 via-rose-50/30 to-purple-50/40 rounded-xl border border-pink-100/70 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <img
+                          src={currentSelected.user.avatar}
+                          alt={currentSelected.user.name}
+                          className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-2xs"
+                        />
+                        {currentSelected.user.isVerified && (
+                          <span
+                            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold ring-2 ring-white"
+                            title="Verified Customer"
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-bold text-xs text-gray-900 truncate">{currentSelected.user.name}</h4>
+                          {currentSelected.user.isVerified && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{currentSelected.user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Hero Card */}
+                  <div className="bg-gray-50/80 rounded-xl p-3.5 border border-gray-100 space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[11px] font-semibold text-gray-400">Total Amount Paid</span>
+                      <span className="text-2xl font-black text-gray-900 tracking-tight">{currentSelected.amount}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-200/60 text-[11px]">
+                      <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                        <span>{currentSelected.methodIcon}</span>
+                        <span>{currentSelected.paymentMethod}</span>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-gray-400 font-mono text-[10px]">{currentSelected.paymentId}</span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-gray-400">{currentSelected.date}</span>
+                    </div>
+                  </div>
+
+                  {/* Structured Key Details */}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                      <span className="text-gray-400 font-medium">Transaction ID</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-gray-800 text-[11px]">{currentSelected.txnId}</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard?.writeText(currentSelected.txnId);
+                            setCopiedId(true);
+                            setTimeout(() => setCopiedId(false), 2000);
+                          }}
+                          className="text-gray-400 hover:text-gray-700 p-0.5 rounded cursor-pointer transition-colors"
+                          title="Copy Transaction ID"
+                        >
+                          {copiedId ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                      <span className="text-gray-400 font-medium">Purchased Plan</span>
+                      <span
+                        className="px-2.5 py-0.5 rounded-md font-bold text-[10px]"
+                        style={{
+                          backgroundColor: currentSelected.planBg,
+                          color: currentSelected.planColor,
+                        }}
+                      >
+                        {currentSelected.item}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5">
+                      <span className="text-gray-400 font-medium">Date & Time</span>
+                      <span className="font-medium text-gray-700 text-[11px]">
+                        {currentSelected.date}, {currentSelected.time}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
+                  No transaction selected
                 </div>
-
-                {/* User Info Header */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl border border-gray-100 mb-4">
-                  <img
-                    src={currentSelected.user.avatar}
-                    alt={currentSelected.user.name}
-                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                  />
-                  <div>
-                    <h4 className="font-bold text-sm text-gray-900">{currentSelected.user.name}</h4>
-                    <p className="text-xs text-gray-400">{currentSelected.user.email}</p>
-                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700">
-                      Verified
-                    </span>
-                  </div>
-                </div>
-
-                {/* Transaction Information Breakdown */}
-                <div className="space-y-2.5 text-xs pb-4 border-b border-gray-100">
-                  <h4 className="font-bold text-gray-900 text-xs mb-1">Transaction Information</h4>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Transaction ID</span>
-                    <span className="font-mono font-bold text-gray-800">{currentSelected.txnId}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Date & Time</span>
-                    <span className="font-semibold text-gray-800">
-                      {currentSelected.date}, {currentSelected.time}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Amount</span>
-                    <span className="font-black text-gray-900 text-sm">{currentSelected.amount}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Status</span>
-                    <span
-                      className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
-                      style={{
-                        backgroundColor: currentSelected.statusBg,
-                        color: currentSelected.statusColor,
-                      }}
-                    >
-                      {currentSelected.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Payment ID</span>
-                    <span className="font-mono text-gray-600 text-[11px]">{currentSelected.paymentId}</span>
-                  </div>
-                </div>
-
-                {/* Plan Details Breakdown */}
-                <div className="pt-3 space-y-2 text-xs">
-                  <h4 className="font-bold text-gray-900 text-xs mb-1">Plan Details</h4>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Plan Name</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.item}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Duration</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.duration}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Features</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.features}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                <button
-                  className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-gray-100 text-gray-700 flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors cursor-pointer"
-                >
-                  <span>View User Profile</span>
-                </button>
-                <button
-                  className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-2xs transition-all hover:opacity-90 cursor-pointer"
-                  style={{ backgroundColor: COLORS.pink }}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Receipt</span>
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </main>

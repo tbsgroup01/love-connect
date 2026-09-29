@@ -1,16 +1,14 @@
-import React from "react"
-import { ArrowRight, Heart } from "lucide-react"
-import heroCoupleRomanticImg from "../../../assets/hero_couple_romantic.jpg"
-import priyaProfileImg from "../../../assets/priya_profile.jpg"
+import React from "react";
+import { ArrowRight, Heart } from "lucide-react";
+import heroCoupleRomanticImg from "../../../assets/hero_couple_romantic.jpg";
+import priyaProfileImg from "../../../assets/priya_profile.jpg";
 
 export default function CTA() {
   return (
     <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] relative overflow-hidden">
       <div className="max-w-[1600px] mx-auto">
-
         {/* Main CTA Dark Card */}
         <div className="relative overflow-hidden rounded-[32px] sm:rounded-[36px] bg-gradient-to-r from-[#17151A] via-[#241738] to-[#120D1F] px-6 sm:px-10 lg:px-14 py-10 sm:py-12 lg:py-14 shadow-2xl shadow-purple-950/30">
-
           {/* Ambient Decorative Fluid Glows */}
           <div className="absolute -top-24 -right-24 w-[400px] h-[400px] bg-[#FF2D72]/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 left-1/4 w-[350px] h-[350px] bg-[#7C3AED]/25 rounded-full blur-3xl pointer-events-none" />
@@ -21,10 +19,8 @@ export default function CTA() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
-
             {/* Left Column: Heading, Subtitle & Action Buttons */}
             <div className="lg:col-span-7 flex flex-col items-start space-y-4">
-
               {/* Eyebrow Badge */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md shadow-xs">
                 <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-[#FFE7F0]">
@@ -39,7 +35,8 @@ export default function CTA() {
 
               {/* Sub-description Paragraph */}
               <p className="text-pink-100/80 text-sm sm:text-base font-normal leading-relaxed max-w-lg">
-                Millions of people are already finding real connections. What are you waiting for?
+                Millions of people are already finding real connections. What
+                are you waiting for?
               </p>
 
               {/* Action Buttons */}
@@ -48,15 +45,12 @@ export default function CTA() {
                   <span>Get Started Free</span>
                   <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
                 </button>
-
               </div>
-
             </div>
 
             {/* Right Column: Romantic Couple Pill Visual with Floating "1M+ Happy Members" */}
             <div className="lg:col-span-5 flex items-center justify-center lg:justify-end relative mt-4 lg:mt-0">
               <div className="relative flex items-center justify-center">
-
                 {/* Handwritten Floating Quote */}
                 <div className="absolute -top-6 right-6 text-[#FFE7F0]/90 font-serif italic text-base sm:text-lg pointer-events-none drop-shadow-md">
                   Love Happens Here ♡
@@ -75,9 +69,21 @@ export default function CTA() {
                 {/* Floating "1M+ Happy Members" Pill Badge */}
                 <div className="absolute -bottom-4 right-0 sm:right-2 z-20 bg-white/95 backdrop-blur-md border border-[#FFE7F0] shadow-xl shadow-black/20 rounded-full px-4 py-2 flex items-center gap-3 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
                   <div className="flex -space-x-2">
-                    <img src={priyaProfileImg} alt="Member" className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs" />
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Member" className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs" />
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Member" className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs" />
+                    <img
+                      src={priyaProfileImg}
+                      alt="Member"
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
+                    />
+                    <img
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
+                      alt="Member"
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
+                    />
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
+                      alt="Member"
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
+                    />
                   </div>
                   <div>
                     <h5 className="font-extrabold text-[#17151A] text-xs leading-none">
@@ -88,14 +94,11 @@ export default function CTA() {
                     </p>
                   </div>
                 </div>
-
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     </section>
-  )
+  );
 }

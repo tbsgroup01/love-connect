@@ -97,7 +97,7 @@ export default function RevenueReports() {
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                 Revenue Reports
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Detailed financial analysis, subscription growth and revenue metrics
               </p>
             </div>
@@ -138,7 +138,7 @@ export default function RevenueReports() {
                     <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>

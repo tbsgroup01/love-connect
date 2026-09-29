@@ -157,10 +157,10 @@ export default function Languages() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A]">
+    <div className="h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] overflow-hidden">
       <AdminNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <AdminSidebar activeTab="Languages" setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">

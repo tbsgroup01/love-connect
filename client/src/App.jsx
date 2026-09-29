@@ -44,7 +44,8 @@ import AdminRevenueReports from "./features/admin/pages/SubscriptionPayment/Reve
 
 // Content Management
 import AdminPushNotifications from "./features/admin/pages/ContentManagement/PushNotifications"
-import AdminCMSPages from "./features/admin/pages/ContentManagement/CMSPages"
+
+
 import AdminBannersAds from "./features/admin/pages/ContentManagement/BannersAds"
 import AdminFAQManagement from "./features/admin/pages/ContentManagement/FAQManagement"
 
@@ -87,7 +88,7 @@ function App() {
         <Route path="/splash" element={<SplashScreen />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
-        
+
         {/* AUTHENTICATION & ONBOARDING */}
         <Route path="/login" element={<Login initialMode="login" />} />
         <Route path="/register" element={<Login initialMode="signup" />} />
@@ -176,8 +177,6 @@ function App() {
         <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
         <Route path="/admin/notifications" element={<AdminPushNotifications />} />
         <Route path="/admin/push" element={<AdminPushNotifications />} />
-        <Route path="/admin/cms-pages" element={<AdminCMSPages />} />
-        <Route path="/admin/cms" element={<AdminCMSPages />} />
         <Route path="/admin/banners" element={<AdminBannersAds />} />
         <Route path="/admin/banner" element={<AdminBannersAds />} />
         <Route path="/admin/ads" element={<AdminBannersAds />} />

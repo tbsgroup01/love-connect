@@ -92,33 +92,6 @@ export default function AdminUsers() {
     status: 'Active'
   });
 
-  // KPI Metrics
-  const kpiCards = [
-    {
-      title: 'Total Admin Users',
-      value: '14',
-      bgColor: '#7C3AED',
-      icon: Users,
-    },
-    {
-      title: 'Super Admins',
-      value: '3',
-      bgColor: '#FF2D72',
-      icon: ShieldCheck,
-    },
-    {
-      title: 'Active Moderators',
-      value: '6',
-      bgColor: '#0EA5E9',
-      icon: ShieldAlert,
-    },
-    {
-      title: 'Support & Finance',
-      value: '5',
-      bgColor: '#10B981',
-      icon: Headphones,
-    },
-  ];
 
   // Admin Users List Data
   const [adminUsersList, setAdminUsersList] = useState([
@@ -221,6 +194,34 @@ export default function AdminUsers() {
     }
   };
 
+  // KPI Metrics matching second image
+  const kpiCards = [
+    {
+      title: 'Total Admin Users',
+      value: adminUsersList.length.toString(),
+      bgColor: '#FF2D72',
+      icon: Users,
+    },
+    {
+      title: 'Super Admins',
+      value: adminUsersList.filter(u => u.role === 'Super Admin').length.toString(),
+      bgColor: '#3B82F6',
+      icon: ShieldCheck,
+    },
+    {
+      title: 'Active Moderators',
+      value: adminUsersList.filter(u => u.role === 'Moderator').length.toString(),
+      bgColor: '#EF4444',
+      icon: ShieldAlert,
+    },
+    {
+      title: 'Support & Finance',
+      value: adminUsersList.filter(u => u.role === 'Support Admin' || u.role === 'Finance Admin').length.toString(),
+      bgColor: '#22C55E',
+      icon: Headphones,
+    },
+  ];
+
   // Search & Filtered Admins
   const filteredAdmins = adminUsersList.filter((user) => {
     const search = searchTerm.toLowerCase();
@@ -245,63 +246,47 @@ export default function AdminUsers() {
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {/* PAGE HERO HEADER CARD */}
-          <div className="relative overflow-hidden bg-white/80 backdrop-blur-md p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-all duration-300">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 bg-gradient-to-br from-[#7C3AED]/15 to-[#FF2D72]/15 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="relative z-10 space-y-1">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#FF2D72] flex items-center justify-center shadow-lg shadow-purple-500/20 text-white">
-                  <ShieldCheck className="w-5.5 h-5.5 stroke-[2.2] fill-white/20" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">
-                    ADMIN USERS & ROLES
-                  </h1>
-                  <p className="text-xs text-gray-500 font-medium">
-                    Manage role-based access permissions, admin accounts, activity status & security protocols.
-                  </p>
-                </div>
-              </div>
+          {/* PAGE TITLE & ACTION HEADER */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                Admin Users & Roles
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Manage role-based access permissions, admin accounts, activity status & security protocols
+              </p>
             </div>
-
-            <div className="relative z-10 flex items-center gap-3">
-              <button
-                onClick={handleOpenAddModal}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-xs font-bold shadow-md shadow-pink-500/20 hover:opacity-95 transition-all cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Add Admin User</span>
-              </button>
-            </div>
+            <button
+              onClick={handleOpenAddModal}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-xs shadow-sm transition-all hover:opacity-90 self-start sm:self-auto cursor-pointer bg-[#FF2D72]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Admin User</span>
+            </button>
           </div>
 
-          {/* ROLE ACCESS SUMMARY CARDS */}
+          {/* TOP 4 KPI CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(ROLE_CONFIG).map(([roleName, cfg]) => {
-              const RoleIcon = cfg.icon;
-              const count = adminUsersList.filter(u => u.role === roleName).length;
+            {kpiCards.map((kpi, idx) => {
+              const Icon = kpi.icon;
               return (
                 <div
-                  key={roleName}
-                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between border-t-4"
-                  style={{ borderTopColor: cfg.color }}
+                  key={idx}
+                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
+                  style={{ borderLeftColor: kpi.bgColor }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-xs font-extrabold text-gray-900 block">{roleName}</span>
-                      <span className="text-[11px] font-bold text-gray-400 mt-0.5 block">{count} {count === 1 ? 'User' : 'Users'}</span>
-                    </div>
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                      style={{ backgroundColor: cfg.color }}
-                    >
-                      <RoleIcon className="w-4 h-4 stroke-[2.2]" />
-                    </div>
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
+                    style={{ backgroundColor: kpi.bgColor }}
+                  >
+                    <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
-                  <p className="text-[11px] font-medium text-gray-500 mt-3 bg-gray-50 p-2 rounded-xl border border-gray-100">
-                    {cfg.access}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
+                      {kpi.value}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -328,11 +313,10 @@ export default function AdminUsers() {
                   <button
                     key={tab}
                     onClick={() => setRoleFilter(tab)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                      roleFilter === tab
-                        ? 'bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white shadow-md shadow-pink-500/20'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${roleFilter === tab
+                      ? 'bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white shadow-md shadow-pink-500/20'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
                   >
                     {tab}
                   </button>

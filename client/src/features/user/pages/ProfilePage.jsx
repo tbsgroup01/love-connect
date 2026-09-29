@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import DashboardLayout from "../components/DashboardLayout"
 import {
   Camera,
@@ -7,25 +7,12 @@ import {
   Briefcase,
   GraduationCap,
   MapPin,
-  Eye,
   Heart,
   Star,
   Users,
   User,
   Sparkles,
   SlidersHorizontal,
-  ShieldCheck,
-  Lock,
-  Bell,
-  HelpCircle,
-  Share2,
-  LogOut,
-  Crown,
-  ImagePlus,
-  UserCheck,
-  ChevronRight,
-  Shield,
-  Compass
 } from "lucide-react"
 
 import rheaImg from "../../../assets/hero_woman_exact.png"
@@ -76,10 +63,6 @@ export default function ProfilePage() {
                 >
                   <Camera className="w-4 h-4" />
                 </button>
-                <span
-                  className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#22C55E] border-2 border-[#FFFFFF]"
-                  title="Online Now"
-                />
               </div>
 
               {/* Edit Profile Button */}
@@ -99,16 +82,9 @@ export default function ProfilePage() {
                 <h2 className="text-2xl sm:text-3xl font-black text-[#17151A]">
                   Ananya Verma, 24
                 </h2>
-                <span className="w-5 h-5 rounded-full bg-[#0095F6] text-[#FFFFFF] flex items-center justify-center text-[10px] font-black shadow-sm" title="Verified Profile">
-                  ✓
-                </span>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 flex-wrap pt-0.5">
-                <span className="flex items-center gap-1.5">
-                  <Briefcase className="w-4 h-4 text-slate-400" />
-                  <span>Product Designer at Google</span>
-                </span>
                 <span className="flex items-center gap-1.5">
                   <GraduationCap className="w-4 h-4 text-slate-400" />
                   <span>Delhi University</span>
@@ -117,28 +93,11 @@ export default function ProfilePage() {
                   <MapPin className="w-4 h-4 text-slate-400" />
                   <span>Noida, India</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-[#22C55E] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                  <span>Online</span>
-                </span>
               </div>
             </div>
 
-            {/* 2. STATS GRID (4 cards) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-100">
-              <div className="p-3.5 rounded-2xl bg-[#FFE7F0]/40 border border-[#FFE7F0] flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF2D72]/10 text-[#FF2D72] flex items-center justify-center shrink-0">
-                  <Eye className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xl font-black text-[#17151A] block leading-tight">2.4k</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-bold text-slate-500">Profile Views</span>
-                    <span className="text-[10px] font-extrabold text-[#22C55E]">↑ 12%</span>
-                  </div>
-                </div>
-              </div>
-
+            {/* 2. STATS GRID (3 cards) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-100">
               <div className="p-3.5 rounded-2xl bg-[#F3E8FF]/40 border border-[#F3E8FF] flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center shrink-0">
                   <Heart className="w-5 h-5 fill-[#7C3AED]" />
@@ -165,65 +124,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-[#E0F2FE]/40 border border-[#E0F2FE] flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xl font-black text-[#17151A] block leading-tight">28</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-bold text-slate-500">Matches</span>
-                    <span className="text-[10px] font-extrabold text-[#22C55E]">↑ 15%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* PROFILE COMPLETION PERCENTAGE BAR (Requirement 17) */}
-            <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#FF2D72]" />
-                  <span className="font-extrabold text-sm text-[#17151A]">Profile 85% Complete</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFE7F0] text-[#FF2D72]">+15% for ID Verification</span>
-                </div>
-                <p className="text-xs text-slate-500">Profiles with 100% completion receive up to 300% more match recommendations.</p>
-              </div>
-              <div className="w-full sm:w-56 space-y-1.5">
-                <div className="flex justify-between text-[10px] font-bold text-slate-600">
-                  <span>Completion Score</span>
-                  <span className="text-[#FF2D72]">85%</span>
-                </div>
-                <div className="w-full bg-white h-2.5 rounded-full border border-pink-200 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] rounded-full transition-all" style={{ width: '85%' }} />
-                </div>
-              </div>
-            </div>
-
-            {/* 3. SUB-NAVIGATION TABS */}
-            <div className="flex items-center gap-6 mt-6 border-b border-slate-100 pb-0 overflow-x-auto scrollbar-none">
-              {[
-                { id: "about", label: "About" },
-                { id: "photos", label: "Photos" },
-                { id: "interests", label: "Interests" },
-                { id: "lifestyle", label: "Lifestyle" },
-                { id: "preferences", label: "Preferences" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setProfileSubTab(tab.id)}
-                  className={`pb-3 text-xs font-black transition-all cursor-pointer relative shrink-0 ${profileSubTab === tab.id
-                    ? "text-[#FF2D72]"
-                    : "text-slate-400 hover:text-slate-600"
-                    }`}
-                >
-                  <span>{tab.label}</span>
-                  {profileSubTab === tab.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] rounded-full" />
-                  )}
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -472,78 +372,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* SECTION 17: COMPLETE PROFILE DASHBOARD & SETTINGS MENU */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
-                <SlidersHorizontal className="w-5 h-5 text-[#FF2D72]" />
-                <span>Profile Management & Account Menu</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Quick access to all profile controls, privacy options, and security settings.</p>
-            </div>
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-pink-50 text-[#FF2D72]">
-              14 Options
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              { title: "Edit Profile", desc: "Update bio, profession, education, height", path: "/edit-profile", icon: Pencil },
-              { title: "Manage Photos", desc: "Reorder photos, upload new angles, delete", path: "/manage-photos", icon: ImagePlus },
-              { title: "Profile Preview", desc: "See how your profile appears to other singles", path: "/profile-details", icon: Eye },
-              { title: "Personal Information", desc: "Name, DOB, gender, and contact details", path: "/edit-profile", icon: User },
-              { title: "Lifestyle & Interests", desc: "Smoking, drinking, pets, fitness, diet", path: "/filters", icon: Heart },
-              { title: "Relationship Preferences", desc: "Relationship, casual dating, or friendship", path: "/filters", icon: Compass },
-              { title: "Verification Center", desc: "Selfie scan, phone, email & identity badge", path: "/verification", icon: ShieldCheck, badge: "Pending" },
-              { title: "Profile Visibility", desc: "Public, Only Matches, or Hidden mode", path: "/visibility", icon: Eye },
-              { title: "Account Settings", desc: "Password, linked accounts, devices", path: "/settings", icon: SlidersHorizontal },
-              { title: "Privacy & Safety", desc: "Blocked users, muted conversations, safety tips", path: "/privacy-safety", icon: Shield },
-              { title: "Premium Subscription", desc: "Upgrade to Gold VIP, rewind swipes, boosts", path: "/premium", icon: Crown, badge: "Save 33%" },
-              { title: "Notifications", desc: "Manage push alerts, emails, and reminders", path: "/notifications", icon: Bell },
-              { title: "Help & Support", desc: "24/7 dedicated assistance, FAQs, live chat", path: "/privacy-policy", icon: HelpCircle },
-              { title: "Invite Friends", desc: "Share LoveConnect & earn 3 free Super Likes", path: "/discover", icon: Share2 },
-              { title: "Log Out", desc: "Securely sign out of this device session", path: "/login", icon: LogOut, danger: true },
-            ].map((item, idx) => {
-              const Icon = item.icon
-              return (
-                <Link
-                  key={idx}
-                  to={item.path}
-                  className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 group hover:shadow-sm ${
-                    item.danger
-                      ? 'border-red-100 hover:border-red-300 bg-red-50/20'
-                      : 'border-slate-100 hover:border-pink-200 bg-slate-50/40 hover:bg-white'
-                  }`}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                      item.danger
-                        ? 'bg-red-100 text-red-600'
-                        : 'bg-[#FFE7F0] text-[#FF2D72]'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 stroke-[2.2]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className={`text-xs font-black truncate ${item.danger ? 'text-red-600' : 'text-[#17151A]'}`}>
-                        {item.title}
-                      </span>
-                      {item.badge && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#FFE7F0] text-[#FF2D72]">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{item.desc}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#FF2D72] group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
-                </Link>
-              )
-            })}
-          </div>
-        </div>
 
       </div>
     </DashboardLayout>

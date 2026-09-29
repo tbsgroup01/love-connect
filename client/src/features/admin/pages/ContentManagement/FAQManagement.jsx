@@ -37,7 +37,6 @@ const INITIAL_FAQS = [
     answer: 'LoveConnect utilizes an advanced AI compatibility score combined with proximity radius, lifestyle interests, and relationship goals. Profiles with verified badges and mutual interest are prioritized in your daily swipe stack.',
     order: 1,
     status: 'Published',
-    views: '48,200',
   },
   {
     id: 'FAQ-2',
@@ -46,7 +45,6 @@ const INITIAL_FAQS = [
     answer: 'Users perform a dynamic 5-second selfie gesture verification. Our secure biometric engine compares your real-time facial landmarks against your uploaded gallery photos. Once confirmed by our moderation team, your profile receives the verified badge.',
     order: 2,
     status: 'Published',
-    views: '62,400',
   },
   {
     id: 'FAQ-3',
@@ -55,7 +53,6 @@ const INITIAL_FAQS = [
     answer: 'Premium unlocks Unlimited Likes, the ability to See Who Likes You, 5 free weekly Super Likes, Profile Boost to top of deck, Rewind Swipes, Advanced Filters (height, lifestyle, verified only), and an ad-free experience.',
     order: 3,
     status: 'Published',
-    views: '39,150',
   },
   {
     id: 'FAQ-4',
@@ -64,7 +61,6 @@ const INITIAL_FAQS = [
     answer: 'Yes! In Settings > Profile Visibility, choose "Hidden" or enable "Incognito Mode". Existing matches can still message you, but your profile will not be shown to any new prospective members.',
     order: 4,
     status: 'Published',
-    views: '24,800',
   },
   {
     id: 'FAQ-5',
@@ -73,7 +69,6 @@ const INITIAL_FAQS = [
     answer: 'Subscriptions can be managed directly in the Account Settings > Subscription tab. For refund requests within 48 hours of purchase, please reach out to support@loveconnect.com with your transaction receipt ID.',
     order: 5,
     status: 'Published',
-    views: '18,900',
   },
   {
     id: 'FAQ-6',
@@ -82,7 +77,6 @@ const INITIAL_FAQS = [
     answer: 'Our 24/7 trust & safety moderation team investigates flagged accounts within 15 minutes. If a profile violates our community guidelines (scam, fake photos, harassment), they are immediately banned across device hardware IDs.',
     order: 6,
     status: 'Published',
-    views: '31,400',
   },
 ];
 
@@ -139,7 +133,6 @@ export default function FAQManagement() {
       const newFaq = {
         id: `FAQ-${faqs.length + 1}`,
         ...form,
-        views: '0',
       };
       setFaqs([...faqs, newFaq]);
     }
@@ -155,72 +148,40 @@ export default function FAQManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A]">
+    <div className="h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] overflow-hidden">
       <AdminNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <AdminSidebar activeTab="FAQ Management" setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {/* HEADER */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#FFE7F0] text-[#FF2D72]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-xl bg-[#FFE7F0] text-[#FF2D72]">
                   <HelpCircle className="w-5 h-5 stroke-[2.5]" />
                 </div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight" style={{ color: COLORS.dark }}>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">
                   FAQ Management
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFE7F0] text-[#FF2D72]">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FFE7F0] text-[#FF2D72]">
                   {faqs.length} Questions
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-1 font-medium">
                 Maintain public customer help center questions, categorizations, answers, and display order.
               </p>
             </div>
 
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
-              style={{ backgroundColor: COLORS.pink }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer bg-[#FF2D72]"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add FAQ Question</span>
             </button>
           </div>
-
-          {/* SEARCH & CATEGORY FILTER BAR */}
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    selectedCategory === cat
-                      ? 'bg-[#FF2D72] text-white shadow-xs'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search questions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:border-[#FF2D72]"
-              />
-            </div>
-          </div>
-
           {/* FAQS ACCORDION / LIST */}
           <div className="space-y-3">
             {filteredFaqs.map((faq) => {
@@ -232,49 +193,54 @@ export default function FAQManagement() {
                 >
                   <div
                     onClick={() => setExpandedId(isExpanded ? null : faq.id)}
-                    className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50"
+                    className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/60"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-xl bg-pink-50 text-[#FF2D72] font-black text-xs flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3.5 min-w-0 pr-4">
+                      <span className="w-8 h-8 rounded-xl bg-pink-100 text-[#FF2D72] font-black text-xs flex items-center justify-center shrink-0">
                         #{faq.order}
                       </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-gray-900">{faq.question}</span>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFE7F0] text-[#FF2D72]">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="text-sm sm:text-sm font-bold text-gray-900 leading-snug">
+                            {faq.question}
+                          </h3>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFE7F0] text-[#FF2D72] border border-pink-200/50 shrink-0">
                             {faq.category}
                           </span>
                         </div>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">
-                          {faq.views} views • Status: <span className="text-green-600 font-bold">{faq.status}</span>
-                        </span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            {faq.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleOpenEdit(faq)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-[#7C3AED] hover:bg-purple-50"
+                        className="p-2 rounded-xl text-gray-500 hover:text-[#7C3AED] hover:bg-purple-50 transition-colors cursor-pointer"
                         title="Edit Question"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(faq.id)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        className="p-2 rounded-xl text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Delete Question"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <div className="p-1.5 text-gray-400">
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
                       </div>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="px-5 pb-5 pt-1 text-xs text-gray-600 leading-relaxed border-t border-gray-50 bg-gray-50/40">
-                      <p className="mt-2">{faq.answer}</p>
+                    <div className="px-6 pb-6 pt-3 border-t border-gray-100 bg-gray-50/60 font-normal">
+                      <p className="mt-1 text-sm text-gray-800 leading-relaxed font-normal">{faq.answer}</p>
                     </div>
                   )}
                 </div>

@@ -32,43 +32,36 @@ export default function AdminDashboard() {
     {
       title: 'Total Users',
       value: '24,568',
-      change: '+12% this month',
       bgColor: '#FF2D72',
       icon: Users,
     },
     {
       title: 'Active Users',
       value: '8,432',
-      change: '+8% this month',
       bgColor: '#3B82F6',
       icon: Users,
     },
     {
       title: 'Total Matches',
       value: '12,346',
-      change: '+18% this month',
       bgColor: '#7C3AED',
       icon: Heart,
     },
     {
       title: 'Total Messages',
       value: '56,789',
-      change: '+22% this month',
       bgColor: '#F59E0B',
       icon: MessageSquare,
     },
     {
       title: 'Total Revenue',
       value: '₹4,26,890',
-      change: '+28% this month',
       bgColor: '#22C55E',
       iconText: '₹',
     },
     {
       title: 'Reports',
       value: '148',
-      change: '+5% this month',
-      changeColor: '#EF4444',
       bgColor: '#EF4444',
       icon: AlertTriangle,
     },
@@ -224,7 +217,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
+    <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-poppins flex flex-col overflow-hidden">
       {/* TOP NAVBAR HEADER */}
       <AdminNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
@@ -240,18 +233,12 @@ export default function AdminDashboard() {
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                 Dashboard
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Real-time operational metrics, member matching pulse and platform revenue analytics
               </p>
             </div>
 
-            <button
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-xs shadow-sm transition-all hover:opacity-90 self-start sm:self-auto cursor-pointer"
-              style={{ backgroundColor: COLORS.pink }}
-            >
-              <Download className="w-4 h-4" />
-              <span>Export Analytics</span>
-            </button>
+
           </div>
 
           {/* TOP 6 KPI METRIC CARDS */}
@@ -271,7 +258,7 @@ export default function AdminDashboard() {
                     {Icon ? <Icon className="w-5.5 h-5.5 stroke-[2.2]" /> : <span className="font-extrabold text-base">{kpi.iconText}</span>}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>
@@ -559,7 +546,7 @@ export default function AdminDashboard() {
           {/* BOTTOM ROW 3: RECENT REPORTS TABLE & SUBSCRIPTION SUMMARY */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Recent Reports Table */}
-            <div className="lg:col-span-2 bg-white/80 backdrop-blur-md rounded-2xl p-5 border border-gray-100/80 shadow-xs overflow-x-auto">
+            <div className="lg:col-span-12 bg-white/80 backdrop-blur-md rounded-2xl p-5 border border-gray-100/80 shadow-xs overflow-x-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
                   Recent Reports
@@ -627,117 +614,7 @@ export default function AdminDashboard() {
               </table>
             </div>
 
-            {/* Subscription Summary Bar Chart & Plan Cards */}
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-5 border border-gray-100/80 shadow-xs flex flex-col justify-between space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
-                  Subscription Summary
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button className="px-3 py-1.5 rounded-2xl text-xs font-extrabold bg-[#FFE7F0]/80 backdrop-blur-md text-[#FF2D72] border border-[#FF2D72]/20 hover:bg-[#FFE7F0] transition-colors cursor-pointer">
-                    View All
-                  </button>
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>Last 30 Days</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Bar Legend */}
-              <div className="flex items-center gap-4 text-xs font-semibold">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.pink }}></span>
-                  <span className="text-gray-600">Free Users</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.purple }}></span>
-                  <span className="text-gray-600">Premium Users</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.blue }}></span>
-                  <span className="text-gray-600">Boost Users</span>
-                </div>
-              </div>
-
-              {/* Bar Chart Visualization */}
-              <div className="h-40 w-full flex items-end justify-around border-b border-gray-100 pb-2 px-2 gap-2">
-                {/* Week 1 */}
-                <div className="flex flex-col items-center gap-1 h-full justify-end">
-                  <div className="flex items-end gap-1">
-                    <div className="w-3.5 rounded-t-md" style={{ height: '90px', backgroundColor: COLORS.pink }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '60px', backgroundColor: COLORS.purple }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '30px', backgroundColor: COLORS.blue }}></div>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">Week 1</span>
-                </div>
-
-                {/* Week 2 */}
-                <div className="flex flex-col items-center gap-1 h-full justify-end">
-                  <div className="flex items-end gap-1">
-                    <div className="w-3.5 rounded-t-md" style={{ height: '110px', backgroundColor: COLORS.pink }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '70px', backgroundColor: COLORS.purple }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '45px', backgroundColor: COLORS.blue }}></div>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">Week 2</span>
-                </div>
-
-                {/* Week 3 */}
-                <div className="flex flex-col items-center gap-1 h-full justify-end">
-                  <div className="flex items-end gap-1">
-                    <div className="w-3.5 rounded-t-md" style={{ height: '100px', backgroundColor: COLORS.pink }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '55px', backgroundColor: COLORS.purple }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '35px', backgroundColor: COLORS.blue }}></div>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">Week 3</span>
-                </div>
-
-                {/* Week 4 */}
-                <div className="flex flex-col items-center gap-1 h-full justify-end">
-                  <div className="flex items-end gap-1">
-                    <div className="w-3.5 rounded-t-md" style={{ height: '120px', backgroundColor: COLORS.pink }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '80px', backgroundColor: COLORS.purple }}></div>
-                    <div className="w-3.5 rounded-t-md" style={{ height: '50px', backgroundColor: COLORS.blue }}></div>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">Week 4</span>
-                </div>
-              </div>
-
-              {/* 3 Mini Plan Cards */}
-              <div className="grid grid-cols-3 gap-2 pt-2">
-                <div className="bg-pink-50/60 p-2.5 rounded-xl border border-pink-100 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center bg-pink-100 text-[#FF2D72]">
-                      <Heart className="w-3 h-3 fill-[#FF2D72]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700">Monthly Plan</span>
-                  </div>
-                  <div className="font-extrabold text-sm" style={{ color: COLORS.dark }}>1,243</div>
-                  <div className="text-[9px] font-bold text-[#22C55E]">+15%</div>
-                </div>
-
-                <div className="bg-purple-50/60 p-2.5 rounded-xl border border-purple-100 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center bg-purple-100 text-[#7C3AED]">
-                      <Zap className="w-3 h-3 fill-[#7C3AED]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700">Yearly Plan</span>
-                  </div>
-                  <div className="font-extrabold text-sm" style={{ color: COLORS.dark }}>536</div>
-                  <div className="text-[9px] font-bold text-[#22C55E]">+22%</div>
-                </div>
-
-                <div className="bg-pink-50/40 p-2.5 rounded-xl border border-pink-100 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center bg-pink-100 text-[#FF2D72]">
-                      <Zap className="w-3 h-3" />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700">Boost Plan</span>
-                  </div>
-                  <div className="font-extrabold text-sm" style={{ color: COLORS.dark }}>322</div>
-                  <div className="text-[9px] font-bold text-[#22C55E]">+18%</div>
-                </div>
-              </div>
-            </div>
           </div>
         </main>
       </div>

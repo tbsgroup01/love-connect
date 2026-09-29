@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   Volume2,
-  Maximize2
+  Maximize2,
+  Eye,
+  Trash2
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
@@ -48,39 +50,31 @@ export default function VideoCallLogs() {
     {
       title: 'Total Video Calls',
       value: '8,432',
-      change: '+28% this month',
-      changeColor: '#22C55E',
       bgColor: '#FF2D72',
       icon: Video,
     },
     {
       title: 'Total Call Duration',
       value: '1,248 hrs',
-      change: '+32% this month',
-      changeColor: '#22C55E',
       bgColor: '#3B82F6',
       icon: Clock,
     },
     {
       title: 'Unique Users',
       value: '4,213',
-      change: '+18% this month',
-      changeColor: '#22C55E',
       bgColor: '#7C3AED',
       icon: Users,
     },
     {
       title: 'Avg. Call Duration',
       value: '8.6 mins',
-      change: '+12% this month',
-      changeColor: '#22C55E',
       bgColor: '#F59E0B',
       icon: Star,
     },
   ];
 
   // Mock Video Call Logs Data matching reference image table exactly
-  const callLogsData = [
+  const initialCallLogsData = [
     {
       id: 1,
       callId: 'CALL0823456',
@@ -383,12 +377,57 @@ export default function VideoCallLogs() {
     },
   ];
 
-  const currentSelected = selectedCall || callLogsData[0];
+  const [callLogsData, setCallLogsData] = useState(initialCallLogsData);
+  const [selectedLogIds, setSelectedLogIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const currentSelected =
+    selectedCall && callLogsData.some((c) => c.id === selectedCall.id)
+      ? selectedCall
+      : callLogsData[0] || null;
 
   const filteredLogs = callLogsData.filter((log) => {
-    if (selectedTabFilter === 'All') return true;
-    return log.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
+    const matchesTab =
+      selectedTabFilter === 'All' ||
+      log.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      !searchTerm ||
+      log.caller.name.toLowerCase().includes(term) ||
+      log.receiver.name.toLowerCase().includes(term) ||
+      log.callId.toLowerCase().includes(term) ||
+      log.callType.toLowerCase().includes(term);
+    return matchesTab && matchesSearch;
   });
+
+  const isAllSelected =
+    filteredLogs.length > 0 &&
+    filteredLogs.every((item) => selectedLogIds.includes(item.id));
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedLogIds([]);
+    } else {
+      setSelectedLogIds(filteredLogs.map((item) => item.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedLogIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedLogIds.length === 0) return;
+    setCallLogsData((prev) => prev.filter((item) => !selectedLogIds.includes(item.id)));
+    setSelectedLogIds([]);
+  };
+
+  const handleDeleteCall = (id) => {
+    setCallLogsData((prev) => prev.filter((item) => item.id !== id));
+    setSelectedLogIds((prev) => prev.filter((item) => item !== id));
+  };
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -407,7 +446,7 @@ export default function VideoCallLogs() {
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                 Video Call Logs
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Monitor and manage video calls between users
               </p>
             </div>
@@ -430,7 +469,7 @@ export default function VideoCallLogs() {
                     <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[11px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
                     <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
                       {kpi.value}
                     </span>
@@ -454,9 +493,9 @@ export default function VideoCallLogs() {
                 <button
                   key={tab.key}
                   onClick={() => setSelectedTabFilter(tab.key)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${selectedTabFilter === tab.key
-                      ? 'text-white shadow-xs'
-                      : 'text-gray-500 hover:bg-gray-50'
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${selectedTabFilter === tab.key
+                    ? 'text-white shadow-xs'
+                    : 'text-gray-500 hover:bg-gray-50'
                     }`}
                   style={{
                     backgroundColor: selectedTabFilter === tab.key ? COLORS.pink : 'transparent',
@@ -472,6 +511,8 @@ export default function VideoCallLogs() {
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search..."
                 className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
               />
@@ -479,94 +520,166 @@ export default function VideoCallLogs() {
           </div>
 
           {/* TABLE AND RIGHT CALL PREVIEW PANEL SPLIT */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
             {/* VIDEO CALL LOGS TABLE (2 Cols wide on XL) */}
             <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between overflow-x-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-800 text-sm">
+                  All Video Calls ({filteredLogs.length})
+                </h3>
+                {selectedLogIds.length > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete Selected ({selectedLogIds.length})
+                  </button>
+                )}
+              </div>
+
               <table className="w-full text-left text-xs min-w-[750px]">
                 <thead>
                   <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
-                    <th className="pb-3 w-8">#</th>
+                    <th className="pb-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-[#FF2D72] focus:ring-[#FF2D72] cursor-pointer"
+                      />
+                    </th>
                     <th className="pb-3 font-semibold">Caller</th>
                     <th className="pb-3 font-semibold">Receiver</th>
                     <th className="pb-3 font-semibold">Call Type</th>
                     <th className="pb-3 font-semibold">Duration</th>
                     <th className="pb-3 font-semibold">Date & Time</th>
                     <th className="pb-3 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filteredLogs.map((item, idx) => {
-                    const isSelected = currentSelected.id === item.id;
-                    return (
-                      <tr
-                        key={item.id}
-                        onClick={() => setSelectedCall(item)}
-                        className={`cursor-pointer transition-colors ${isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
+                  {filteredLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">
+                        No video call logs found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredLogs.map((item) => {
+                      const isSelected = currentSelected && currentSelected.id === item.id;
+                      return (
+                        <tr
+                          key={item.id}
+                          onClick={() => setSelectedCall(item)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? 'bg-pink-50/50' : 'hover:bg-gray-50/50'
                           }`}
-                      >
-                        <td className="py-3.5 font-bold text-gray-400">{idx + 1}</td>
-                        <td className="py-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src={item.caller.avatar}
-                              alt={item.caller.name}
-                              className="w-8 h-8 rounded-full object-cover border"
-                              style={{ borderColor: isSelected ? COLORS.pink : '#E5E7EB' }}
-                            />
-                            <div>
-                              <div className="font-bold text-gray-900">{item.caller.name}</div>
-                              <div className="text-gray-400 text-[10px]">
-                                {item.caller.age}, {item.caller.location}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src={item.receiver.avatar}
-                              alt={item.receiver.name}
-                              className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                            />
-                            <div>
-                              <div className="font-bold text-gray-900">{item.receiver.name}</div>
-                              <div className="text-gray-400 text-[10px]">
-                                {item.receiver.age}, {item.receiver.location}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5">
-                          <div className="flex items-center gap-1.5 font-semibold text-gray-700">
-                            <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
-                            <span>{item.callType}</span>
-                          </div>
-                        </td>
-                        <td className="py-3.5 font-semibold text-gray-700">{item.duration}</td>
-                        <td className="py-3.5">
-                          <div className="font-semibold text-gray-700">{item.date}</div>
-                          <div className="text-gray-400 text-[10px]">{item.time}</div>
-                        </td>
-                        <td className="py-3.5">
-                          <span
-                            className="px-3 py-1 rounded-full font-bold text-[10px] inline-block"
-                            style={{
-                              backgroundColor: item.statusBg,
-                              color: item.statusColor,
-                            }}
+                        >
+                          <td
+                            className="py-3.5 text-center"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            {item.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            <input
+                              type="checkbox"
+                              checked={selectedLogIds.includes(item.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleToggleSelect(item.id);
+                              }}
+                              className="rounded border-gray-300 text-[#FF2D72] focus:ring-[#FF2D72] cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <img
+                                src={item.caller.avatar}
+                                alt={item.caller.name}
+                                className="w-8 h-8 rounded-full object-cover border"
+                                style={{ borderColor: isSelected ? COLORS.pink : '#E5E7EB' }}
+                              />
+                              <div>
+                                <div className="font-bold text-gray-900">{item.caller.name}</div>
+                                <div className="text-gray-400 text-[10px]">
+                                  {item.caller.age}, {item.caller.location}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <img
+                                src={item.receiver.avatar}
+                                alt={item.receiver.name}
+                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                              />
+                              <div>
+                                <div className="font-bold text-gray-900">{item.receiver.name}</div>
+                                <div className="text-gray-400 text-[10px]">
+                                  {item.receiver.age}, {item.receiver.location}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5">
+                            <div className="flex items-center gap-1.5 font-semibold text-gray-700">
+                              <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
+                              <span>{item.callType}</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 font-semibold text-gray-700">{item.duration}</td>
+                          <td className="py-3.5">
+                            <div className="font-semibold text-gray-700">{item.date}</div>
+                            <div className="text-gray-400 text-[10px]">{item.time}</div>
+                          </td>
+                          <td className="py-3.5">
+                            <span
+                              className="px-3 py-1 rounded-full font-bold text-[10px] inline-block"
+                              style={{
+                                backgroundColor: item.statusBg,
+                                color: item.statusColor,
+                              }}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                          <td
+                            className="py-3.5 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCall(item);
+                                }}
+                                title="View Call Details"
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCall(item.id);
+                                }}
+                                title="Delete Log"
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
 
               {/* Pagination matching reference image */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
-                <span>Showing 1 to 10 of 8,432 call logs</span>
+                <span>Showing {filteredLogs.length > 0 ? 1 : 0} to {filteredLogs.length} of {callLogsData.length} call logs</span>
                 <div className="flex items-center gap-2">
                   <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
                     <option>10 per page</option>
@@ -606,186 +719,111 @@ export default function VideoCallLogs() {
               </div>
             </div>
 
-            {/* RIGHT CALL PREVIEW & DETAILS PANEL matching reference image */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
-                    Call Preview
-                  </h2>
-                  <button className="text-gray-400 hover:text-gray-600 p-1">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Video Call Player Mockup with PiP Video overlay */}
-                <div className="relative bg-black rounded-2xl overflow-hidden h-52 mb-4 group shadow-md">
-                  <img
-                    src={currentSelected.previewImage}
-                    alt="Receiver Preview"
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Picture-in-Picture Floating Window */}
-                  <div className="absolute top-3 right-3 w-16 h-20 rounded-xl overflow-hidden border-2 border-white shadow-lg">
-                    <img
-                      src={currentSelected.pipImage}
-                      alt="Caller PiP"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Player Controls Bar at bottom */}
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 flex items-center justify-between text-white text-xs">
-                    <div className="flex items-center gap-2">
-                      <Play className="w-3.5 h-3.5 fill-current cursor-pointer hover:scale-110 transition-transform" />
-                      <span className="text-[11px] font-medium font-mono">{currentSelected.duration} / 12:34</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="w-3.5 h-3.5 cursor-pointer" />
-                      <Maximize2 className="w-3.5 h-3.5 cursor-pointer" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Call Details Breakdown matching reference image */}
-                <div className="space-y-2.5 text-xs pb-3 border-b border-gray-100">
-                  <h4 className="font-bold text-gray-900 text-xs mb-1">Call Details</h4>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Call ID</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.callId}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Caller</span>
-                    <div className="flex items-center gap-1.5 font-semibold text-gray-800">
-                      <img
-                        src={currentSelected.caller.avatar}
-                        alt="Caller"
-                        className="w-5 h-5 rounded-full object-cover"
-                      />
-                      <span>{currentSelected.caller.name}</span>
-                      <span className="text-gray-400 font-normal text-[10px]">
-                        {currentSelected.caller.age}, {currentSelected.caller.location}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Receiver</span>
-                    <div className="flex items-center gap-1.5 font-semibold text-gray-800">
-                      <img
-                        src={currentSelected.receiver.avatar}
-                        alt="Receiver"
-                        className="w-5 h-5 rounded-full object-cover"
-                      />
-                      <span>{currentSelected.receiver.name}</span>
-                      <span className="text-gray-400 font-normal text-[10px]">
-                        {currentSelected.receiver.age}, {currentSelected.receiver.location}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Call Type</span>
-                    <div className="flex items-center gap-1 font-semibold text-gray-800">
-                      <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
-                      <span>{currentSelected.callType}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Date & Time</span>
-                    <span className="font-semibold text-gray-800">
-                      {currentSelected.date}, {currentSelected.time}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Duration</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.rawDuration}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Status</span>
-                    <span
-                      className="px-2.5 py-0.5 rounded-md font-bold text-[10px]"
-                      style={{
-                        backgroundColor: currentSelected.statusBg,
-                        color: currentSelected.statusColor,
-                      }}
+            {/* RIGHT CALL PREVIEW & DETAILS PANEL */}
+            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit">
+              {currentSelected ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
+                      Call Preview
+                    </h2>
+                    <button
+                      onClick={() => setSelectedCall(null)}
+                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
                     >
-                      {currentSelected.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Device Info</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.deviceInfo}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Network</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.network}</span>
-                  </div>
-                </div>
-
-                {/* Call Statistics 2x2 Mini Grid matching reference UI bottom right */}
-                <div className="pt-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-gray-900 text-xs">Call Statistics</h4>
-                    <button className="text-[11px] font-bold" style={{ color: COLORS.pink }}>
-                      View All
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-pink-50/60 p-2.5 rounded-xl border border-pink-100 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-[#FF2D72] shrink-0">
-                        <Video className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-extrabold text-xs text-gray-900 block">8,432</span>
-                        <span className="text-[9px] text-gray-400 font-semibold block leading-none">Total Calls</span>
-                        <span className="text-[9px] font-bold text-green-600 block mt-0.5">↑ 28%</span>
+                  {/* Video Call Player Mockup with PiP Video overlay */}
+                  <div className="relative bg-black rounded-2xl overflow-hidden h-52 mb-4 group shadow-md">
+                    <img
+                      src={currentSelected.previewImage}
+                      alt="Receiver Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Picture-in-Picture Floating Window */}
+                    <div className="absolute top-3 right-3 w-16 h-20 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                      <img
+                        src={currentSelected.pipImage}
+                        alt="Caller PiP"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Call Details Breakdown */}
+                  <div className="space-y-2.5 text-xs">
+                    <h4 className="font-bold text-gray-900 text-xs mb-1">Call Details</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Caller</span>
+                      <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                        <img
+                          src={currentSelected.caller.avatar}
+                          alt="Caller"
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span>{currentSelected.caller.name}</span>
+                        <span className="text-gray-400 font-normal text-[10px]">
+                          {currentSelected.caller.age}, {currentSelected.caller.location}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="bg-blue-50/60 p-2.5 rounded-xl border border-blue-100 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-blue-500 shrink-0">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-extrabold text-xs text-gray-900 block">1,248 hrs</span>
-                        <span className="text-[9px] text-gray-400 font-semibold block leading-none">Total Duration</span>
-                        <span className="text-[9px] font-bold text-green-600 block mt-0.5">↑ 32%</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-purple-50/60 p-2.5 rounded-xl border border-purple-100 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-purple-600 shrink-0">
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="font-extrabold text-xs text-gray-900 block">4,213</span>
-                        <span className="text-[9px] text-gray-400 font-semibold block leading-none">Unique Users</span>
-                        <span className="text-[9px] font-bold text-green-600 block mt-0.5">↑ 18%</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Receiver</span>
+                      <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                        <img
+                          src={currentSelected.receiver.avatar}
+                          alt="Receiver"
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span>{currentSelected.receiver.name}</span>
+                        <span className="text-gray-400 font-normal text-[10px]">
+                          {currentSelected.receiver.age}, {currentSelected.receiver.location}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-100 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-amber-500 shrink-0">
-                        <Star className="w-4 h-4" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Call Type</span>
+                      <div className="flex items-center gap-1 font-semibold text-gray-800">
+                        <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
+                        <span>{currentSelected.callType}</span>
                       </div>
-                      <div>
-                        <span className="font-extrabold text-xs text-gray-900 block">8.6 mins</span>
-                        <span className="text-[9px] text-gray-400 font-semibold block leading-none">Avg. Duration</span>
-                        <span className="text-[9px] font-bold text-green-600 block mt-0.5">↑ 12%</span>
-                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Date & Time</span>
+                      <span className="font-semibold text-gray-800">
+                        {currentSelected.date}, {currentSelected.time}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Duration</span>
+                      <span className="font-semibold text-gray-800">{currentSelected.rawDuration}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Status</span>
+                      <span
+                        className="px-2.5 py-0.5 rounded-md font-bold text-[10px]"
+                        style={{
+                          backgroundColor: currentSelected.statusBg,
+                          color: currentSelected.statusColor,
+                        }}
+                      >
+                        {currentSelected.status}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
+                  No call selected
+                </div>
+              )}
             </div>
           </div>
         </main>

@@ -138,8 +138,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             title: 'USER MANAGEMENT',
             items: [
                 { name: 'Users', icon: Users, path: '/admin/users' },
-                // { name: 'Profiles', icon: UserCheck, path: '/admin/profiles' },
-                // { name: 'Verifications', icon: ShieldCheck, path: '/admin/verifications' },
                 { name: 'Reports & Moderation', icon: Flag, path: '/admin/reports' },
             ],
         },
@@ -156,14 +154,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             items: [
                 { name: 'Subscription Plans', icon: CreditCard, path: '/admin/subscriptions' },
                 { name: 'Transactions', icon: Receipt, path: '/admin/transactions' },
-                { name: 'Revenue Reports', icon: BarChart3, path: '/admin/revenue' },
             ],
         },
         {
             title: 'CONTENT MANAGEMENT',
             items: [
-                { name: 'Push Notifications', icon: BellRing, path: '/admin/push-notifications' },
-                // { name: 'CMS Pages', icon: FileText, path: '/admin/cms-pages' },
                 { name: 'Banners & Ads', icon: Image, path: '/admin/banners' },
                 { name: 'FAQ Management', icon: HelpCircle, path: '/admin/faq' },
             ],
@@ -172,9 +167,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             title: 'SETTINGS',
             items: [
                 { name: 'App Settings', icon: Settings, path: '/admin/app-settings' },
-                // { name: 'Feature Management', icon: Sliders, path: '/admin/feature-management' },
-                // { name: 'Languages', icon: Globe, path: '/admin/languages' },
-                { name: 'Admin Users', icon: UserCog, path: '/admin/admin-users' },
                 { name: 'Activity Logs', icon: History, path: '/admin/activity-logs' },
             ],
         },
@@ -222,7 +214,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                             >
                                 <LayoutDashboard className="w-4.5 h-4.5 stroke-[2.2]" />
                             </div>
-                            {!collapsed && <span className="tracking-tight text-[13.5px] font-bold">Dashboard</span>}
+                            {!collapsed && <span className="tracking-tight text-[13.5px] font-semibold">Dashboard</span>}
                         </div>
                         {!collapsed && (
                             <ChevronRight
@@ -238,7 +230,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                     <div key={idx} className="space-y-1 pt-1">
                         {!collapsed ? (
                             <div className="flex items-center justify-between px-3 mb-1">
-                                <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+                                <h3 className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
                                     {section.title}
                                 </h3>
                             </div>
@@ -264,12 +256,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                                         <div
                                             className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 ${isActive
                                                 ? 'bg-[#FF2D72] text-white shadow-md shadow-pink-500/30'
-                                                : 'bg-gray-100/80 text-gray-500 group-hover:bg-pink-50 group-hover:text-[#FF2D72]'
+                                                : 'bg-pink-50 text-[#FF2D72] border border-pink-100'
                                                 }`}
                                         >
-                                            <Icon className="w-4 h-4 stroke-[2.2]" />
+                                            <Icon className="w-4.5 h-4.5 stroke-[2.2]" />
                                         </div>
-                                        {!collapsed && <span className="text-[13.5px] font-bold tracking-tight">{item.name}</span>}
+                                        {!collapsed && <span className="text-[13.5px] font-semibold tracking-tight">{item.name}</span>}
                                     </div>
 
                                     {!collapsed && (

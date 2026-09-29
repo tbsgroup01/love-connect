@@ -1,27 +1,16 @@
 import React, { useState } from 'react';
 import {
   MessageSquare,
-  Users,
-  Send,
-  Flag,
-  ShieldCheck,
-  Search,
-  Filter,
-  MoreVertical,
-  Video,
-  Phone,
-  Paperclip,
-  Image as ImageIcon,
-  Smile,
+  MessageCircle,
   ShieldAlert,
-  UserX,
-  Bell,
-  VolumeX,
-  User,
-  X,
-  CheckCheck,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Copy,
   Check,
-  MoreHorizontal
+  X,
+  Trash2,
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
@@ -42,331 +31,349 @@ const COLORS = {
 export default function ChatManagement() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Chat Management');
-  const [conversationFilter, setConversationFilter] = useState('All');
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [copiedId, setCopiedId] = useState(false);
 
-  // Top 5 KPI Cards matching reference UI image
+  // Top 3 KPI Cards specified by user:
+  // 1. Total Conversations
+  // 2. Active Chats
+  // 3. Reported Chats
   const kpiCards = [
     {
-      title: 'Total Chats',
+      title: 'Total Conversations',
       value: '56,789',
-      change: '+28% this month',
-      changeColor: '#22C55E',
       bgColor: '#FF2D72',
       icon: MessageSquare,
     },
     {
-      title: 'Active Conversations',
+      title: 'Active Chats',
       value: '8,432',
-      change: '+22% this month',
-      changeColor: '#22C55E',
       bgColor: '#22C55E',
-      icon: Users,
+      icon: MessageCircle,
     },
     {
-      title: 'Messages Today',
-      value: '12,450',
-      change: '+18% this month',
-      changeColor: '#22C55E',
-      bgColor: '#7C3AED',
-      icon: Send,
-    },
-    {
-      title: 'Reported Messages',
+      title: 'Reported Chats',
       value: '186',
-      change: '-12% this month',
-      changeColor: '#22C55E',
-      bgColor: '#F59E0B',
-      icon: Flag,
-    },
-    {
-      title: 'Auto Filtered',
-      value: '324',
-      change: '+32% this month',
-      changeColor: '#22C55E',
-      bgColor: '#3B82F6',
-      icon: ShieldCheck,
+      bgColor: '#EF4444',
+      icon: ShieldAlert,
     },
   ];
 
-  // Conversations List Mock Data matching reference image
-  const conversationsData = [
+  // Mock Conversations Data with full message history between both users
+  const initialConversationsData = [
     {
       id: 1,
-      name: 'Aaradhya Sharma',
-      age: 25,
-      location: 'Delhi, India',
-      isOnline: true,
-      lastSeen: 'Online now',
-      time: '10:24 AM',
-      unreadCount: 2,
-      lastMessage: 'Hey! How are you doing? 😊',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '15 Sep 2026, 10:20 AM',
-      totalMessages: 24,
-      photosShared: 8,
-      status: 'Active',
-      userType: 'Premium User',
-      reportCount: 0,
-      sharedMedia: [
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80',
-      ],
-      extraMediaCount: 5,
+      conversationId: 'CNV-849201',
+      userA: {
+        name: 'Rohan Mehta',
+        age: 28,
+        location: 'Mumbai, India',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Aaradhya Sharma',
+        age: 25,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 142,
+      lastActivityDate: '15 Sep 2026',
+      lastActivityTime: '10:24 AM',
+      createdDate: '01 Sep 2026',
       messages: [
-        { id: 101, text: 'Hi there! 👋', time: '10:20 AM', isSender: false },
-        { id: 102, text: 'I came across your profile and really liked it.', time: '10:21 AM', isSender: false },
-        { id: 103, text: 'Hey! How are you doing? 😊', time: '10:22 AM', isSender: true },
-        { id: 104, text: "I'm good, thanks! What about you?", time: '10:22 AM', isSender: false },
-        { id: 105, text: "I'm doing great! Do you like travelling?", time: '10:23 AM', isSender: true },
-        { id: 106, text: 'Yes! I love travelling and exploring new places.', time: '10:24 AM', isSender: false },
-        {
-          id: 107,
-          text: '',
-          time: '10:24 AM',
-          isSender: false,
-          images: [
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
-          ]
-        },
-        { id: 108, text: 'Here are some of my recent photos from my trip! 😍', time: '10:24 AM', isSender: false },
-        { id: 109, text: 'Wow! These photos are amazing! 😊', time: '10:25 AM', isSender: true },
-      ]
+        { senderId: 'userA', text: 'Hi Aaradhya! I came across your profile and really liked your Himachal travel photos 😊', time: '10:18 AM' },
+        { senderId: 'userB', text: 'Hey Rohan! Thanks so much! Yes, Himachal was an incredible experience.', time: '10:20 AM' },
+        { senderId: 'userA', text: 'Are you into trekking and mountain trails too?', time: '10:22 AM' },
+        { senderId: 'userB', text: 'Yes, absolutely! I try to go whenever I get a long weekend off 🏔️', time: '10:23 AM' },
+        { senderId: 'userA', text: 'Same here. Maybe we could catch up over coffee this weekend and share stories?', time: '10:24 AM' },
+        { senderId: 'userB', text: "That sounds wonderful! Let's plan it ☕", time: '10:24 AM' },
+      ],
     },
     {
       id: 2,
-      name: 'Priya Singh',
-      age: 23,
-      location: 'Bangalore, India',
-      isOnline: true,
-      lastSeen: 'Online now',
-      time: '09:18 AM',
-      unreadCount: 1,
-      lastMessage: 'That sounds great! 👍',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '15 Sep 2026, 09:00 AM',
-      totalMessages: 18,
-      photosShared: 4,
-      status: 'Active',
-      userType: 'VIP Gold User',
-      reportCount: 0,
-      sharedMedia: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-      ],
-      extraMediaCount: 3,
+      conversationId: 'CNV-849200',
+      userA: {
+        name: 'Karan Verma',
+        age: 29,
+        location: 'Bangalore, India',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Priya Singh',
+        age: 26,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 68,
+      lastActivityDate: '15 Sep 2026',
+      lastActivityTime: '09:18 AM',
+      createdDate: '10 Sep 2026',
       messages: [
-        { id: 201, text: 'Hello! Nice to meet you.', time: '09:00 AM', isSender: false },
-        { id: 202, text: 'That sounds great! 👍', time: '09:18 AM', isSender: false },
-      ]
+        { senderId: 'userA', text: "Hey Priya, hope you're having a good week.", time: '09:10 AM' },
+        { senderId: 'userB', text: 'Hi Karan, yes pretty busy with work though.', time: '09:12 AM' },
+        { senderId: 'userA', text: 'Why are you taking so long to reply? Are you ignoring me?', time: '09:15 AM' },
+        { senderId: 'userB', text: 'Please stop messaging repeatedly. I was in a meeting and I have told you I am not interested.', time: '09:16 AM' },
+        { senderId: 'userA', text: 'You cannot just ignore me like that, check this out.', time: '09:17 AM' },
+        { senderId: 'userB', text: 'I am reporting this conversation now.', time: '09:18 AM' },
+      ],
     },
     {
       id: 3,
-      name: 'Neha Patel',
-      age: 25,
-      location: 'Chennai, India',
-      isOnline: false,
-      lastSeen: 'Yesterday',
-      time: 'Yesterday',
-      unreadCount: 0,
-      lastMessage: 'Nice to meet you!',
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '14 Sep 2026, 04:12 PM',
-      totalMessages: 12,
-      photosShared: 2,
-      status: 'Active',
-      userType: 'Free User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849199',
+      userA: {
+        name: 'Rahul Mehta',
+        age: 32,
+        location: 'Gurgaon, India',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Neha Patel',
+        age: 28,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 215,
+      lastActivityDate: '14 Sep 2026',
+      lastActivityTime: '08:55 PM',
+      createdDate: '28 Aug 2026',
       messages: [
-        { id: 301, text: 'Nice to meet you!', time: 'Yesterday', isSender: false },
-      ]
+        { senderId: 'userA', text: 'Good evening Neha! How did your design workshop go today?', time: '08:45 PM' },
+        { senderId: 'userB', text: 'Hey Rahul! It went so well! Lots of energetic participants 😊', time: '08:48 PM' },
+        { senderId: 'userA', text: "I'm so glad to hear that! You must be tired though.", time: '08:50 PM' },
+        { senderId: 'userB', text: 'A bit, but very fulfilled. Heading home now!', time: '08:52 PM' },
+        { senderId: 'userA', text: "Have a safe commute! Let's talk tomorrow.", time: '08:55 PM' },
+      ],
     },
     {
       id: 4,
-      name: 'Sneha Reddy',
-      age: 26,
-      location: 'Hyderabad, India',
-      isOnline: false,
-      lastSeen: 'Yesterday',
-      time: 'Yesterday',
-      unreadCount: 0,
-      lastMessage: 'Are you free this weekend?',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-      isReported: true,
-      firstMessageDate: '14 Sep 2026, 02:00 PM',
-      totalMessages: 8,
-      photosShared: 1,
-      status: 'Reported',
-      userType: 'Free User',
-      reportCount: 1,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849198',
+      userA: {
+        name: 'Amit Kumar',
+        age: 30,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Sneha Reddy',
+        age: 27,
+        location: 'Hyderabad, India',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 34,
+      lastActivityDate: '14 Sep 2026',
+      lastActivityTime: '07:42 PM',
+      createdDate: '13 Sep 2026',
       messages: [
-        { id: 401, text: 'Are you free this weekend?', time: 'Yesterday', isSender: false },
-      ]
+        { senderId: 'userA', text: 'Hey Sneha, nice to connect with you on LoveConnect!', time: '07:35 PM' },
+        { senderId: 'userB', text: 'Hi Amit, nice to meet you too.', time: '07:38 PM' },
+        { senderId: 'userA', text: 'Hey join my exclusive crypto club click here: bit.ly/free-crypto-giveaway', time: '07:40 PM' },
+        { senderId: 'userB', text: 'Is this a scam? Please do not send unauthorized promotional links.', time: '07:41 PM' },
+        { senderId: 'userB', text: 'I am reporting this account to admins.', time: '07:42 PM' },
+      ],
     },
     {
       id: 5,
-      name: 'Karan Verma',
-      age: 29,
-      location: 'Pune, India',
-      isOnline: true,
-      lastSeen: 'Online now',
-      time: '14 Sep',
-      unreadCount: 0,
-      lastMessage: "Sure, let's connect!",
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '14 Sep 2026',
-      totalMessages: 15,
-      photosShared: 3,
-      status: 'Active',
-      userType: 'Free User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849197',
+      userA: {
+        name: 'Vikram Singh',
+        age: 31,
+        location: 'Pune, India',
+        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Pooja Verma',
+        age: 26,
+        location: 'Noida, India',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 89,
+      lastActivityDate: '14 Sep 2026',
+      lastActivityTime: '06:21 PM',
+      createdDate: '05 Sep 2026',
       messages: [
-        { id: 501, text: "Sure, let's connect!", time: '14 Sep', isSender: false },
-      ]
+        { senderId: 'userA', text: 'Hey Pooja! Noticed you listen to a lot of indie rock music 🎸', time: '06:10 PM' },
+        { senderId: 'userB', text: "Hey Vikram! Yes, it's my go-to genre every day!", time: '06:14 PM' },
+        { senderId: 'userA', text: 'Have you listened to the new acoustic release by The Local Train?', time: '06:18 PM' },
+        { senderId: 'userB', text: 'Yes! The melodies are absolutely beautiful ✨', time: '06:21 PM' },
+      ],
     },
     {
       id: 6,
-      name: 'Amit Kumar',
-      age: 30,
-      location: 'Noida, India',
-      isOnline: false,
-      lastSeen: '13 Sep',
-      time: '13 Sep',
-      unreadCount: 0,
-      lastMessage: 'Shared a photo',
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '13 Sep 2026',
-      totalMessages: 6,
-      photosShared: 2,
-      status: 'Active',
-      userType: 'Premium User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849196',
+      userA: {
+        name: 'Alisha Verma',
+        age: 25,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Riya Malhotra',
+        age: 24,
+        location: 'Mumbai, India',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 112,
+      lastActivityDate: '14 Sep 2026',
+      lastActivityTime: '03:12 PM',
+      createdDate: '02 Sep 2026',
       messages: [
-        { id: 601, text: 'Shared a photo', time: '13 Sep', isSender: false },
-      ]
+        { senderId: 'userA', text: 'Hi Riya! Your cafe recommendations in Bandra were on point!', time: '03:02 PM' },
+        { senderId: 'userB', text: "Haha I'm so glad you checked them out! Did you try the almond croissants?", time: '03:05 PM' },
+        { senderId: 'userA', text: "Yes, they were fresh and crisp! Best I've had in a while.", time: '03:08 PM' },
+        { senderId: 'userB', text: 'Told you! Next time we should check out their cold brews together ☕', time: '03:12 PM' },
+      ],
     },
     {
       id: 7,
-      name: 'Rahul Mehta',
-      age: 32,
-      location: 'Gurgaon, India',
-      isOnline: true,
-      lastSeen: 'Online now',
-      time: '12 Sep',
-      unreadCount: 0,
-      lastMessage: 'You: Thanks! 😊',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '12 Sep 2026',
-      totalMessages: 30,
-      photosShared: 5,
-      status: 'Active',
-      userType: 'VIP Gold User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849195',
+      userA: {
+        name: 'Karan Sharma',
+        age: 30,
+        location: 'Bangalore, India',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Simran Kaur',
+        age: 28,
+        location: 'Bangalore, India',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 46,
+      lastActivityDate: '13 Sep 2026',
+      lastActivityTime: '11:24 AM',
+      createdDate: '09 Sep 2026',
       messages: [
-        { id: 701, text: 'Thanks! 😊', time: '12 Sep', isSender: true },
-      ]
+        { senderId: 'userA', text: 'Hey Simran, do you frequent Cubbon Park for weekend runs?', time: '11:15 AM' },
+        { senderId: 'userB', text: 'Yes, almost every Sunday morning around 7 AM!', time: '11:18 AM' },
+        { senderId: 'userA', text: 'Awesome, I run there too! Maybe we can do a lap together sometime.', time: '11:20 AM' },
+        { senderId: 'userB', text: 'Sure, that sounds fun! See you this Sunday.', time: '11:24 AM' },
+      ],
     },
     {
       id: 8,
-      name: 'Pooja Verma',
-      age: 27,
-      location: 'Chennai, India',
-      isOnline: false,
-      lastSeen: '12 Sep',
-      time: '12 Sep',
-      unreadCount: 0,
-      lastMessage: 'Let\'s plan for a coffee ☕',
-      avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '12 Sep 2026',
-      totalMessages: 14,
-      photosShared: 2,
-      status: 'Active',
-      userType: 'Free User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849194',
+      userA: {
+        name: 'Tanya Gupta',
+        age: 24,
+        location: 'Lucknow, India',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Vikram Singh',
+        age: 27,
+        location: 'Lucknow, India',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 18,
+      lastActivityDate: '13 Sep 2026',
+      lastActivityTime: '10:10 AM',
+      createdDate: '12 Sep 2026',
       messages: [
-        { id: 801, text: 'Let\'s plan for a coffee ☕', time: '12 Sep', isSender: false },
-      ]
+        { senderId: 'userB', text: 'Why did you not reply to my previous message? Respond now.', time: '10:05 AM' },
+        { senderId: 'userA', text: 'Please do not be rude. I do not wish to continue chatting.', time: '10:08 AM' },
+        { senderId: 'userB', text: 'You think you are too special to answer?', time: '10:09 AM' },
+        { senderId: 'userA', text: 'I am blocking and reporting this chat.', time: '10:10 AM' },
+      ],
     },
     {
       id: 9,
-      name: 'Vikram Singh',
-      age: 28,
-      location: 'Delhi, India',
-      isOnline: false,
-      lastSeen: '11 Sep',
-      time: '11 Sep',
-      unreadCount: 0,
-      lastMessage: 'Sure, see you there!',
-      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80',
-      isReported: true,
-      firstMessageDate: '11 Sep 2026',
-      totalMessages: 10,
-      photosShared: 1,
-      status: 'Reported',
-      userType: 'Free User',
-      reportCount: 2,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849193',
+      userA: {
+        name: 'Dev Malhotra',
+        age: 33,
+        location: 'Noida, India',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Nisha Kapoor',
+        age: 29,
+        location: 'Delhi, India',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 72,
+      lastActivityDate: '12 Sep 2026',
+      lastActivityTime: '08:20 PM',
+      createdDate: '04 Sep 2026',
       messages: [
-        { id: 901, text: 'Sure, see you there!', time: '11 Sep', isSender: false },
-      ]
+        { senderId: 'userA', text: 'Hi Nisha, great discussion about UI/UX design trends today!', time: '08:10 PM' },
+        { senderId: 'userB', text: 'Thanks Dev! Minimalist interfaces really are the future.', time: '08:15 PM' },
+        { senderId: 'userA', text: 'Totally agree. Looking forward to our next design meetup!', time: '08:20 PM' },
+      ],
     },
     {
       id: 10,
-      name: 'Tanya Gupta',
-      age: 24,
-      location: 'Lucknow, India',
-      isOnline: false,
-      lastSeen: '10 Sep',
-      time: '10 Sep',
-      unreadCount: 0,
-      lastMessage: 'You: Great! 👍',
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-      isReported: false,
-      firstMessageDate: '10 Sep 2026',
-      totalMessages: 8,
-      photosShared: 1,
-      status: 'Active',
-      userType: 'Free User',
-      reportCount: 0,
-      sharedMedia: [],
-      extraMediaCount: 0,
+      conversationId: 'CNV-849192',
+      userA: {
+        name: 'Rahul Das',
+        age: 27,
+        location: 'Kolkata, India',
+        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
+      },
+      userB: {
+        name: 'Sneha Reddy',
+        age: 26,
+        location: 'Kolkata, India',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+      },
+      totalMessages: 54,
+      lastActivityDate: '12 Sep 2026',
+      lastActivityTime: '05:40 PM',
+      createdDate: '06 Sep 2026',
       messages: [
-        { id: 1001, text: 'Great! 👍', time: '10 Sep', isSender: true },
-      ]
+        { senderId: 'userA', text: 'Hey Sneha! Have you explored the book cafes in College Street?', time: '05:30 PM' },
+        { senderId: 'userB', text: 'Oh yes, Indian Coffee House is my all-time favorite!', time: '05:35 PM' },
+        { senderId: 'userA', text: 'Classic choice! The nostalgia there is unmatched.', time: '05:40 PM' },
+      ],
     },
   ];
 
-  const currentSelected = selectedConversation || conversationsData[0];
+  const [conversationsData, setConversationsData] = useState(initialConversationsData);
+  const [selectedChatIds, setSelectedChatIds] = useState([]);
 
-  const filteredConversations = conversationsData.filter((conv) => {
-    if (conversationFilter === 'All') return true;
-    if (conversationFilter === 'Unread') return conv.unreadCount > 0;
-    if (conversationFilter === 'Reported') return conv.isReported;
-    return true;
+  const currentSelected =
+    selectedChat && conversationsData.some((c) => c.id === selectedChat.id)
+      ? selectedChat
+      : conversationsData[0] || null;
+
+  const filteredConversations = conversationsData.filter((item) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      !searchTerm ||
+      item.userA.name.toLowerCase().includes(term) ||
+      item.userB.name.toLowerCase().includes(term) ||
+      item.conversationId.toLowerCase().includes(term)
+    );
   });
+
+  const isAllSelected =
+    filteredConversations.length > 0 &&
+    filteredConversations.every((item) => selectedChatIds.includes(item.id));
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedChatIds([]);
+    } else {
+      setSelectedChatIds(filteredConversations.map((item) => item.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedChatIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedChatIds.length === 0) return;
+    setConversationsData((prev) => prev.filter((item) => !selectedChatIds.includes(item.id)));
+    setSelectedChatIds([]);
+  };
+
+  const handleDeleteConversation = (id) => {
+    setConversationsData((prev) => prev.filter((item) => item.id !== id));
+    setSelectedChatIds((prev) => prev.filter((item) => item !== id));
+  };
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -375,419 +382,403 @@ export default function ChatManagement() {
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* SIDEBAR NAVIGATION */}
-        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} />
+        <AdminSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 flex flex-col">
-          {/* PAGE TITLE & HEADER */}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
-              Chat Management
-            </h1>
-            <p className="text-xs text-gray-400 mt-1">
-              Monitor and manage user conversations, report messages and ensure a safe community
-            </p>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+          {/* PAGE TITLE & ACTION HEADER */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
+                Chat Management
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Monitor user conversations, track active chat sessions, and manage privacy-compliant reported chats
+              </p>
+            </div>
           </div>
 
-          {/* TOP 5 KPI CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* TOP 3 KPI CARDS (Total Conversations, Active Chats, Reported Chats) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {kpiCards.map((kpi, idx) => {
               const Icon = kpi.icon;
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between"
+                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
+                  style={{ borderLeftColor: kpi.bgColor }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                      style={{ backgroundColor: kpi.bgColor }}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-gray-400 block">{kpi.title}</span>
-                      <span className="text-xl font-extrabold tracking-tight" style={{ color: COLORS.dark }}>
-                        {kpi.value}
-                      </span>
-                      <span
-                        className="text-[11px] font-bold block mt-0.5 flex items-center gap-1"
-                        style={{ color: kpi.changeColor }}
-                      >
-                        ↑ {kpi.change}
-                      </span>
-                    </div>
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
+                    style={{ backgroundColor: kpi.bgColor }}
+                  >
+                    <Icon className="w-5.5 h-5.5 stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[13px] font-semibold text-gray-500 block truncate">{kpi.title}</span>
+                    <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">
+                      {kpi.value}
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* 3-COLUMN CHAT INTERFACE SPLIT */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[580px] overflow-hidden">
-            {/* COLUMN 1: CONVERSATIONS LIST (3 Cols) */}
-            <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
-              {/* Conversations Header */}
-              <div className="p-3.5 border-b border-gray-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-sm text-gray-900">
-                    Conversations <span className="text-gray-400 text-xs font-normal">(8,432)</span>
-                  </h3>
-                </div>
-
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-8 pr-7 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                  />
-                  <Filter className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-gray-600" />
-                </div>
-
-                {/* Filter Pills */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  {[
-                    { label: 'All (8,432)', key: 'All' },
-                    { label: 'Unread (24)', key: 'Unread' },
-                    { label: 'Reported (14)', key: 'Reported' },
-                  ].map((pill) => (
-                    <button
-                      key={pill.key}
-                      onClick={() => setConversationFilter(pill.key)}
-                      className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all flex-1 text-center cursor-pointer ${
-                        conversationFilter === pill.key
-                          ? 'text-white shadow-2xs'
-                          : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
-                      }`}
-                      style={{
-                        backgroundColor: conversationFilter === pill.key ? COLORS.pink : '',
-                      }}
-                    >
-                      {pill.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Conversations Scroll List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-                {filteredConversations.map((conv) => {
-                  const isSelected = currentSelected.id === conv.id;
-                  return (
-                    <div
-                      key={conv.id}
-                      onClick={() => setSelectedConversation(conv)}
-                      className={`p-3.5 flex items-center justify-between cursor-pointer transition-colors relative ${
-                        isSelected ? 'bg-pink-50/60' : 'hover:bg-gray-50/60'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-1 rounded-r-md"
-                          style={{ backgroundColor: COLORS.pink }}
-                        ></div>
-                      )}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="relative shrink-0">
-                          <img
-                            src={conv.avatar}
-                            alt={conv.name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                          />
-                          {conv.isOnline && (
-                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-1">
-                            <h4 className="font-extrabold text-xs text-gray-900 truncate">
-                              {conv.name}
-                            </h4>
-                            <span className="text-[10px] text-gray-400 font-medium shrink-0">
-                              {conv.time}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-1 mt-0.5">
-                            <p className="text-[11px] text-gray-500 truncate font-medium">
-                              {conv.lastMessage}
-                            </p>
-                            {conv.unreadCount > 0 && (
-                              <span
-                                className="w-4 h-4 rounded-full text-[9px] font-extrabold text-white flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: COLORS.pink }}
-                              >
-                                {conv.unreadCount}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* COLUMN 2: ACTIVE CHAT MESSAGES WINDOW (6 Cols) */}
-            <div className="lg:col-span-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
-              {/* Chat Header */}
-              <div className="p-3.5 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={currentSelected.avatar}
-                      alt={currentSelected.name}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                    />
-                    {currentSelected.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-gray-900 leading-tight">
-                      {currentSelected.name}
-                    </h3>
-                    <p className="text-[11px] text-green-600 font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                      {currentSelected.lastSeen}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
-                    <Video className="w-4 h-4 text-blue-500" />
-                  </button>
-                  <button className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
-                    <Phone className="w-4 h-4 text-pink-500" />
-                  </button>
-                  <button className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                  <button
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-white font-bold text-xs shadow-2xs cursor-pointer ml-1"
-                    style={{ backgroundColor: COLORS.pink }}
-                  >
-                    <Flag className="w-3.5 h-3.5" />
-                    <span>Report</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Chat Messages Body */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/40">
-                {/* Date Divider */}
-                <div className="flex items-center justify-center my-2">
-                  <span className="text-[10px] font-bold text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-2xs">
-                    15 Sep 2026
+          {/* TABLE AND RIGHT PREVIEW PANEL SPLIT */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            {/* CONVERSATIONS TABLE (2 Cols wide on XL) */}
+            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+              {/* Table Header & Search Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-gray-700">All Conversations</span>
+                  <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    {filteredConversations.length}
                   </span>
-                </div>
-
-                {/* Messages Feed */}
-                {currentSelected.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${msg.isSender ? 'items-end' : 'items-start'}`}
-                  >
-                    {/* Text Message */}
-                    {msg.text && (
-                      <div
-                        className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs font-medium leading-relaxed shadow-2xs ${
-                          msg.isSender
-                            ? 'text-white rounded-br-xs'
-                            : 'bg-white text-gray-800 border border-gray-100 rounded-bl-xs'
-                        }`}
-                        style={{
-                          backgroundColor: msg.isSender ? COLORS.pink : '',
-                        }}
-                      >
-                        {msg.text}
-                      </div>
-                    )}
-
-                    {/* Image Grid Message */}
-                    {msg.images && msg.images.length > 0 && (
-                      <div className="grid grid-cols-3 gap-1.5 my-1 max-w-[75%]">
-                        {msg.images.map((img, iIdx) => (
-                          <img
-                            key={iIdx}
-                            src={img}
-                            alt="Sent media"
-                            className="w-24 h-24 rounded-xl object-cover border border-gray-200"
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    <span className="text-[10px] text-gray-400 font-medium mt-1 px-1 flex items-center gap-1">
-                      {msg.time}
-                      {msg.isSender && <CheckCheck className="w-3 h-3 text-pink-500" />}
+                  {selectedChatIds.length > 0 && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ml-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Selected ({selectedChatIds.length})</span>
+                    </button>
+                  )}
+                  {selectedChatIds.length > 0 && (
+                    <span className="text-xs font-semibold text-gray-500 ml-1">
+                      ({selectedChatIds.length} selected)
                     </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Chat Input Field Bar */}
-              <div className="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50">
-                  <Paperclip className="w-4 h-4" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50">
-                  <ImageIcon className="w-4 h-4" />
-                </button>
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  className="flex-1 bg-gray-50 border border-gray-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
-                />
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50">
-                  <Smile className="w-4 h-4" />
-                </button>
-                <button
-                  className="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0 shadow-2xs transition-all hover:opacity-90 cursor-pointer"
-                  style={{ backgroundColor: COLORS.pink }}
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* COLUMN 3: RIGHT USER PROFILE & CHAT INFO PANEL (3 Cols) */}
-            <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between p-4 overflow-y-auto space-y-4">
-              <div>
-                {/* User Header Profile Card */}
-                <div className="relative rounded-2xl overflow-hidden h-44 mb-3 border border-gray-100">
-                  <img
-                    src={currentSelected.avatar}
-                    alt={currentSelected.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <button className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  )}
                 </div>
-
-                <div className="flex flex-col items-center text-center pb-3 border-b border-gray-100">
-                  <div className="relative -mt-10 mb-1">
-                    <img
-                      src={currentSelected.avatar}
-                      alt={currentSelected.name}
-                      className="w-14 h-14 rounded-full object-cover border-4 border-white shadow-md"
+                <div className="w-full sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search User or Chat ID..."
+                      className="w-full bg-gray-50 border border-gray-200 text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-[#FF2D72] text-gray-700 placeholder-gray-400"
                     />
                   </div>
-                  <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-1">
-                    {currentSelected.name}
-                    <ShieldCheck className="w-3.5 h-3.5 text-sky-500 fill-sky-500" />
-                  </h3>
-                  <p className="text-[11px] text-green-600 font-bold flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    {currentSelected.lastSeen}
-                  </p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
-                    {currentSelected.age} Years • {currentSelected.location}
-                  </p>
+                </div>
+              </div>
 
-                  <div className="flex items-center gap-2 mt-3 w-full">
+              {/* Table with columns: User, Conversation, Last Activity, Action */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[550px]">
+                  <thead>
+                    <tr className="text-gray-400 font-semibold border-b border-gray-100 pb-2">
+                      <th className="pb-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={isAllSelected}
+                          onChange={handleSelectAll}
+                          className="rounded text-[#FF2D72] focus:ring-0 cursor-pointer"
+                        />
+                      </th>
+                      <th className="pb-3 font-semibold">User</th>
+                      <th className="pb-3 font-semibold">Conversation</th>
+                      <th className="pb-3 font-semibold">Last Activity</th>
+                      <th className="pb-3 font-semibold text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredConversations.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="py-8 text-center text-gray-400">
+                          No conversations found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredConversations.map((item) => {
+                        const isSelected = currentSelected && currentSelected.id === item.id;
+                        const isChecked = selectedChatIds.includes(item.id);
+                        return (
+                          <tr
+                            key={item.id}
+                            onClick={() => setSelectedChat(item)}
+                            className={`cursor-pointer transition-colors ${
+                              isChecked ? 'bg-pink-50/40' : isSelected ? 'bg-pink-50/20' : 'hover:bg-gray-50/50'
+                            }`}
+                          >
+                            {/* Checkbox */}
+                            <td className="py-3">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSelect(item.id);
+                                }}
+                                className="rounded text-[#FF2D72] focus:ring-0 cursor-pointer"
+                              />
+                            </td>
+
+                            {/* 1. User */}
+                            <td className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.userA.avatar}
+                                  alt={item.userA.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                />
+                                <div>
+                                  <div className="font-bold text-gray-900">{item.userA.name}</div>
+                                  <div className="text-gray-400 text-[10px]">
+                                    {item.userA.age} yrs • {item.userA.location.split(',')[0]}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* 2. Conversation */}
+                            <td className="py-3">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={item.userB.avatar}
+                                  alt={item.userB.name}
+                                  className="w-7 h-7 rounded-full object-cover border border-gray-200"
+                                />
+                                <div>
+                                  <div className="font-medium text-gray-800 text-[11px]">
+                                    with {item.userB.name}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* 3. Last Activity */}
+                            <td className="py-3">
+                              <div className="font-semibold text-gray-800">{item.lastActivityDate}</div>
+                              <div className="text-gray-400 text-[10px]">{item.lastActivityTime}</div>
+                            </td>
+
+                            {/* 4. Action */}
+                            <td className="py-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedChat(item);
+                                  }}
+                                  title="Open Chat in Drawer"
+                                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#FF2D72] hover:bg-pink-50 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteConversation(item.id);
+                                  }}
+                                  title="Delete Conversation"
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
+                <span>Showing {filteredConversations.length > 0 ? 1 : 0} to {filteredConversations.length} of {conversationsData.length} conversations</span>
+                <div className="flex items-center gap-2">
+                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
+                    <option>10 per page</option>
+                    <option>25 per page</option>
+                  </select>
+                  <div className="flex items-center gap-1">
+                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
                     <button
-                      className="flex-1 py-1.5 rounded-xl font-bold text-[11px] text-white shadow-2xs cursor-pointer"
+                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
                       style={{ backgroundColor: COLORS.pink }}
                     >
-                      View Full Profile
+                      1
                     </button>
-                    <button className="flex-1 py-1.5 rounded-xl font-bold text-[11px] text-pink-600 bg-pink-50 cursor-pointer">
-                      🚫 Block User
+                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
+                      2
                     </button>
-                  </div>
-                </div>
-
-                {/* Chat Information Breakdown */}
-                <div className="space-y-2 text-xs py-3 border-b border-gray-100">
-                  <h4 className="font-extrabold text-gray-900 text-xs mb-2">Chat Information</h4>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">First Message</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.firstMessageDate}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">Total Messages</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.totalMessages}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">Photos Shared</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.photosShared}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">Status</span>
-                    <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-green-100 text-green-700">
-                      {currentSelected.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">User Type</span>
-                    <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-pink-50 text-[#FF2D72]">
-                      👑 {currentSelected.userType}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-gray-400">Report Count</span>
-                    <span className="font-semibold text-gray-800">{currentSelected.reportCount}</span>
-                  </div>
-                </div>
-
-                {/* Quick Actions Buttons */}
-                <div className="py-3 border-b border-gray-100 space-y-2">
-                  <h4 className="font-extrabold text-gray-900 text-xs">Quick Actions</h4>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    <button className="p-2 rounded-xl bg-purple-500 text-white font-bold text-[9px] flex flex-col items-center justify-center gap-1 cursor-pointer">
-                      <User className="w-3.5 h-3.5" />
-                      <span>View Profile</span>
+                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
+                      3
                     </button>
-                    <button className="p-2 rounded-xl bg-blue-500 text-white font-bold text-[9px] flex flex-col items-center justify-center gap-1 cursor-pointer">
-                      <Bell className="w-3.5 h-3.5" />
-                      <span>Send Warning</span>
+                    <span className="text-gray-400">...</span>
+                    <button className="w-7 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
+                      5,679
                     </button>
-                    <button className="p-2 rounded-xl bg-orange-500 text-white font-bold text-[9px] flex flex-col items-center justify-center gap-1 cursor-pointer">
-                      <VolumeX className="w-3.5 h-3.5" />
-                      <span>Mute Chat</span>
+                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                      <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button className="p-2 rounded-xl bg-rose-500 text-white font-bold text-[9px] flex flex-col items-center justify-center gap-1 cursor-pointer">
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Report User</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Shared Media Grid */}
-                <div className="pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-extrabold text-gray-900 text-xs">
-                      Shared Media ({currentSelected.photosShared})
-                    </h4>
-                    <button className="text-[11px] font-bold" style={{ color: COLORS.pink }}>
-                      View All
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {currentSelected.sharedMedia.map((mImg, mIdx) => (
-                      <div key={mIdx} className="relative rounded-xl overflow-hidden h-14 border border-gray-100">
-                        <img src={mImg} alt="Media" className="w-full h-full object-cover" />
-                        {mIdx === currentSelected.sharedMedia.length - 1 && currentSelected.extraMediaCount > 0 && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-extrabold text-xs">
-                            +{currentSelected.extraMediaCount}
-                          </div>
-                        )}
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* RIGHT CONVERSATION DETAILS & CHAT DRAWER */}
+            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit transition-all">
+              {currentSelected ? (
+                <>
+                  {/* Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full inline-block bg-emerald-500 animate-pulse" />
+                      <h3 className="font-extrabold text-sm text-gray-900">Conversation Details</h3>
+                    </div>
+                    {selectedChat && (
+                      <button
+                        onClick={() => setSelectedChat(null)}
+                        title="Reset selection"
+                        className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Connected Chat Participants Visual Card */}
+                  <div className="p-3.5 bg-gradient-to-r from-pink-50/80 via-rose-50/40 to-purple-50/60 rounded-2xl border border-pink-100/80">
+                    <div className="flex items-center justify-between">
+                      {/* User A */}
+                      <div className="flex flex-col items-center text-center">
+                        <img
+                          src={currentSelected.userA.avatar}
+                          alt={currentSelected.userA.name}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-xs"
+                        />
+                        <span className="font-bold text-xs text-gray-900 mt-1">{currentSelected.userA.name}</span>
+                        <span className="text-[10px] text-gray-400">{currentSelected.userA.age} yrs</span>
+                      </div>
+
+                      {/* Connected Chat Messages Indicator */}
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-white shadow-xs flex items-center justify-center border border-pink-100">
+                          <MessageCircle className="w-4 h-4 text-[#FF2D72]" />
+                        </div>
+                        <span className="text-[9px] font-bold text-[#FF2D72] mt-1">{currentSelected.totalMessages} Chats</span>
+                      </div>
+
+                      {/* User B */}
+                      <div className="flex flex-col items-center text-center">
+                        <img
+                          src={currentSelected.userB.avatar}
+                          alt={currentSelected.userB.name}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-xs"
+                        />
+                        <span className="font-bold text-xs text-gray-900 mt-1">{currentSelected.userB.name}</span>
+                        <span className="text-[10px] text-gray-400">{currentSelected.userB.age} yrs</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CHAT MESSAGES STREAM BETWEEN USER A & USER B */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs pb-0.5">
+                      <span className="font-extrabold text-gray-800 flex items-center gap-1.5 text-xs">
+                        <MessageSquare className="w-3.5 h-3.5 text-[#FF2D72]" />
+                        <span>Chat Messages</span>
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {currentSelected.lastActivityDate}
+                      </span>
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto space-y-2.5 p-3 bg-gray-50/70 rounded-2xl border border-gray-100 text-xs">
+                      {currentSelected.messages && currentSelected.messages.length > 0 ? (
+                        currentSelected.messages.map((msg, mIdx) => {
+                          const isUserA = msg.senderId === 'userA';
+                          return (
+                            <div
+                              key={mIdx}
+                              className={`flex flex-col ${isUserA ? 'items-end' : 'items-start'}`}
+                            >
+                              <span className="text-[9px] font-semibold text-gray-400 mb-0.5 px-1">
+                                {isUserA ? currentSelected.userA.name : currentSelected.userB.name}
+                              </span>
+                              <div
+                                className={`max-w-[85%] px-3 py-2 rounded-2xl text-[11px] leading-relaxed shadow-2xs ${
+                                  isUserA
+                                    ? 'text-white rounded-br-xs'
+                                    : 'bg-white text-gray-800 border border-gray-100 rounded-bl-xs'
+                                }`}
+                                style={{
+                                  backgroundColor: isUserA ? COLORS.pink : '',
+                                }}
+                              >
+                                {msg.text}
+                              </div>
+                              <span className="text-[9px] text-gray-400 font-medium mt-0.5 px-1">
+                                {msg.time}
+                              </span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-8 text-center text-gray-400 text-xs">
+                          No chat messages to display.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Conversation Key Information Breakdown */}
+                  <div className="space-y-2 text-xs pt-1 border-t border-gray-50">
+                    <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                      <span className="text-gray-400 font-medium">Conversation ID</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-gray-800 text-[11px]">{currentSelected.conversationId}</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard?.writeText(currentSelected.conversationId);
+                            setCopiedId(true);
+                            setTimeout(() => setCopiedId(false), 2000);
+                          }}
+                          className="text-gray-400 hover:text-gray-700 p-0.5 rounded cursor-pointer transition-colors"
+                          title="Copy Conversation ID"
+                        >
+                          {copiedId ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                      <span className="text-gray-400 font-medium">Started Date</span>
+                      <span className="font-medium text-gray-700 text-[11px]">
+                        {currentSelected.createdDate}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-gray-400 font-medium">Last Activity</span>
+                      <span className="font-medium text-gray-700 text-[11px]">
+                        {currentSelected.lastActivityDate}, {currentSelected.lastActivityTime}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
+                  No conversation selected
+                </div>
+              )}
             </div>
           </div>
         </main>

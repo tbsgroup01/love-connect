@@ -143,10 +143,10 @@ export default function BannersAds() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A]">
+    <div className="h-screen bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] overflow-hidden">
       <AdminNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <AdminSidebar activeTab="Banners & Ads" setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -156,7 +156,7 @@ export default function BannersAds() {
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
                 Banners & Ads
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Configure promotional banners, partnerships, CTA buttons, and placement channels across mobile screens
               </p>
             </div>
@@ -171,98 +171,8 @@ export default function BannersAds() {
             </button>
           </div>
 
-          {/* TOP 4 KPI CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
-              style={{ borderLeftColor: COLORS.pink }}
-            >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                style={{ backgroundColor: COLORS.pink }}
-              >
-                <Eye className="w-5.5 h-5.5 stroke-[2.2]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold text-gray-500 block truncate">Total Impressions</span>
-                <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">3.29M</span>
-              </div>
-            </div>
-
-            <div
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
-              style={{ borderLeftColor: COLORS.purple }}
-            >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                style={{ backgroundColor: COLORS.purple }}
-              >
-                <MousePointer className="w-5.5 h-5.5 stroke-[2.2]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold text-gray-500 block truncate">Total Clicks</span>
-                <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">270,600</span>
-              </div>
-            </div>
-
-            <div
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
-              style={{ borderLeftColor: '#3B82F6' }}
-            >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                style={{ backgroundColor: '#3B82F6' }}
-              >
-                <Layers className="w-5.5 h-5.5 stroke-[2.2]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold text-gray-500 block truncate">Active Placements</span>
-                <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">4 Zones</span>
-              </div>
-            </div>
-
-            <div
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex items-center gap-3.5 border-l-4"
-              style={{ borderLeftColor: COLORS.success }}
-            >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
-                style={{ backgroundColor: COLORS.success }}
-              >
-                <Sparkles className="w-5.5 h-5.5 stroke-[2.2]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold text-gray-500 block truncate">Monetization / Conv.</span>
-                <span className="text-xl font-extrabold tracking-tight text-gray-900 block leading-tight mt-0.5">₹4.82L</span>
-              </div>
-            </div>
-          </div>
-
-          {/* FILTER TABS & CONTROLS */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
-              {['All', 'Swipe Deck Interstitial', 'Discover Top Banner', 'Matches Page Header', 'Chat Screen Top Bar'].map(
-                (p) => {
-                  const count = p === 'All' ? banners.length : banners.filter((b) => b.placement === p).length;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setPlacementFilter(p)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                        placementFilter === p ? 'text-white shadow-xs' : 'text-gray-500 hover:bg-gray-50'
-                      }`}
-                      style={{
-                        backgroundColor: placementFilter === p ? COLORS.pink : 'transparent',
-                      }}
-                    >
-                      {p} ({count})
-                    </button>
-                  );
-                }
-              )}
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          {/* STATUS CONTROLS */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <span className="text-xs font-semibold text-gray-500">Filter By Status:</span>
                 <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#DCFCE7] text-[#16A34A]">
@@ -273,7 +183,6 @@ export default function BannersAds() {
                 </span>
               </div>
             </div>
-          </div>
 
           {/* BANNERS GRID CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,9 +201,8 @@ export default function BannersAds() {
                       </span>
                       <button
                         onClick={() => toggleBannerStatus(banner.id)}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all ${
-                          banner.active ? 'bg-green-500 text-white' : 'bg-gray-600 text-white'
-                        }`}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all ${banner.active ? 'bg-green-500 text-white' : 'bg-gray-600 text-white'
+                          }`}
                       >
                         {banner.active ? 'Active' : 'Disabled'}
                       </button>

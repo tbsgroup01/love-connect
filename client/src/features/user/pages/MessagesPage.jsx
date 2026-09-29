@@ -17,10 +17,10 @@ export default function MessagesPage() {
   const [inputMessage, setInputMessage] = useState("")
 
   const conversations = [
-    { id: 1, name: "Priya", age: 25, lastMsg: "Would love to get coffee this weekend... ", time: "10:18 AM", unread: 0, online: true, img: priyaImg },
-    { id: 2, name: "Meera", age: 23, lastMsg: "That architecture design was stunning!", time: "Yesterday", unread: 2, online: true, img: meeraImg },
-    { id: 3, name: "Rhea", age: 24, lastMsg: "Haha totally agree! See you soon.", time: "2 days ago", unread: 0, online: false, img: rheaImg },
-    { id: 4, name: "Sneha", age: 24, lastMsg: "Are you free this Friday evening?", time: "3 days ago", unread: 1, online: false, img: snehaImg },
+    { id: 1, name: "Priya", age: 25, lastMsg: "Would love to get coffee this weekend... ", time: "10:18 AM", unread: 0, img: priyaImg },
+    { id: 2, name: "Meera", age: 23, lastMsg: "That architecture design was stunning!", time: "Yesterday", unread: 2, img: meeraImg },
+    { id: 3, name: "Rhea", age: 24, lastMsg: "Haha totally agree! See you soon.", time: "2 days ago", unread: 0, img: rheaImg },
+    { id: 4, name: "Sneha", age: 24, lastMsg: "Are you free this Friday evening?", time: "3 days ago", unread: 1, img: snehaImg },
   ]
 
   const handleSendMessage = (e) => {
@@ -65,9 +65,6 @@ export default function MessagesPage() {
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-2xs">
                   <img src={chat.img} alt={chat.name} className="w-full h-full object-cover" />
-                  {chat.online && (
-                    <span className="w-3 h-3 rounded-full bg-[#22C55E] border-2 border-white absolute bottom-0 right-0" />
-                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -96,18 +93,12 @@ export default function MessagesPage() {
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden border border-slate-200">
                 <img src={currentChatPartner.img} alt={currentChatPartner.name} className="w-full h-full object-cover" />
-                {currentChatPartner.online && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] border border-white absolute bottom-0 right-0" />
-                )}
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-sm text-[#17151A]">{currentChatPartner.name}, {currentChatPartner.age}</h3>
                   <span className="text-[10px] font-bold bg-[#FFE7F0] text-[#FF2D72] px-2 py-0.5 rounded-full">Matched</span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  {currentChatPartner.online ? "Online Now" : "Offline"}
-                </p>
               </div>
             </div>
 
