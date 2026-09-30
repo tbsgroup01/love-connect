@@ -120,7 +120,7 @@ const INITIAL_FEATURES = [
     enabled: true,
     rolloutPercentage: 90,
     requiresPremium: false,
-    statusNote: 'Generates 98% match scores',
+    statusNote: 'Active for all regions',
   },
 ];
 

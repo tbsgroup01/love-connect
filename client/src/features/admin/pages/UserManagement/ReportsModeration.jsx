@@ -389,7 +389,7 @@ export default function ReportsModeration() {
   const currentSelected =
     selectedReport && reportsData.some((r) => r.id === selectedReport.id)
       ? selectedReport
-      : reportsData[0] || null;
+      : null;
 
   const isAllSelected =
     filteredData.length > 0 &&
@@ -473,8 +473,8 @@ export default function ReportsModeration() {
 
           {/* TABLE AND RIGHT REPORT DETAILS PANEL SPLIT */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-            {/* REPORTS TABLE (2 Cols wide on XL) */}
-            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+            {/* REPORTS TABLE */}
+            <div className={`${currentSelected ? 'xl:col-span-2' : 'xl:col-span-3'} bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}>
               {/* Table Header & Search Bar */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
@@ -692,18 +692,21 @@ export default function ReportsModeration() {
             </div>
 
             {/* RIGHT REPORT DETAILS PREVIEW PANEL */}
-            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5 xl:sticky xl:top-6 h-fit">
-              {currentSelected ? (
-                <>
-                  <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
-                    Report Details
-                  </h2>
-                  <button className="text-gray-400 hover:text-gray-600 p-1">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+            {currentSelected && (
+              <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5 xl:sticky xl:top-6 h-fit">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold" style={{ color: COLORS.dark }}>
+                      Report Details
+                    </h2>
+                    <button
+                      onClick={() => setSelectedReport(null)}
+                      title="Close drawer"
+                      className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
 
                 {/* Profile Header */}
                 <div className="flex flex-col items-center text-center p-4 bg-gray-50/60 rounded-2xl border border-gray-100 mb-4">
@@ -837,14 +840,9 @@ export default function ReportsModeration() {
                   <X className="w-3.5 h-3.5" />
                   <span>Dismiss</span>
                 </button>
-              </div>
-                </>
-              ) : (
-                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
-                  No report selected
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

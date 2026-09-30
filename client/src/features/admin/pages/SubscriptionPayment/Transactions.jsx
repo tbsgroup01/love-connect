@@ -335,7 +335,7 @@ export default function Transactions() {
   const currentSelected =
     selectedTransaction && transactionsData.some((t) => t.id === selectedTransaction.id)
       ? selectedTransaction
-      : transactionsData[0] || null;
+      : null;
 
   const filteredTransactions = transactionsData.filter((item) => {
     const matchesTab =
@@ -430,8 +430,8 @@ export default function Transactions() {
 
           {/* BOTTOM SECTION: TRANSACTIONS TABLE & RIGHT TRANSACTION DETAILS SPLIT */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-            {/* TRANSACTIONS TABLE (2 Cols wide on XL) */}
-            <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+            {/* TRANSACTIONS TABLE */}
+            <div className={`${currentSelected ? 'xl:col-span-2' : 'xl:col-span-3'} bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}>
               {/* Header Filters */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 overflow-x-auto">
@@ -651,39 +651,36 @@ export default function Transactions() {
             </div>
 
             {/* RIGHT TRANSACTION DETAILS PREVIEW PANEL */}
-            <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit transition-all">
-              {currentSelected ? (
-                <>
-                  {/* Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full inline-block animate-pulse"
-                        style={{ backgroundColor: currentSelected.statusColor }}
-                      />
-                      <h3 className="font-extrabold text-sm text-gray-900">Transaction Details</h3>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
-                        style={{
-                          backgroundColor: currentSelected.statusBg,
-                          color: currentSelected.statusColor,
-                        }}
-                      >
-                        {currentSelected.status}
-                      </span>
-                      {selectedTransaction && (
-                        <button
-                          onClick={() => setSelectedTransaction(null)}
-                          title="Reset selection"
-                          className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
+            {currentSelected && (
+              <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit transition-all">
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full inline-block animate-pulse"
+                      style={{ backgroundColor: currentSelected.statusColor }}
+                    />
+                    <h3 className="font-extrabold text-sm text-gray-900">Transaction Details</h3>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
+                      style={{
+                        backgroundColor: currentSelected.statusBg,
+                        color: currentSelected.statusColor,
+                      }}
+                    >
+                      {currentSelected.status}
+                    </span>
+                    <button
+                      onClick={() => setSelectedTransaction(null)}
+                      title="Close drawer"
+                      className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
 
                   {/* Customer Profile Banner */}
                   <div className="p-3 bg-gradient-to-r from-pink-50/70 via-rose-50/30 to-purple-50/40 rounded-xl border border-pink-100/70 flex items-center justify-between">
@@ -778,13 +775,8 @@ export default function Transactions() {
                       </span>
                     </div>
                   </div>
-                </>
-              ) : (
-                <div className="py-16 text-center text-gray-400 text-xs font-semibold">
-                  No transaction selected
                 </div>
               )}
-            </div>
           </div>
         </main>
       </div>

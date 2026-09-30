@@ -32,7 +32,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="relative bg-[#17151A] text-white pt-16 sm:pt-20 pb-10 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/10">
+    <footer className="relative bg-[#17151A] text-white pt-16 sm:pt-20 pb-10 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/10 font-poppins">
       {/* Ambient Radial Gradient Glows */}
       <div className="absolute -top-32 left-1/4 -z-0 w-[550px] h-[550px] bg-[#FF2D72]/15 blur-[140px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 -z-0 w-[450px] h-[450px] bg-[#7C3AED]/20 blur-[130px] rounded-full pointer-events-none" />

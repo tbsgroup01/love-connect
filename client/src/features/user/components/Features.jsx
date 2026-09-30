@@ -63,7 +63,7 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC]"
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] font-poppins"
     >
       {/* Background Soft Fluid Glows */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 -z-10 w-96 h-96 bg-[#FFE7F0]/60 blur-3xl rounded-full pointer-events-none" />
@@ -120,11 +120,6 @@ export default function Features() {
 
                     {/* Gradient Overlay for subtle contrast */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
-
-                    {/* Online Indicator Green Dot */}
-                    {profile.online && (
-                      <div className="absolute bottom-2.5 left-2.5 w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-2 ring-white shadow-xs" />
-                    )}
                   </div>
 
                   {/* Card Bottom: Name, Age, Location & Like Heart Button */}
@@ -137,23 +132,6 @@ export default function Features() {
                         {profile.location}
                       </p>
                     </div>
-
-                    {/* Heart Like Button */}
-                    <button
-                      onClick={() => toggleLike(profile.id)}
-                      aria-label={`Like ${profile.name}`}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
-                        isLiked
-                          ? "bg-[#FFE7F0] text-[#FF2D72] scale-110 shadow-xs"
-                          : "bg-pink-50 text-[#FF2D72] hover:bg-[#FFE7F0] hover:scale-110"
-                      }`}
-                    >
-                      <Heart
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isLiked ? "fill-[#FF2D72]" : "fill-[#FF2D72]/80"
-                        }`}
-                      />
-                    </button>
                   </div>
                 </div>
               );

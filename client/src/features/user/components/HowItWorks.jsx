@@ -54,7 +54,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="w-full py-16 sm:py-20 lg:py-24 bg-white relative overflow-hidden"
+      className="w-full py-16 sm:py-20 lg:py-24 bg-white relative overflow-hidden font-poppins"
     >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}

@@ -9,7 +9,7 @@ import Footer from "../components/Footer"
 
 export default function Home() {
     return (
-        <div className="w-full min-h-screen bg-[#FAFAFC] text-[#17151A]">
+        <div className="w-full min-h-screen bg-[#FAFAFC] text-[#17151A] font-poppins">
             <Navbar />
             <main>
                 <Hero />

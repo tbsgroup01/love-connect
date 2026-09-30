@@ -9,7 +9,7 @@ export default function SplashScreen() {
   const [deviceFrame, setDeviceFrame] = useState(false);
 
   return (
-    <div className={`min-h-screen bg-[#17151A] flex flex-col items-center justify-center ${deviceFrame ? 'p-4 sm:p-8' : ''} select-none transition-all`}>
+    <div className={`min-h-screen bg-[#17151A] flex flex-col items-center justify-center font-poppins ${deviceFrame ? 'p-4 sm:p-8' : ''} select-none transition-all`}>
       {/* FRAME TOGGLE FOR MOBILE APP 390x844 SIMULATION */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 text-white text-xs font-semibold">
         <button

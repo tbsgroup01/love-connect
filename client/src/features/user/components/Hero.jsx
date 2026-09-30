@@ -16,7 +16,7 @@ import priyaProfileImg from "../../../assets/priya_profile.jpg";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3]">
+    <section className="relative overflow-hidden bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3] font-poppins">
       {/* Ambient Sunset Glows matching the reference design background color */}
       <div className="absolute top-0 right-0 -z-10 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_75%_20%,rgba(254,215,170,0.45)_0%,rgba(255,143,163,0.30)_40%,transparent_70%)] pointer-events-none" />
       <div className="absolute top-1/3 left-1/4 -z-10 w-[600px] h-[600px] bg-[radial-gradient(circle_at_40%_40%,rgba(255,45,114,0.07)_0%,transparent_65%)] pointer-events-none" />
@@ -35,33 +35,12 @@ export default function Hero() {
         {/* LEFT COLUMN CONTENT: Aligned with standard Navbar container */}
         <div className="max-w-[1600px] order-2 mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-16 xl:py-20 z-10 relative">
           <div className="lg:w-[48%] xl:w-[46%] flex flex-col justify-center space-y-7">
-            {/* 1. Top Pill Tag: ❤️ 1M+ People Already Connected! + Avatars */}
             <div className="inline-flex items-center gap-2.5 self-start px-4 py-1.5 rounded-full bg-white/95 border border-[#FFE4EE] shadow-[0_2px_12px_rgba(255,45,114,0.08)]">
               <div className="flex items-center gap-1.5 text-[#FF2D72]">
                 <Heart className="w-3.5 h-3.5 fill-[#FF2D72] text-[#FF2D72]" />
                 <span className="text-xs sm:text-sm font-bold tracking-wide">
-                  1M+ People Already Connected!
+                  Connect with real people!
                 </span>
-              </div>
-              <div className="flex items-center -space-x-1.5 pl-2.5 border-l border-[#FFE4EE]">
-                <img
-                  src={priyaProfileImg}
-                  alt="Member"
-                  className="w-5 h-5 rounded-full object-cover border border-white"
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
-                  alt="Member"
-                  className="w-5 h-5 rounded-full object-cover border border-white"
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
-                  alt="Member"
-                  className="w-5 h-5 rounded-full object-cover border border-white"
-                />
-                <div className="w-5 h-5 rounded-full bg-[#FFF0F5] text-[#FF2D72] flex items-center justify-center text-[10px] font-black border border-white">
-                  +
-                </div>
               </div>
             </div>
 
@@ -73,7 +52,7 @@ export default function Hero() {
                   Perfect Match
                 </span>
               </h1>
-              <p className="text-[#52525B] text-base sm:text-lg font-normal max-w-lg leading-relaxed pt-1">
+              <p className="text-[#52525B] text-base sm:text-lg tracking-wide font-normal max-w-lg leading-relaxed pt-1">
                 LoveConnect brings together like-minded people who believe in
                 real connections. Meet, chat and build something meaningful –
                 because you deserve it.
@@ -205,38 +184,6 @@ export default function Hero() {
             <div className="inline-flex items-center gap-1.5 text-[#FF2D72] text-3xl sm:text-4xl font-black -rotate-3 mt-1 drop-shadow-[0_1px_6px_rgba(255,255,255,0.7)]">
               <span>Real Love</span>
               <span className="text-2xl">♡</span>
-            </div>
-          </div>
-
-          {/* FLOATING CARD 2: Bottom-Right "Ananya & Rohan Matched 2 days ago" */}
-          <div className="absolute bottom-6 sm:bottom-8 right-6 sm:right-10 lg:right-14 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 shadow-[0_12px_32px_rgba(255,77,133,0.14)] border border-white/90 flex items-center gap-3.5 min-w-[230px] sm:min-w-[250px] animate-float-reverse hover:scale-105 hover:shadow-[0_18px_38px_rgba(255,77,133,0.22)] transition-all duration-300 cursor-pointer">
-            <div className="flex -space-x-2 shrink-0">
-              <img
-                src={priyaProfileImg}
-                alt="Ananya"
-                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
-                alt="Rohan"
-                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h4 className="font-extrabold text-[#18181B] text-xs sm:text-sm truncate">
-                  Ananya & Rohan
-                </h4>
-                <div className="w-4 h-4 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shrink-0 text-[10px] font-bold">
-                  ✓
-                </div>
-              </div>
-              <p className="text-[11px] text-[#71717A] font-medium truncate mt-0.5">
-                Matched 2 days ago
-              </p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-[#FFF0F5] flex items-center justify-center text-[#FF2D72] shrink-0">
-              <Heart className="w-4 h-4 fill-[#FF2D72]" />
             </div>
           </div>
         </div>

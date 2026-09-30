@@ -137,7 +137,7 @@ export default function Onboarding() {
   const step = steps[currentStep];
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-sans select-none">
+    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-3 sm:p-5 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-poppins select-none">
       {/* Ambient Fluid Background Glows */}
       <div className="absolute -top-40 -left-40 w-[650px] h-[650px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/15 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-[650px] h-[650px] bg-gradient-to-tl from-[#7C3AED]/20 via-[#FFE7F0]/70 to-transparent blur-3xl rounded-full pointer-events-none" />
@@ -154,7 +154,7 @@ export default function Onboarding() {
       {/* ========================================================= */}
       {/* TOP HEADER: Logo & Step Progression Pills                 */}
       {/* ========================================================= */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-3 sm:pb-4 border-b border-[#FFE7F0]/80">
+      <header className="relative z-10 w-full max-w-5xl mx-auto flex items-center justify-between pb-3 sm:pb-4 border-b border-[#FFE7F0]/80">
         <Link
           to="/"
           title="Return to Home"
@@ -201,16 +201,16 @@ export default function Onboarding() {
       </header>
 
       {/* ========================================================= */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto my-auto flex-1 flex flex-col justify-center py-2 sm:py-4">
-        <div className="bg-white/95 backdrop-blur-xl rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:h-[78vh] transition-all duration-500">
+      <main className="relative z-10 w-full max-w-5xl mx-auto my-auto flex-1 flex flex-col justify-center py-1 sm:py-2">
+        <div className="w-full bg-white/95 backdrop-blur-xl rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 max-w-5xl mx-auto min-h-[520px] lg:min-h-[540px] lg:h-[74vh] max-h-[720px] transition-all duration-500">
           {/* ------------------------------------------------------- */}
           {/* LEFT COLUMN: Storytelling, Features & Step Navigation   */}
           {/* ------------------------------------------------------- */}
-          <div className="lg:col-span-6 p-6 sm:p-10 lg:p-12 flex flex-col justify-between order-2 lg:order-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="lg:col-span-7 p-5 sm:p-7 lg:p-8 flex flex-col justify-between order-2 lg:order-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div>
               {/* Step Tag & Live Chemistry Pill */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-3 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[11px] font-black uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-2 sm:mb-2.5">
+                <span className="px-3 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
                   {step.tag}
                 </span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
@@ -220,7 +220,7 @@ export default function Onboarding() {
               </div>
 
               {/* Bold Expressive Title */}
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#17151A] tracking-tight leading-[1.15]">
+              <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#17151A] tracking-tight leading-[1.2]">
                 <span>{step.titlePrefix} </span>
                 <span className="bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] bg-clip-text text-transparent">
                   {step.titleHighlight}
@@ -228,27 +228,27 @@ export default function Onboarding() {
               </h1>
 
               {/* Narrative Subtitle */}
-              <p className="text-sm sm:text-base text-[#64748b] mt-3 leading-relaxed font-normal max-w-xl">
+              <p className="text-xs sm:text-sm text-[#64748b] mt-1.5 sm:mt-2 leading-relaxed font-normal max-w-xl">
                 {step.subtitle}
               </p>
 
               {/* Feature Perks List */}
-              <div className="space-y-3.5 mt-6 sm:mt-8">
+              <div className="space-y-2 sm:space-y-2.5 mt-3 sm:mt-4">
                 {step.perks.map((perk, i) => {
                   const Icon = perk.icon;
                   return (
                     <div
                       key={i}
-                      className="p-3 sm:p-3.5 rounded-2xl bg-[#FAFAFC] hover:bg-gradient-to-r hover:from-[#FFE7F0]/40 hover:to-purple-50/30 border border-slate-100 hover:border-[#FFE7F0] transition-all duration-200 flex items-start gap-3.5 group shadow-2xs"
+                      className="p-2.5 sm:p-3 rounded-2xl bg-[#FAFAFC] hover:bg-gradient-to-r hover:from-[#FFE7F0]/40 hover:to-purple-50/30 border border-slate-100 hover:border-[#FFE7F0] transition-all duration-200 flex items-start gap-3 group shadow-2xs"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FFE7F0] to-purple-50 border border-[#FFE7F0] flex items-center justify-center text-[#FF2D72] group-hover:scale-110 transition-transform duration-200 shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FFE7F0] to-purple-50 border border-[#FFE7F0] flex items-center justify-center text-[#FF2D72] group-hover:scale-110 transition-transform duration-200 shrink-0 mt-0.5">
                         <Icon className="w-4 h-4 stroke-[2.5]" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="text-xs sm:text-sm font-bold text-[#17151A]">
                           {perk.title}
                         </h3>
-                        <p className="text-xs text-[#64748b] mt-0.5 leading-normal">
+                        <p className="text-[11px] sm:text-xs text-[#64748b] mt-0.5 leading-normal">
                           {perk.desc}
                         </p>
                       </div>
@@ -259,9 +259,9 @@ export default function Onboarding() {
             </div>
 
             {/* Bottom Actions Bar */}
-            <div className="pt-6 sm:pt-8 mt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              {/* Pagination Dots (Mobile & Tablet) */}
-              <div className="flex items-center gap-2">
+            <div className="pt-3.5 sm:pt-4 mt-3 sm:mt-4 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+              {/* Pagination Dots */}
+              <div className="flex items-center gap-1.5 shrink-0">
                 {steps.map((_, idx) => (
                   <button
                     key={idx}
@@ -269,8 +269,8 @@ export default function Onboarding() {
                     onClick={() => setCurrentStep(idx)}
                     className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                       currentStep === idx
-                        ? "w-8 bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] shadow-xs"
-                        : "w-2.5 bg-slate-200 hover:bg-slate-300"
+                        ? "w-7 bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] shadow-xs"
+                        : "w-2 bg-slate-200 hover:bg-slate-300"
                     }`}
                     aria-label={`Jump to step ${idx + 1}`}
                   />
@@ -278,12 +278,12 @@ export default function Onboarding() {
               </div>
 
               {/* Action Buttons: Back & Next */}
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                 {currentStep > 0 && (
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex-1 sm:flex-none px-5 py-3 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white text-xs sm:text-sm font-bold text-slate-600 hover:text-[#17151A] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-xs sm:text-sm font-bold text-slate-600 hover:text-[#17151A] transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back</span>
@@ -293,10 +293,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="flex-1 sm:flex-none px-7 sm:px-9 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] hover:brightness-105 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-lg shadow-[#FF2D72]/30 hover:shadow-xl hover:shadow-[#FF2D72]/45 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] hover:brightness-105 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#FF2D72]/25 hover:shadow-lg hover:shadow-[#FF2D72]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
                 >
                   <span>{step.buttonText}</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                 </button>
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function Onboarding() {
           {/* ------------------------------------------------------- */}
           {/* RIGHT COLUMN: Big Visual Showcase & Floating Badges     */}
           {/* ------------------------------------------------------- */}
-          <div className="lg:col-span-6 relative min-h-[300px] sm:min-h-[380px] lg:min-h-0 order-1 lg:order-2 overflow-hidden bg-[#17151A] group">
+          <div className="lg:col-span-5 relative min-h-[300px] sm:min-h-[380px] lg:min-h-0 order-1 lg:order-2 overflow-hidden bg-[#17151A] group">
             {/* Main Stage Image with smooth cross-fade */}
             <img
               key={currentStep}
@@ -318,12 +318,6 @@ export default function Onboarding() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/85 via-black/20 to-transparent pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
 
-            {/* Floating Top Left Trust Badge */}
-            <div className="absolute top-5 left-5 z-20 px-3.5 py-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all animate-pulse-soft">
-              <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-ping" />
-              <span>{step.badge}</span>
-            </div>
-
             {/* Floating Top Right Skip Pill */}
             <button
               type="button"
@@ -332,23 +326,6 @@ export default function Onboarding() {
             >
               Skip
             </button>
-
-            {/* Bottom Floating Social Proof Card */}
-            <div className="absolute bottom-6 inset-x-6 z-20">
-              <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-3.5 sm:p-4 text-white shadow-xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center shrink-0 shadow-md">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="text-xs sm:text-sm font-bold text-white leading-tight">
-                    {step.quote}
-                  </p>
-                  <p className="text-[10px] text-pink-200/90 mt-0.5 font-medium">
-                    Verified Community Member Review
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </main>
@@ -356,7 +333,7 @@ export default function Onboarding() {
       {/* ========================================================= */}
       {/* BOTTOM FOOTER: Trust Guarantees                           */}
       {/* ========================================================= */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2 pt-3 border-t border-[#FFE7F0]/60">
+      <footer className="relative z-10 w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2 pt-3 border-t border-[#FFE7F0]/60">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-[#22C55E]" />

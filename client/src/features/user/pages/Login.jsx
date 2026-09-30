@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Mail,
+  Phone,
   Lock,
   Eye,
   EyeOff,
@@ -25,7 +26,8 @@ export default function Login({ initialMode = "login" }) {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    identifier: "",
+    email: "",
+    phone: "",
     password: "",
   });
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -69,7 +71,7 @@ export default function Login({ initialMode = "login" }) {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-sans select-none py-6 lg:py-0">
+    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-6 lg:py-0">
       {/* Ambient Fluid Glows */}
       <div className="absolute -top-32 -left-32 w-[550px] h-[550px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
@@ -322,11 +324,11 @@ export default function Login({ initialMode = "login" }) {
               </div>
             )}
 
-            {/* Email or Mobile Number Input */}
+            {/* Email Field */}
             <div className="relative">
               <div
                 className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
-                  focusedField === "identifier"
+                  focusedField === "email"
                     ? "text-[#FF2D72]"
                     : "text-slate-400"
                 }`}
@@ -334,18 +336,47 @@ export default function Login({ initialMode = "login" }) {
                 <Mail className="w-4 h-4" />
               </div>
               <input
-                type="text"
+                type={mode === "signup" ? "email" : "text"}
                 required
-                placeholder="Email or Mobile Number"
-                value={formData.identifier}
-                onFocus={() => setFocusedField("identifier")}
+                placeholder={
+                  mode === "signup" ? "Email Address" : "Email or Mobile Number"
+                }
+                value={formData.email}
+                onFocus={() => setFocusedField("email")}
                 onBlur={() => setFocusedField(null)}
                 onChange={(e) =>
-                  setFormData({ ...formData, identifier: e.target.value })
+                  setFormData({ ...formData, email: e.target.value })
                 }
                 className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
               />
             </div>
+
+            {/* If Sign Up: Phone Number Field */}
+            {mode === "signup" && (
+              <div className="relative">
+                <div
+                  className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
+                    focusedField === "phone"
+                      ? "text-[#FF2D72]"
+                      : "text-slate-400"
+                  }`}
+                >
+                  <Phone className="w-4 h-4" />
+                </div>
+                <input
+                  type="tel"
+                  required
+                  placeholder="Mobile / Phone Number"
+                  value={formData.phone}
+                  onFocus={() => setFocusedField("phone")}
+                  onBlur={() => setFocusedField(null)}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
+                />
+              </div>
+            )}
 
             {/* Password Input */}
             <div className="relative">

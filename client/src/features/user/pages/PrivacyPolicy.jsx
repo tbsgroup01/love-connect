@@ -43,7 +43,7 @@ export default function PrivacyPolicy() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#FAFAFC] text-[#17151A] flex flex-col">
+    <div className="w-full min-h-screen bg-[#FAFAFC] text-[#17151A] flex flex-col font-poppins">
       <Navbar />
 
       <main className="flex-1">

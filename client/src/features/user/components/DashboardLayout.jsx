@@ -33,12 +33,11 @@ export default function DashboardLayout({
   const navigate = useNavigate();
 
   // Filter Controls state in Right Sidebar
-  const [distanceKm, setDistanceKm] = useState(25);
   const [showGender, setShowGender] = useState("all");
   const [verifiedOnly, setVerifiedOnly] = useState(true);
 
   return (
-    <div className="h-screen w-full bg-[#FAFAFC] flex flex-col font-sans select-none text-[#17151A] antialiased relative overflow-hidden pt-[65px]">
+    <div className="h-screen w-full bg-[#FAFAFC] flex flex-col font-poppins select-none text-[#17151A] antialiased relative overflow-hidden pt-[65px]">
       {/* Brand Color Ambient Glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl pointer-events-none rounded-full" />
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/40 to-transparent blur-3xl pointer-events-none rounded-full" />
@@ -182,15 +181,6 @@ export default function DashboardLayout({
                 <Users className="w-4 h-4" />
                 <span>Matches</span>
               </div>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
-                  activeTab === "matches"
-                    ? "bg-[#FFFFFF]/25 text-[#FFFFFF]"
-                    : "bg-[#FFE7F0] text-[#FF2D72]"
-                }`}
-              >
-                12
-              </span>
             </button>
 
             {/* Nav: Messages */}
@@ -207,15 +197,6 @@ export default function DashboardLayout({
                 <MessageSquare className="w-4 h-4" />
                 <span>Messages</span>
               </div>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  activeTab === "messages"
-                    ? "bg-[#FFFFFF]/25 text-[#FFFFFF]"
-                    : "bg-[#FFE7F0] text-[#FF2D72]"
-                }`}
-              >
-                5
-              </span>
             </button>
 
             {/* Nav: My Profile */}
@@ -374,7 +355,6 @@ export default function DashboardLayout({
                   <button
                     type="button"
                     onClick={() => {
-                      setDistanceKm(25);
                       setShowGender("all");
                       setVerifiedOnly(true);
                     }}
@@ -384,27 +364,8 @@ export default function DashboardLayout({
                   </button>
                 </div>
 
-                {/* Distance Slider */}
-                <div>
-                  <div className="flex justify-between text-xs font-bold text-[#17151A] mb-2">
-                    <span>Maximum Distance</span>
-                    <span className="text-[#FF2D72]">{distanceKm} km</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    value={distanceKm}
-                    onChange={(e) => setDistanceKm(Number(e.target.value))}
-                    className="w-full accent-[#FF2D72] cursor-pointer h-1.5 bg-slate-100 rounded-lg"
-                  />
-                </div>
-
                 {/* Show Gender Pills */}
                 <div>
-                  <span className="text-xs font-bold text-[#17151A] block mb-2">
-                    Show
-                  </span>
                   <div className="grid grid-cols-4 gap-1.5">
                     {["all", "women", "men", "others"].map((gender) => (
                       <button

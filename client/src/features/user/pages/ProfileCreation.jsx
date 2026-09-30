@@ -1,11 +1,9 @@
 import React, { useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Camera,
   Plus,
   Trash2,
-  Check,
-  ArrowRight,
   ArrowLeft,
   Calendar,
   MapPin,
@@ -21,13 +19,7 @@ import {
   ChefHat,
   Trees,
   Cat,
-  Users,
-  CheckCircle2,
-  Sparkles,
-  Eye,
-  ShieldCheck,
 } from "lucide-react";
-import loveConnectLogo from "../../../assets/loveconnect.png";
 import profileImg1 from "../../../assets/hero_woman.jpg";
 import profileImg2 from "../../../assets/priya_profile.jpg";
 import profileImg3 from "../../../assets/signup_hero_woman.jpg";
@@ -37,10 +29,8 @@ export default function ProfileCreation() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  // Active step: 1 (Photo), 2 (Basic Info), 3 (Interests), 4 (Relationship)
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Step 1: Photos
   const [photos, setPhotos] = useState([
     profileImg1,
     profileImg2,
@@ -48,15 +38,12 @@ export default function ProfileCreation() {
     profileImg4,
   ]);
 
-  // Step 2: Basic Information
   const [basicInfo, setBasicInfo] = useState({
     name: "Ananya",
     dob: "1999-08-15",
     gender: "Woman",
     location: "Mumbai, India",
   });
-
-  // Step 3: Interests
   const [selectedInterests, setSelectedInterests] = useState([
     "Travel",
     "Photography",
@@ -64,11 +51,6 @@ export default function ProfileCreation() {
     "Music",
   ]);
 
-  // Step 4: Relationship Preference
-  const [relationshipPreference, setRelationshipPreference] =
-    useState("Relationship");
-
-  // Completed State
   const [isCompleted, setIsCompleted] = useState(false);
 
   const interestOptions = [
@@ -86,28 +68,6 @@ export default function ProfileCreation() {
     { name: "Pets", icon: Cat },
   ];
 
-  const relationshipOptions = [
-    {
-      id: "Relationship",
-      title: "Relationship",
-      subtitle: "Long-term relationship",
-      icon: Heart,
-    },
-    {
-      id: "Dating",
-      title: "Dating",
-      subtitle: "Casual dating",
-      icon: Heart,
-    },
-    {
-      id: "Friendship",
-      title: "Friendship",
-      subtitle: "Make new friends",
-      icon: Users,
-    },
-  ];
-
-  // Photo handlers
   const handleFileUpload = (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -150,7 +110,7 @@ export default function ProfileCreation() {
   };
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep((prev) => prev + 1);
     } else {
       navigate("/discover");
@@ -164,56 +124,28 @@ export default function ProfileCreation() {
   };
 
   const handleSkip = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep((prev) => prev + 1);
     } else {
       navigate("/discover");
     }
   };
 
-  // Stepper Header data
   const stepTitles = {
-    1: { stepNum: 1, label: "Step 1 of 8", progress: "12.5%" },
-    2: { stepNum: 2, label: "Step 2 of 8", progress: "35%" },
-    3: { stepNum: 6, label: "Step 6 of 8", progress: "75%" },
-    4: { stepNum: 8, label: "Step 8 of 8", progress: "100%" },
+    1: { stepNum: 1, label: "Step 1 of 3", progress: "33%" },
+    2: { stepNum: 2, label: "Step 2 of 3", progress: "66%" },
+    3: { stepNum: 3, label: "Step 3 of 3", progress: "100%" },
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-3 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-sans select-none">
-      {/* Ambient Fluid Glows */}
+    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-3 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-poppins select-none">
       <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
 
-      {/* Top Header Logo */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-3 sm:pb-4 border-b border-[#FFE7F0]/80 mb-2">
-        <Link
-          to="/"
-          title="Return to LoveConnect Home"
-          className="inline-flex items-center group"
-        >
-          <img
-            src={loveConnectLogo}
-            alt="LoveConnect"
-            className="h-9 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        </Link>
-
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
-          <span>Profile Verification Active</span>
-        </div>
-      </header>
-
-      {/* Main SaaS Stage: Full-Width 2-Column Desktop Experience */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto my-auto flex-1 flex flex-col justify-center">
-        <div className="bg-white rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:h-[76vh] max-h-[780px] transition-all duration-300">
-          {/* ========================================================= */}
-          {/* LEFT COLUMN: The Interactive 4-Step Form Wizard           */}
-          {/* ========================================================= */}
-          <div className="lg:col-span-7 p-6 sm:p-9 lg:p-10 flex flex-col justify-between overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <main className="relative z-10 w-full max-w-5xl mx-auto my-auto flex-1 flex flex-col justify-center py-2 sm:py-4">
+        <div className="w-full bg-white rounded-[28px] sm:rounded-[36px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden flex flex-col justify-between max-w-5xl mx-auto min-h-[540px] lg:min-h-[580px] lg:h-[76vh] max-h-[780px] transition-all duration-300">
+          <div className="p-6 sm:p-9 lg:p-10 flex flex-col justify-between flex-1 h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div>
-              {/* Stepper Progress Bar */}
               <div className="mb-6">
                 <div className="relative w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div
@@ -225,7 +157,7 @@ export default function ProfileCreation() {
                 <div className="flex items-center justify-between mt-3">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[11px] font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF2D72]" />
-                    <span>Step {stepTitles[currentStep].stepNum} of 8</span>
+                    <span>Step {stepTitles[currentStep].stepNum} of 3</span>
                   </div>
                   <span className="text-xs font-semibold text-slate-400">
                     {stepTitles[currentStep].label}
@@ -321,7 +253,7 @@ export default function ProfileCreation() {
                     </p>
                   </div>
 
-                  <div className="space-y-3.5 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1">
                     <div>
                       <label className="block text-xs font-bold text-[#17151A] mb-1">
                         Name *
@@ -438,57 +370,6 @@ export default function ProfileCreation() {
                   </div>
                 </div>
               )}
-
-              {/* STEP 4: Relationship Preference */}
-              {currentStep === 4 && (
-                <div className="animate-fadeIn">
-                  <div className="mb-5">
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
-                      Relationship Preference
-                    </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      What are you looking for?
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {relationshipOptions.map((opt) => {
-                      const isSelected = relationshipPreference === opt.id;
-                      const IconComponent = opt.icon;
-                      return (
-                        <div
-                          key={opt.id}
-                          onClick={() => setRelationshipPreference(opt.id)}
-                          className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                            isSelected
-                              ? "border-[#FF2D72] bg-[#FFE7F0]/25 shadow-xs"
-                              : "border-slate-200 hover:border-slate-300 bg-white"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-full bg-[#FFE7F0] flex items-center justify-center text-[#FF2D72] shrink-0">
-                              <IconComponent className="w-5 h-5 fill-[#FF2D72]" />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-bold text-[#17151A]">
-                                {opt.title}
-                              </h3>
-                              <p className="text-xs text-[#64748b] mt-0.5">
-                                {opt.subtitle}
-                              </p>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <div className="w-6 h-6 rounded-full bg-[#FF2D72] text-white flex items-center justify-center">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Bottom Actions Bar */}
@@ -517,63 +398,9 @@ export default function ProfileCreation() {
                 onClick={handleNext}
                 className="px-8 sm:px-10 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#FF2D72] hover:brightness-105 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#FF2D72]/25 hover:shadow-lg hover:shadow-[#FF2D72]/40 transition-all cursor-pointer"
               >
-                <span>{currentStep === 4 ? "Complete" : "Next"}</span>
+                <span>{currentStep === 3 ? "Complete" : "Next"}</span>
               </button>
             </div>
-          </div>
-
-          {/* ========================================================= */}
-          {/* RIGHT COLUMN: Live Match Profile Card Preview             */}
-          {/* ========================================================= */}
-          <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-purple-50/60 via-[#FFE7F0]/30 to-pink-50/40 p-6 flex-col items-center justify-center relative border-l border-[#FFE7F0]/60">
-            <div className="mb-3 text-center">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md text-[11px] font-bold text-[#FF2D72] border border-[#FFE7F0] shadow-2xs">
-                <Eye className="w-3.5 h-3.5" />
-                <span>Live Match Preview</span>
-              </span>
-            </div>
-
-            {/* The Live Card */}
-            <div className="w-full max-w-[320px] bg-white rounded-[24px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden p-3.5 transition-all">
-              <div className="relative w-full h-[260px] rounded-2xl overflow-hidden bg-slate-100 shadow-inner">
-                <img
-                  src={photos[0]}
-                  alt="Live Profile Preview"
-                  className="w-full h-full object-cover object-top"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-
-                <div className="absolute bottom-3 inset-x-3 text-white">
-                  <h3 className="text-xl font-black flex items-center gap-1.5">
-                    <span>{basicInfo.name || "Your Name"}</span>
-                    <CheckCircle2 className="w-4 h-4 text-[#3B82F6] fill-white" />
-                  </h3>
-                  <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5 font-medium">
-                    <MapPin className="w-3 h-3 text-[#FF2D72]" />
-                    <span>{basicInfo.location || "Your Location"}</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Preferences Pill */}
-              <div className="pt-3 pb-1 flex flex-wrap gap-1.5">
-                <span className="px-2.5 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-bold">
-                  {relationshipPreference}
-                </span>
-                {selectedInterests.slice(0, 3).map((item) => (
-                  <span
-                    key={item}
-                    className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-semibold"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-400 mt-3 text-center">
-              This is how your card appears to nearby singles
-            </p>
           </div>
         </div>
       </main>

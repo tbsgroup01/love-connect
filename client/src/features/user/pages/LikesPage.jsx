@@ -1,28 +1,51 @@
-import React from "react"
-import DashboardLayout from "../components/DashboardLayout"
-import { Lock, Crown, Sparkles, Heart } from "lucide-react"
+import React from "react";
+import DashboardLayout from "../components/DashboardLayout";
+import { Lock, Crown, Sparkles, Heart } from "lucide-react";
 
-import priyaImg from "../../../assets/priya_profile.jpg"
-import meeraImg from "../../../assets/signup_hero_woman.jpg"
-import rheaImg from "../../../assets/hero_woman_exact.png"
-import snehaImg from "../../../assets/hero_woman.jpg"
+import priyaImg from "../../../assets/priya_profile.jpg";
+import meeraImg from "../../../assets/signup_hero_woman.jpg";
+import rheaImg from "../../../assets/hero_woman_exact.png";
+import snehaImg from "../../../assets/hero_woman.jpg";
 
 export default function LikesPage() {
   const admirers = [
-    { name: "Priya", age: 25, distance: "4 km away", time: "10 mins ago", matchScore: "96% Match", img: priyaImg },
-    { name: "Meera", age: 23, distance: "6 km away", time: "1 hour ago", matchScore: "95% Match", img: meeraImg },
-    { name: "Rhea", age: 24, distance: "3 km away", time: "2 hours ago", matchScore: "92% Match", img: rheaImg },
-    { name: "Sneha", age: 24, distance: "5 km away", time: "Yesterday", matchScore: "94% Match", img: snehaImg },
-    { name: "Kritika", age: 23, distance: "1 km away", time: "Yesterday", matchScore: "91% Match", img: rheaImg },
-    { name: "Neha", age: 22, distance: "2 km away", time: "2 days ago", matchScore: "89% Match", img: meeraImg },
-    { name: "Pooja", age: 25, distance: "7 km away", time: "3 days ago", matchScore: "88% Match", img: priyaImg },
-    { name: "Ananya", age: 24, distance: "2 km away", time: "4 days ago", matchScore: "98% Match", img: snehaImg },
-  ]
+    {
+      name: "Priya",
+      img: priyaImg,
+    },
+    {
+      name: "Meera",
+      img: meeraImg,
+    },
+    {
+      name: "Rhea",
+      img: rheaImg,
+    },
+    {
+      name: "Sneha",
+      img: snehaImg,
+    },
+    {
+      name: "Kritika",
+      img: rheaImg,
+    },
+    {
+      name: "Neha",
+      img: meeraImg,
+    },
+    {
+      name: "Pooja",
+      img: priyaImg,
+    },
+    {
+      name: "Ananya",
+      img: snehaImg,
+    },
+  ];
 
   return (
     <DashboardLayout activeTab="likes">
       <div className="w-full space-y-5 animate-fadeIn">
-
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-3">
@@ -58,7 +81,8 @@ export default function LikesPage() {
                 See who likes you instantly!
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Upgrade to LoveConnect Gold to unblur all 24 profile photos and match instantly.
+                Upgrade to LoveConnect Gold to unblur all 24 profile photos and
+                match instantly.
               </p>
             </div>
           </div>
@@ -85,15 +109,12 @@ export default function LikesPage() {
                 <img
                   src={admirer.img}
                   alt={admirer.name}
-                  className="w-full h-full object-cover filter blur-lg scale-110 group-hover:scale-120 transition-transform duration-500"
+                  className="w-full h-full object-cover filter blur-sm hover:blur-none hover:scale-110 transition-transform duration-500"
                 />
 
                 <div className="absolute inset-0 bg-black/25 flex flex-col justify-between p-3">
                   {/* Top Badges */}
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md text-[#FFFFFF] text-[10px] font-extrabold border border-white/20">
-                      {admirer.matchScore}
-                    </span>
                     <span className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-white">
                       <Lock className="w-3.5 h-3.5 text-white" />
                     </span>
@@ -102,12 +123,8 @@ export default function LikesPage() {
                   {/* Bottom Text */}
                   <div>
                     <h4 className="font-black text-base text-white drop-shadow-md">
-                      {admirer.name}, {admirer.age}
+                      {admirer.name}
                     </h4>
-                    <div className="flex items-center justify-between text-[11px] text-white/90 font-medium">
-                      <span>{admirer.distance}</span>
-                      <span className="text-[10px] text-pink-200">{admirer.time}</span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -116,18 +133,19 @@ export default function LikesPage() {
               <div className="p-3 bg-white border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => alert(`Unlocking profile of ${admirer.name}...`)}
+                  onClick={() =>
+                    alert(`Unlocking profile of ${admirer.name}...`)
+                  }
                   className="w-full py-2 rounded-xl bg-[#FFE7F0] hover:bg-[#FF2D72] text-[#FF2D72] hover:text-white font-extrabold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Match & Chat</span>
+                  <span>Chat</span>
                 </button>
               </div>
             </div>
           ))}
         </div>
-
       </div>
     </DashboardLayout>
-  )
+  );
 }

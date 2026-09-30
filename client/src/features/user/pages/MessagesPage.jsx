@@ -1,44 +1,99 @@
-import React, { useState } from "react"
-import DashboardLayout from "../components/DashboardLayout"
-import { Phone, Video, Paperclip, Smile, Send, Search, CheckCheck } from "lucide-react"
+import React, { useState } from "react";
+import DashboardLayout from "../components/DashboardLayout";
+import {
+  Phone,
+  Video,
+  Paperclip,
+  Smile,
+  Send,
+  Search,
+  CheckCheck,
+} from "lucide-react";
 
-import priyaImg from "../../../assets/priya_profile.jpg"
-import meeraImg from "../../../assets/signup_hero_woman.jpg"
-import rheaImg from "../../../assets/hero_woman_exact.png"
-import snehaImg from "../../../assets/hero_woman.jpg"
+import priyaImg from "../../../assets/priya_profile.jpg";
+import meeraImg from "../../../assets/signup_hero_woman.jpg";
+import rheaImg from "../../../assets/hero_woman_exact.png";
+import snehaImg from "../../../assets/hero_woman.jpg";
 
 export default function MessagesPage() {
-  const [activeChat, setActiveChat] = useState(1)
+  const [activeChat, setActiveChat] = useState(1);
   const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: "them", text: "Hey Ananya! Loved your travel photos from Goa ", time: "10:14 AM" },
-    { id: 2, sender: "me", text: "Thanks Priya! Goa is my absolute favorite place. Do you travel often?", time: "10:16 AM" },
-    { id: 3, sender: "them", text: "Yes! Planning a trip next month. Would love to get coffee this weekend to chat more? ", time: "10:18 AM" },
-  ])
-  const [inputMessage, setInputMessage] = useState("")
+    {
+      id: 1,
+      sender: "them",
+      text: "Hey Ananya! Loved your travel photos from Goa ",
+      time: "10:14 AM",
+    },
+    {
+      id: 2,
+      sender: "me",
+      text: "Thanks Priya! Goa is my absolute favorite place. Do you travel often?",
+      time: "10:16 AM",
+    },
+    {
+      id: 3,
+      sender: "them",
+      text: "Yes! Planning a trip next month. Would love to get coffee this weekend to chat more? ",
+      time: "10:18 AM",
+    },
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
 
   const conversations = [
-    { id: 1, name: "Priya", age: 25, lastMsg: "Would love to get coffee this weekend... ", time: "10:18 AM", unread: 0, img: priyaImg },
-    { id: 2, name: "Meera", age: 23, lastMsg: "That architecture design was stunning!", time: "Yesterday", unread: 2, img: meeraImg },
-    { id: 3, name: "Rhea", age: 24, lastMsg: "Haha totally agree! See you soon.", time: "2 days ago", unread: 0, img: rheaImg },
-    { id: 4, name: "Sneha", age: 24, lastMsg: "Are you free this Friday evening?", time: "3 days ago", unread: 1, img: snehaImg },
-  ]
+    {
+      id: 1,
+      name: "Priya",
+      age: 25,
+      lastMsg: "Would love to get coffee this weekend... ",
+      time: "10:18 AM",
+      unread: 0,
+      img: priyaImg,
+    },
+    {
+      id: 2,
+      name: "Meera",
+      age: 23,
+      lastMsg: "That architecture design was stunning!",
+      time: "Yesterday",
+      unread: 2,
+      img: meeraImg,
+    },
+    {
+      id: 3,
+      name: "Rhea",
+      age: 24,
+      lastMsg: "Haha totally agree! See you soon.",
+      time: "2 days ago",
+      unread: 0,
+      img: rheaImg,
+    },
+    {
+      id: 4,
+      name: "Sneha",
+      age: 24,
+      lastMsg: "Are you free this Friday evening?",
+      time: "3 days ago",
+      unread: 1,
+      img: snehaImg,
+    },
+  ];
 
   const handleSendMessage = (e) => {
-    e.preventDefault()
-    if (!inputMessage.trim()) return
+    e.preventDefault();
+    if (!inputMessage.trim()) return;
     setChatMessages((prev) => [
       ...prev,
       { id: Date.now(), sender: "me", text: inputMessage, time: "Just now" },
-    ])
-    setInputMessage("")
-  }
+    ]);
+    setInputMessage("");
+  };
 
-  const currentChatPartner = conversations.find((c) => c.id === activeChat) || conversations[0]
+  const currentChatPartner =
+    conversations.find((c) => c.id === activeChat) || conversations[0];
 
   return (
     <DashboardLayout activeTab="messages">
       <div className="w-full bg-[#FFFFFF] rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-[680px] animate-fadeIn">
-
         {/* LEFT CONVERSATION LIST SIDEBAR */}
         <div className="w-full md:w-80 border-r border-slate-200/80 flex flex-col shrink-0 bg-white">
           {/* Header & Search */}
@@ -60,19 +115,32 @@ export default function MessagesPage() {
               <div
                 key={chat.id}
                 onClick={() => setActiveChat(chat.id)}
-                className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${activeChat === chat.id ? "bg-[#FFE7F0]/40 border-l-4 border-[#FF2D72]" : "hover:bg-slate-50"
-                  }`}
+                className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${
+                  activeChat === chat.id
+                    ? "bg-[#FFE7F0]/40 border-l-4 border-[#FF2D72]"
+                    : "hover:bg-slate-50"
+                }`}
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-2xs">
-                  <img src={chat.img} alt={chat.name} className="w-full h-full object-cover" />
+                  <img
+                    src={chat.img}
+                    alt={chat.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-[#17151A] truncate">{chat.name}, {chat.age}</h4>
-                    <span className="text-[10px] text-slate-400 font-semibold">{chat.time}</span>
+                    <h4 className="text-xs font-black text-[#17151A] truncate">
+                      {chat.name}, {chat.age}
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-semibold">
+                      {chat.time}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate font-medium mt-0.5">{chat.lastMsg}</p>
+                  <p className="text-[11px] text-slate-500 truncate font-medium mt-0.5">
+                    {chat.lastMsg}
+                  </p>
                 </div>
 
                 {chat.unread > 0 && (
@@ -87,17 +155,24 @@ export default function MessagesPage() {
 
         {/* RIGHT CHAT WINDOW */}
         <div className="flex-1 flex flex-col h-full bg-slate-50/50">
-
           {/* Chat Partner Header */}
           <div className="px-5 py-3.5 bg-white border-b border-slate-200/80 flex items-center justify-between shrink-0 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden border border-slate-200">
-                <img src={currentChatPartner.img} alt={currentChatPartner.name} className="w-full h-full object-cover" />
+                <img
+                  src={currentChatPartner.img}
+                  alt={currentChatPartner.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-black text-sm text-[#17151A]">{currentChatPartner.name}, {currentChatPartner.age}</h3>
-                  <span className="text-[10px] font-bold bg-[#FFE7F0] text-[#FF2D72] px-2 py-0.5 rounded-full">Matched</span>
+                  <h3 className="font-black text-sm text-[#17151A]">
+                    {currentChatPartner.name}, {currentChatPartner.age}
+                  </h3>
+                  <span className="text-[10px] font-bold bg-[#FFE7F0] text-[#FF2D72] px-2 py-0.5 rounded-full">
+                    Matched
+                  </span>
                 </div>
               </div>
             </div>
@@ -113,7 +188,11 @@ export default function MessagesPage() {
               </button>
               <button
                 type="button"
-                onClick={() => alert(`Starting Video Call with ${currentChatPartner.name}...`)}
+                onClick={() =>
+                  alert(
+                    `Starting Video Call with ${currentChatPartner.name}...`,
+                  )
+                }
                 className="p-2 rounded-xl bg-slate-100 hover:bg-[#FFE7F0] hover:text-[#FF2D72] text-slate-600 transition-colors cursor-pointer"
                 title="Video Call"
               >
@@ -136,16 +215,19 @@ export default function MessagesPage() {
                 className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max-w-[75%] p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-2xs ${msg.sender === "me"
-                    ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] rounded-br-none"
-                    : "bg-[#FFFFFF] text-[#17151A] border border-slate-200/80 rounded-bl-none"
-                    }`}
+                  className={`max-w-[75%] p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-2xs ${
+                    msg.sender === "me"
+                      ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] rounded-br-none"
+                      : "bg-[#FFFFFF] text-[#17151A] border border-slate-200/80 rounded-bl-none"
+                  }`}
                 >
                   {msg.text}
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium mt-1 px-1 flex items-center gap-1">
                   <span>{msg.time}</span>
-                  {msg.sender === "me" && <CheckCheck className="w-3 h-3 text-[#FF2D72]" />}
+                  {msg.sender === "me" && (
+                    <CheckCheck className="w-3 h-3 text-[#FF2D72]" />
+                  )}
                 </span>
               </div>
             ))}
@@ -153,21 +235,28 @@ export default function MessagesPage() {
 
           {/* Quick Suggestion Pills */}
           <div className="px-4 py-2 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 shrink-0">Quick React:</span>
-            {["☕ Coffee date?", "✨ Loved your photos!", "😍 You look amazing"].map((pill, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setInputMessage(pill)}
-                className="px-3 py-1 rounded-full bg-[#FFE7F0] hover:bg-[#FF2D72] hover:text-[#FFFFFF] text-[#FF2D72] text-[11px] font-bold transition-colors shrink-0 cursor-pointer"
-              >
-                {pill}
-              </button>
-            ))}
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 shrink-0">
+              Quick React:
+            </span>
+            {[" Coffee date?", " Loved your photos!", " You look amazing"].map(
+              (pill, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setInputMessage(pill)}
+                  className="px-3 py-1 rounded-full bg-[#FFE7F0] hover:bg-[#FF2D72] hover:text-[#FFFFFF] text-[#FF2D72] text-[11px] font-bold transition-colors shrink-0 cursor-pointer"
+                >
+                  {pill}
+                </button>
+              ),
+            )}
           </div>
 
           {/* Chat Input Form */}
-          <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-200/80 flex items-center gap-2 shrink-0">
+          <form
+            onSubmit={handleSendMessage}
+            className="p-3 bg-white border-t border-slate-200/80 flex items-center gap-2 shrink-0"
+          >
             <button
               type="button"
               onClick={() => alert("Attach photo/media")}
@@ -202,10 +291,8 @@ export default function MessagesPage() {
               <Send className="w-4 h-4" />
             </button>
           </form>
-
         </div>
-
       </div>
-    </DashboardLayout >
-  )
+    </DashboardLayout>
+  );
 }

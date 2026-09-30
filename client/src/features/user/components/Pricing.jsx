@@ -39,7 +39,7 @@ export default function Pricing() {
         "Create verified profile",
         "Browse local members",
         "Up to 50 likes per day",
-        "Standard filters (age, distance)",
+        "Standard discovery filters",
         "Safe in-app chat with mutual matches",
       ],
       buttonText: "Get Started Free",
@@ -108,8 +108,9 @@ export default function Pricing() {
   return (
     <section
       id="pricing"
-      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC]"
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] font-poppins"
     >
+      <div id="plans" className="absolute -top-20" />
       {/* Background Soft Fluid Glows */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[700px] h-[700px] bg-gradient-to-tr from-[#FFE7F0]/60 via-[#7C3AED]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
 
@@ -194,9 +195,6 @@ export default function Pricing() {
                             {plan.name}
                           </h3>
                         </div>
-                      </div>
-                      <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-amber-400">
-                        <Heart className="w-3.5 h-3.5 fill-amber-400" />
                       </div>
                     </div>
 
@@ -288,10 +286,6 @@ export default function Pricing() {
                           {plan.name}
                         </h3>
                       </div>
-                    </div>
-
-                    <div className="w-7 h-7 rounded-full bg-[#FFE7F0] flex items-center justify-center text-[#FF2D72]">
-                      <Heart className="w-3.5 h-3.5 fill-[#FF2D72]" />
                     </div>
                   </div>
 

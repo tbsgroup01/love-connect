@@ -1,22 +1,29 @@
-import React, { useState } from "react"
-import { Link } from "react-router-dom"
-import { Mail, ArrowLeft, CheckCircle2, Heart, Sparkles, Send } from "lucide-react"
-import loveConnectLogo from "../../../assets/loveconnect.png"
-import envelopeIllustration from "../../../assets/forgot_password_envelope.jpg"
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Mail,
+  ArrowLeft,
+  CheckCircle2,
+  Heart,
+  Sparkles,
+  Send,
+} from "lucide-react";
+import loveConnectLogo from "../../../assets/loveconnect.png";
+import envelopeIllustration from "../../../assets/forgot_password_envelope.jpg";
 
 export default function ForgotPassword() {
-  const [identifier, setIdentifier] = useState("")
-  const [submitted, setSubmitted] = useState(false)
-  const [isFocused, setIsFocused] = useState(false)
+  const [identifier, setIdentifier] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!identifier.trim()) return
-    setSubmitted(true)
-  }
+    e.preventDefault();
+    if (!identifier.trim()) return;
+    setSubmitted(true);
+  };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-5 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-sans select-none py-8 lg:py-0">
+    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-5 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-8 lg:py-0">
       {/* Ambient Fluid Glows */}
       <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
@@ -32,12 +39,10 @@ export default function ForgotPassword() {
 
       {/* Main SaaS Card (28px border radius, clean white, soft shadow) */}
       <div className="relative z-10 w-full max-w-[880px] h-auto bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300 my-auto">
-
         {/* ========================================================= */}
         {/* LEFT COLUMN: Form Section                                */}
         {/* ========================================================= */}
         <div className="lg:col-span-7 order-1 lg:order-1 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
-
           {/* Top Brand Logo */}
           <div className="mb-6 sm:mb-8">
             <Link
@@ -74,8 +79,10 @@ export default function ForgotPassword() {
                   </h3>
                   <p className="text-xs text-emerald-700/90 mt-1 leading-relaxed">
                     We've dispatched password recovery instructions to{" "}
-                    <span className="font-semibold text-emerald-900">{identifier}</span>.
-                    Please check your messages or spam folder.
+                    <span className="font-semibold text-emerald-900">
+                      {identifier}
+                    </span>
+                    . Please check your messages or spam folder.
                   </p>
                 </div>
               </div>
@@ -103,21 +110,22 @@ export default function ForgotPassword() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#17151A] mb-1.5">
-                  Email or Mobile Number
+                  Email
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="Enter your email or mobile number"
+                    placeholder="Enter your email"
                     value={identifier}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className={`w-full px-4 py-3 rounded-xl border text-xs sm:text-sm text-[#17151A] placeholder-slate-400 bg-[#FAFAFC] focus:bg-white transition-all shadow-2xs outline-none ${isFocused
+                    className={`w-full px-4 py-3 rounded-xl border text-xs sm:text-sm text-[#17151A] placeholder-slate-400 bg-[#FAFAFC] focus:bg-white transition-all shadow-2xs outline-none ${
+                      isFocused
                         ? "border-[#FF2D72] ring-3 ring-[#FFE7F0]"
                         : "border-slate-200 hover:border-slate-300"
-                      }`}
+                    }`}
                   />
                 </div>
               </div>
@@ -144,14 +152,12 @@ export default function ForgotPassword() {
               </div>
             </form>
           )}
-
         </div>
 
         {/* ========================================================= */}
         {/* RIGHT COLUMN: 3D Isometric Envelope Illustration          */}
         {/* ========================================================= */}
         <div className="lg:col-span-5 order-2 lg:order-2 bg-gradient-to-tr from-purple-50/50 via-pink-50/30 to-white flex items-center justify-center p-6 sm:p-8 relative overflow-hidden border-t lg:border-t-0 lg:border-l border-[#FFE7F0]/60">
-
           {/* Subtle Ambient Radial Highlight */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#FFE7F0]/30 via-transparent to-[#7C3AED]/5 pointer-events-none" />
 
@@ -163,10 +169,8 @@ export default function ForgotPassword() {
               className="w-full h-full object-contain rounded-2xl transition-transform duration-700 group-hover:scale-105 "
             />
           </div>
-
         </div>
-
       </div>
     </div>
-  )
+  );
 }

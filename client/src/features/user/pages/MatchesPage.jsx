@@ -1,6 +1,6 @@
-import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import DashboardLayout from "../components/DashboardLayout"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "../components/DashboardLayout";
 import {
   Users,
   MessageSquare,
@@ -12,17 +12,17 @@ import {
   Send,
   Crown,
   Briefcase,
-  Check
-} from "lucide-react"
+  Check,
+} from "lucide-react";
 
-import priyaImg from "../../../assets/priya_profile.jpg"
-import meeraImg from "../../../assets/signup_hero_woman.jpg"
-import rheaImg from "../../../assets/hero_woman_exact.png"
-import snehaImg from "../../../assets/hero_woman.jpg"
+import priyaImg from "../../../assets/priya_profile.jpg";
+import meeraImg from "../../../assets/signup_hero_woman.jpg";
+import rheaImg from "../../../assets/hero_woman_exact.png";
+import snehaImg from "../../../assets/hero_woman.jpg";
 
 export default function MatchesPage() {
-  const navigate = useNavigate()
-  const [filterTab, setFilterTab] = useState("all")
+  const navigate = useNavigate();
+  const [filterTab, setFilterTab] = useState("all");
 
   // Match profiles list (matching Image 1)
   const matchesList = [
@@ -30,9 +30,7 @@ export default function MatchesPage() {
       id: 1,
       name: "Priya",
       age: 25,
-      score: "96% Match",
       profession: "Senior Software Engineer",
-      distance: "2 km away",
       location: "Noida, India",
       tags: ["Travel", "Music", "Food", "Photography"],
       moreCount: 3,
@@ -42,9 +40,7 @@ export default function MatchesPage() {
       id: 2,
       name: "Meera",
       age: 23,
-      score: "95% Match",
       profession: "Architect",
-      distance: "3 km away",
       location: "Noida, India",
       tags: ["Art", "Reading", "Travel", "Fitness"],
       moreCount: 2,
@@ -54,15 +50,13 @@ export default function MatchesPage() {
       id: 3,
       name: "Rhea",
       age: 24,
-      score: "92% Match",
       profession: "Content Strategist",
-      distance: "5 km away",
       location: "Noida, India",
       tags: ["Food", "Movies", "Nature", "Pets"],
       moreCount: 2,
       img: rheaImg,
     },
-  ]
+  ];
 
   // Avatar list for New Matches (Start Chat) section (6 avatars matching Image 1)
   const newMatchesAvatars = [
@@ -72,14 +66,11 @@ export default function MatchesPage() {
     { name: "Sneha", age: 24, img: snehaImg },
     { name: "Kritika", age: 23, img: rheaImg },
     { name: "Neha", age: 22, img: meeraImg },
-  ]
+  ];
 
   // Custom Right Sidebar matching Image 1 exactly!
   const customRightSidebar = (
     <div className="space-y-4 animate-fadeIn">
-
-
-
       {/* 2. GET 10X MORE MATCHES PROMO BANNER CARD */}
       <div className="relative overflow-hidden rounded-2xl border border-[#FFD0E0] bg-gradient-to-br from-[#FFF0F5] via-white to-[#F4F0FF] p-4 sm:p-5 shadow-xs">
         <div className="relative z-10 max-w-[70%] space-y-2">
@@ -143,16 +134,20 @@ export default function MatchesPage() {
 
         <div className="grid grid-cols-3 gap-2.5 text-center">
           {[
-            { name: "Kritika", age: 23, dist: "1 km away", img: rheaImg },
-            { name: "Neha", age: 22, dist: "2 km away", img: meeraImg },
-            { name: "Simran", age: 24, dist: "3 km away", img: priyaImg },
+            { name: "Kritika", age: 23, img: rheaImg },
+            { name: "Neha", age: 22, img: meeraImg },
+            { name: "Simran", age: 24, img: priyaImg },
           ].map((user, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-1 cursor-pointer group">
+            <div
+              key={idx}
+              className="flex flex-col items-center gap-1 cursor-pointer group"
+            >
               <div className="relative w-full h-20 rounded-xl overflow-hidden shadow-2xs group-hover:scale-105 transition-transform">
-                <img src={user.img} alt={user.name} className="w-full h-full object-cover" />
-                <span className="w-5 h-5 rounded-full bg-white/90 text-[#FF2D72] absolute bottom-1 right-1 flex items-center justify-center text-[10px] shadow-2xs">
-                  ❤️
-                </span>
+                <img
+                  src={user.img}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-xs font-extrabold text-[#17151A] truncate w-full pt-1">
                 {user.name}
@@ -160,20 +155,19 @@ export default function MatchesPage() {
               <span className="text-[10px] text-slate-400 font-semibold -mt-1">
                 {user.age}
               </span>
-              <span className="text-[9px] text-slate-500 font-semibold -mt-1">
-                {user.dist}
-              </span>
             </div>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 
   return (
-    <DashboardLayout activeTab="matches" customRightSidebar={customRightSidebar}>
+    <DashboardLayout
+      activeTab="matches"
+      customRightSidebar={customRightSidebar}
+    >
       <div className="w-full space-y-5 animate-fadeIn">
-
         {/* 1. PAGE HEADER SECTION WITH ROMANTIC GRAPHIC */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-3">
@@ -192,35 +186,16 @@ export default function MatchesPage() {
 
           {/* Right side banner graphic */}
           <div className="hidden md:flex items-center gap-3 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FFF0F5] to-[#F4F0FF] border border-[#FFE7F0]">
-            <div className="text-xl">💖</div>
+            <div className="text-xl"> </div>
             <div>
-              <span className="block text-xs font-black text-[#FF2D72] italic font-serif">It's better together</span>
-              <span className="text-[11px] font-semibold text-slate-500">Meaningful conversations start with a hello!</span>
+              <span className="block text-xs font-black text-[#FF2D72] italic font-serif">
+                It's better together
+              </span>
+              <span className="text-[11px] font-semibold text-slate-500">
+                Meaningful conversations start with a hello!
+              </span>
             </div>
           </div>
-        </div>
-
-        {/* 2. CATEGORY FILTER PILLS */}
-        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-          {[
-            { id: "all", label: "All Matches", icon: null },
-            { id: "new", label: "New Matches", icon: Sparkles },
-            { id: "nearby", label: "Nearby", icon: MapPin },
-            { id: "verified", label: "Verified", icon: ShieldCheck },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilterTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${filterTab === tab.id
-                ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
-                : "bg-[#FFFFFF] text-slate-600 border border-slate-200/80 hover:bg-slate-50"
-                }`}
-            >
-              {tab.icon && <tab.icon className="w-3.5 h-3.5 text-current" />}
-              <span>{tab.label}</span>
-            </button>
-          ))}
         </div>
 
         {/* 3. NEW MATCHES (START CHAT) HORIZONTAL AVATARS ROW */}
@@ -232,14 +207,6 @@ export default function MatchesPage() {
               </span>
               <span>New Matches (Start Chat)</span>
             </h3>
-            <button
-              type="button"
-              onClick={() => alert("Viewing all matches")}
-              className="text-xs font-black text-[#FF2D72] hover:underline flex items-center gap-1 cursor-pointer"
-            >
-              <span>See All</span>
-              <span>→</span>
-            </button>
           </div>
 
           <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto pb-1 scrollbar-none">
@@ -249,9 +216,12 @@ export default function MatchesPage() {
                 onClick={() => navigate("/messages")}
                 className="flex flex-col items-center gap-1.5 cursor-pointer group shrink-0"
               >
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 border-2 border-[#FF2D72] group-hover:scale-105 transition-transform shadow-2xs">
-                  <img src={person.img} alt={person.name} className="w-full h-full rounded-full object-cover" />
-                  <span className="w-3.5 h-3.5 rounded-full bg-[#22C55E] border-2 border-white absolute bottom-0 right-0" />
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5  group-hover:scale-105 transition-transform shadow-2xs">
+                  <img
+                    src={person.img}
+                    alt={person.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 </div>
                 <div className="text-center leading-tight">
                   <span className="block text-xs font-extrabold text-[#17151A] group-hover:text-[#FF2D72] transition-colors">
@@ -276,7 +246,11 @@ export default function MatchesPage() {
               <div className="flex items-start sm:items-center gap-4">
                 {/* Avatar Image */}
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 shadow-2xs">
-                  <img src={match.img} alt={match.name} className="w-full h-full object-cover" />
+                  <img
+                    src={match.img}
+                    alt={match.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 {/* Profile Details */}
@@ -285,9 +259,6 @@ export default function MatchesPage() {
                     <h3 className="text-lg font-black text-[#17151A]">
                       {match.name}, {match.age}
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-extrabold">
-                      {match.score}
-                    </span>
                   </div>
 
                   <div className="space-y-0.5 text-xs text-slate-500 font-semibold">
@@ -297,7 +268,7 @@ export default function MatchesPage() {
                     </p>
                     <p className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{match.distance} • {match.location}</span>
+                      <span>{match.location}</span>
                     </p>
                   </div>
 
@@ -330,21 +301,11 @@ export default function MatchesPage() {
                   <Send className="w-3.5 h-3.5" />
                   <span>Message</span>
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => alert(`Options for ${match.name}`)}
-                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/60"
-                  title="More options"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
               </div>
             </div>
           ))}
         </div>
-
       </div>
     </DashboardLayout>
-  )
+  );
 }

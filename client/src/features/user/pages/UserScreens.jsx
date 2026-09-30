@@ -47,7 +47,7 @@ const interests = [
 function Shell({ title, children, back = false }) {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[#FAFAFC] text-[#17151A]">
+    <div className="min-h-screen bg-[#FAFAFC] text-[#17151A] font-poppins">
       <header className="sticky top-0 z-30 border-b border-[#FFE7F0] bg-white/90 px-4 py-3 backdrop-blur-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -285,7 +285,7 @@ export function ProfileDetails() {
                 <CheckCircle2 className="inline h-5 w-5 fill-sky-400" />
               </h2>
               <p className="text-sm text-white/80">
-                Product Designer at Google · 2 km away
+                Product Designer at Google · Noida, India
               </p>
             </div>
           </div>
@@ -421,7 +421,6 @@ export function Call() {
 
 export function Filters() {
   const [age, setAge] = useState(28);
-  const [distance, setDistance] = useState(25);
   const [gender, setGender] = useState("Everyone");
   const [selected, setSelected] = useState(["Travel", "Music"]);
 
@@ -445,13 +444,6 @@ export function Filters() {
           min="18"
           max="60"
           onChange={setAge}
-        />
-        <Range
-          label={`Distance up to ${distance} km`}
-          value={distance}
-          min="1"
-          max="100"
-          onChange={setDistance}
         />
         <h3 className="mt-8 text-sm font-extrabold text-[#17151A]">Show me</h3>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -856,22 +848,15 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
-  const [notifications, setNotifications] = useState({
-    push: true,
-    email: true,
-    marketing: false,
-  });
-
-  const toggleNotification = (key) => {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const [accountModal, setAccountModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   return (
     <DashboardLayout activeTab="settings">
       <div className="w-full pb-20 lg:pb-6 space-y-6 animate-fadeIn">
         <Intro
           title="Account settings"
-          description="Manage your password, notifications, and account access."
+          description="Manage your password and account access."
         />
 
         <div className="w-full space-y-5">
@@ -939,59 +924,193 @@ export function SettingsPage() {
             </form>
           </Card>
 
-          {/* Notifications Card */}
-          <Card className="w-full">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h3 className="font-extrabold text-base text-[#17151A]">
-                  Notifications
-                </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Choose what alerts you want to receive.
-                </p>
-              </div>
-              <Bell className="h-5 w-5 text-[#FF2D72] shrink-0" />
-            </div>
-            <div className="divide-y divide-slate-100">
-              <Toggle
-                label="Push notifications"
-                subtitle="Instant alerts for new matches and messages"
-                value={notifications.push}
-                onChange={() => toggleNotification("push")}
-              />
-              <Toggle
-                label="Email updates"
-                subtitle="Important account and security notifications"
-                value={notifications.email}
-                onChange={() => toggleNotification("email")}
-              />
-              <Toggle
-                label="Special offers & tips"
-                subtitle="Discounts, promotions, and dating tips"
-                value={notifications.marketing}
-                onChange={() => toggleNotification("marketing")}
-              />
-            </div>
-          </Card>
-
           {/* Action Buttons */}
           <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-xs sm:text-sm font-bold text-slate-700 hover:border-[#FF2D72] hover:text-[#FF2D72] transition-colors shadow-xs"
+              className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-xs sm:text-sm font-bold text-slate-700 hover:border-[#FF2D72] hover:text-[#FF2D72] transition-colors shadow-xs cursor-pointer"
             >
               Log out
             </button>
-            <Link
-              to="/delete-account"
-              className="block w-full rounded-2xl border border-red-100 bg-red-50/80 py-3 text-center text-xs sm:text-sm font-bold text-red-500 hover:bg-red-100/60 transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModal(true);
+                setConfirmAction(null);
+              }}
+              className="w-full rounded-2xl border border-red-100 bg-red-50/80 py-3 text-center text-xs sm:text-sm font-bold text-red-500 hover:bg-red-100/60 transition-colors cursor-pointer"
             >
               Deactivate or delete account
-            </Link>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Deactivate or Delete Account Modal */}
+      {accountModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
+          onClick={() => {
+            setAccountModal(false);
+            setConfirmAction(null);
+          }}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-[#FFE7F0] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModal(false);
+                setConfirmAction(null);
+              }}
+              className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {!confirmAction ? (
+              <>
+                {/* Modal Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 shrink-0 shadow-2xs">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#17151A]">
+                      Manage Account Access
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Choose to pause your profile or delete your data permanently.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Options List */}
+                <div className="space-y-3 mt-5">
+                  {/* Deactivate Option */}
+                  <div className="p-4 rounded-2xl border border-slate-200 hover:border-purple-200 bg-slate-50/50 hover:bg-white transition-all">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#17151A]">
+                        Deactivate account
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Temporarily hide your profile, photos, and activity. You can reactivate anytime simply by logging back in.
+                      </p>
+                    </div>
+                    <div className="mt-3.5 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmAction("deactivate")}
+                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        Deactivate profile
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Option */}
+                  <div className="p-4 rounded-2xl border border-red-100 hover:border-red-300 bg-red-50/40 hover:bg-red-50/70 transition-all">
+                    <div>
+                      <h4 className="text-sm font-bold text-red-600">
+                        Delete account permanently
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Permanently delete your profile, photos, conversations, and all account data. This action is irreversible.
+                      </p>
+                    </div>
+                    <div className="mt-3.5 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmAction("delete")}
+                        className="rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer shadow-2xs"
+                      >
+                        Delete permanently
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAccountModal(false);
+                      setConfirmAction(null);
+                    }}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Confirmation Screen */
+              <div className="animate-fadeIn">
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${
+                      confirmAction === "delete"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-purple-100 text-[#7C3AED]"
+                    }`}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#17151A]">
+                      {confirmAction === "delete"
+                        ? "Delete Account Permanently?"
+                        : "Deactivate Your Account?"}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {confirmAction === "delete"
+                        ? "This action cannot be undone."
+                        : "You can come back anytime."}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 my-4 p-3.5 rounded-xl bg-slate-50 border border-slate-100 leading-relaxed">
+                  {confirmAction === "delete"
+                    ? "All your profile details, photos, messages, and settings will be permanently erased from LoveConnect. Are you sure you wish to continue?"
+                    : "Your profile will be hidden from other singles immediately. Whenever you are ready to return, simply sign in to reactivate your account."}
+                </p>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction(null)}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAccountModal(false);
+                      setConfirmAction(null);
+                      navigate("/login");
+                    }}
+                    className={`rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-colors cursor-pointer shadow-sm ${
+                      confirmAction === "delete"
+                        ? "bg-red-500 hover:bg-red-600 shadow-red-500/20"
+                        : "bg-slate-900 hover:bg-slate-800"
+                    }`}
+                  >
+                    {confirmAction === "delete"
+                      ? "Confirm Delete"
+                      : "Confirm Deactivation"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

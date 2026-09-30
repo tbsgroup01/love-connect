@@ -49,7 +49,7 @@ export default function VideoCall() {
   };
 
   return (
-    <div className="relative h-screen w-full bg-[#17151A] overflow-hidden select-none text-white font-sans">
+    <div className="relative h-screen w-full bg-[#17151A] overflow-hidden select-none text-white font-poppins">
       {/* REMOTE VIDEO FEED (FULL SCREEN BACKGROUND) */}
       <div className="absolute inset-0 z-0">
         <img

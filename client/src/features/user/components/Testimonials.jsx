@@ -1,5 +1,13 @@
-import React, { useState } from "react"
-import { ChevronLeft, ChevronRight, Quote, Heart, ShieldCheck, Sparkles, CheckCircle2 } from "lucide-react"
+import React, { useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Quote,
+  Heart,
+  ShieldCheck,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function Testimonials() {
   const testimonials = [
@@ -18,7 +26,7 @@ export default function Testimonials() {
       id: 2,
       name: "Rahul & Sneha",
       location: "Delhi, India",
-      tag: "Engaged 💖",
+      tag: "Engaged  ",
       quote:
         "The verified profiles gave me complete peace of mind. On our very first coffee date in CP, we ended up talking for four hours straight. Getting married this winter!",
       avatar:
@@ -51,7 +59,7 @@ export default function Testimonials() {
       id: 5,
       name: "Rohan & Meera",
       location: "Hyderabad, India",
-      tag: "In Love ❤️",
+      tag: "In Love ",
       quote:
         "The smart prompts and video calling made getting to know each other so natural and respectful before our first date. Couldn't be happier!",
       avatar:
@@ -69,34 +77,36 @@ export default function Testimonials() {
         "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80",
       matchedDate: "Matched 1 yr ago",
     },
-  ]
+  ];
 
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length)
-  }
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
 
   const handlePrev = () => {
     setCurrentIndex((prev) =>
-      prev === 0 ? testimonials.length - 1 : prev - 1
-    )
-  }
+      prev === 0 ? testimonials.length - 1 : prev - 1,
+    );
+  };
 
   // Pick 3 testimonials starting from currentIndex, wrapping around seamlessly
   const visibleTestimonials = [
     testimonials[currentIndex % testimonials.length],
     testimonials[(currentIndex + 1) % testimonials.length],
     testimonials[(currentIndex + 2) % testimonials.length],
-  ]
+  ];
 
   return (
-    <section id="testimonials" className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC]">
+    <section
+      id="testimonials"
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] font-poppins"
+    >
       {/* Background Soft Fluid Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[650px] h-[650px] bg-gradient-to-tr from-[#FFE7F0]/60 via-[#7C3AED]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
 
       <div className="max-w-[1600px] mx-auto relative z-10">
-        
         {/* Section Header (Centered) */}
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-xs font-bold tracking-wider uppercase mb-3.5 border border-[#FF2D72]/20">
@@ -110,7 +120,8 @@ export default function Testimonials() {
             </span>
           </h2>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed font-normal">
-            Real stories from verified couples who discovered love, companionship, and lifelong happiness on LoveConnect.
+            Real stories from verified couples who discovered love,
+            companionship, and lifelong happiness on LoveConnect.
           </p>
         </div>
 
@@ -157,10 +168,6 @@ export default function Testimonials() {
                             className="w-full h-full rounded-full object-cover"
                           />
                         </div>
-                        <span
-                          className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#22C55E] border-2 border-white rounded-full shadow-xs"
-                          title="Verified Member"
-                        />
                       </div>
 
                       <div>
@@ -168,37 +175,18 @@ export default function Testimonials() {
                           <h4 className="font-bold text-[#17151A] text-base sm:text-lg leading-tight group-hover:text-[#FF2D72] transition-colors duration-200">
                             {item.name}
                           </h4>
-                          <ShieldCheck className="w-4 h-4 text-[#FF2D72] shrink-0" title="Verified Profile" />
                         </div>
                         <p className="text-xs text-[#767393] font-medium mt-0.5">
                           {item.location}
                         </p>
                       </div>
                     </div>
-
-                    {/* Relationship Tag Pill */}
-                    <span className="px-2.5 py-1 rounded-full bg-[#FFE7F0] border border-[#FF2D72]/20 text-[#FF2D72] text-[11px] font-bold shrink-0 tracking-wide">
-                      {item.tag}
-                    </span>
                   </div>
 
                   {/* Quote Content */}
                   <p className="text-sm sm:text-base text-[#475569] leading-relaxed font-normal italic relative z-10 mb-6">
                     "{item.quote}"
                   </p>
-                </div>
-
-                {/* Card Footer: Verified Match & Matched Timeline */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#22C55E] bg-emerald-50/80 px-2.5 py-1 rounded-full border border-emerald-100">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" />
-                    <span>Verified Match</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#FF2D72]">
-                    <Heart className="w-3.5 h-3.5 fill-[#FF2D72]" />
-                    <span className="text-[#64748b]">{item.matchedDate}</span>
-                  </div>
                 </div>
               </div>
             ))}
@@ -220,8 +208,7 @@ export default function Testimonials() {
             />
           ))}
         </div>
-
       </div>
     </section>
-  )
+  );
 }

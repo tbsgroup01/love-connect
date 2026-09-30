@@ -5,7 +5,7 @@ import priyaProfileImg from "../../../assets/priya_profile.jpg";
 
 export default function CTA() {
   return (
-    <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] relative overflow-hidden">
+    <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] relative overflow-hidden font-poppins">
       <div className="max-w-[1600px] mx-auto">
         {/* Main CTA Dark Card */}
         <div className="relative overflow-hidden rounded-[32px] sm:rounded-[36px] bg-gradient-to-r from-[#17151A] via-[#241738] to-[#120D1F] px-6 sm:px-10 lg:px-14 py-10 sm:py-12 lg:py-14 shadow-2xl shadow-purple-950/30">
@@ -64,35 +64,6 @@ export default function CTA() {
                     className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                </div>
-
-                {/* Floating "1M+ Happy Members" Pill Badge */}
-                <div className="absolute -bottom-4 right-0 sm:right-2 z-20 bg-white/95 backdrop-blur-md border border-[#FFE7F0] shadow-xl shadow-black/20 rounded-full px-4 py-2 flex items-center gap-3 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
-                  <div className="flex -space-x-2">
-                    <img
-                      src={priyaProfileImg}
-                      alt="Member"
-                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
-                    />
-                    <img
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
-                      alt="Member"
-                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
-                    />
-                    <img
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
-                      alt="Member"
-                      className="w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs"
-                    />
-                  </div>
-                  <div>
-                    <h5 className="font-extrabold text-[#17151A] text-xs leading-none">
-                      1M+
-                    </h5>
-                    <p className="text-[10px] text-[#767393] font-medium mt-0.5">
-                      Happy Members
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
