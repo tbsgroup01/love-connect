@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Mail,
   Phone,
@@ -16,14 +16,27 @@ import {
 } from "lucide-react";
 import loginCoupleImg from "../../../assets/login_couple.jpg";
 import loveConnectLogo from "../../../assets/loveconnect.png";
+import { login, register } from "../../../services/authServices.js";
 
 export default function Login({ initialMode = "login" }) {
-  const [mode, setMode] = useState(initialMode); // "login" | "signup"
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
+  // Synchronize mode directly with the current route path
+  const isSignupRoute =
+    location.pathname === "/register" ||
+    location.pathname === "/signup" ||
+    location.pathname.endsWith("/register") ||
+    location.pathname.endsWith("/signup");
+
+  const isLoginRoute =
+    location.pathname === "/login" || location.pathname.endsWith("/login");
+
+  const mode = isSignupRoute ? "signup" : isLoginRoute ? "login" : initialMode;
+
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,7 +45,6 @@ export default function Login({ initialMode = "login" }) {
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [focusedField, setFocusedField] = useState(null);
-  const navigate = useNavigate();
 
   const slides = [
     {
@@ -52,7 +64,14 @@ export default function Login({ initialMode = "login" }) {
     },
   ];
 
-  // Auto-advance slides every 5 seconds
+  useEffect(() => {
+    if (location.state?.message) {
+      setError(location.state.message);
+    } else {
+      setError("");
+    }
+  }, [mode, location.state]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -60,24 +79,63 @@ export default function Login({ initialMode = "login" }) {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (mode === "login") {
-      navigate("/");
-    } else {
-      // Account created -> Proceed to Onboarding flow
-      navigate("/onboarding");
+    setError("");
+    setLoading(true);
+
+    try {
+      if (mode === "login") {
+        const res = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (res.data?.token) {
+          localStorage.setItem("token", res.data.token);
+          if (res.data.user) {
+            localStorage.setItem("user", JSON.stringify(res.data.user));
+          }
+          if (res.data.user?.role === "admin") {
+            localStorage.setItem("loveconnect_admin_token", res.data.token);
+            const targetPath = location.state?.from || "/admin/dashboard";
+            navigate(targetPath, { replace: true });
+          } else {
+            navigate("/discover", { replace: true });
+          }
+        }
+      } else {
+        const res = await register({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+        });
+
+        if (res.data?.token) {
+          localStorage.setItem("token", res.data.token);
+        }
+        if (res.data?.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        }
+        navigate("/onboarding");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Invalid credentials. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-6 lg:py-0">
-      {/* Ambient Fluid Glows */}
       <div className="absolute -top-32 -left-32 w-[550px] h-[550px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-white/40 blur-3xl rounded-full pointer-events-none" />
 
-      {/* Floating Animated Ambient Hearts */}
       <div className="absolute top-8 right-14 text-[#FF2D72]/25 pointer-events-none hidden sm:block animate-float-slow">
         <Heart className="w-9 h-9 fill-[#FF2D72]/20" />
       </div>
@@ -91,31 +149,20 @@ export default function Login({ initialMode = "login" }) {
         <Heart className="w-8 h-8 fill-[#FF2D72]/15" />
       </div>
 
-      {/* Main SaaS Card (24px border radius, clean white, soft shadow) */}
       <div className="relative z-10 w-full max-w-6xl h-auto lg:max-h-[94vh] bg-white rounded-[28px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300 my-auto">
-        {/* ========================================================= */}
-        {/* LEFT/BOTTOM COLUMN: Visual Hero Banner with Couple       */}
-        {/* Order 2 on mobile (below form), Order 1 on desktop (left) */}
-        {/* ========================================================= */}
         <div className="lg:col-span-6 order-2 lg:order-1 relative min-h-[320px] sm:min-h-[380px] lg:min-h-0 flex flex-col justify-end p-5 sm:p-6 lg:p-7 overflow-hidden bg-[#17151A] group">
-          {/* Couple Photo Background with subtle scale on hover */}
           <img
             src={loginCoupleImg}
             alt="Romantic Couple Embrace"
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
           />
 
-          {/* Deep Dark Gradient Vignette for Text Legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#17151A] via-[#17151A]/60 to-transparent pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-transparent pointer-events-none" />
-
-          {/* Floating Live Trust Badge on Photo */}
           <div className="absolute top-5 right-5 z-20 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse-soft">
             <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-ping" />
             <span>{slides[currentSlide].badge}</span>
           </div>
-
-          {/* Glowing Pink Neon Vector Ribbon Line */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none opacity-90"
             viewBox="0 0 500 700"
@@ -144,7 +191,6 @@ export default function Login({ initialMode = "login" }) {
             </defs>
           </svg>
 
-          {/* Floating 3D Hearts on the Image */}
           <div className="absolute top-9 left-6 sm:left-8 z-10 animate-float-slow">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF2D72] to-[#ff4a86] flex items-center justify-center shadow-lg shadow-[#FF2D72]/50 border border-white/20">
               <Heart className="w-3.5 h-3.5 fill-white text-white" />
@@ -236,10 +282,6 @@ export default function Login({ initialMode = "login" }) {
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* RIGHT COLUMN: Modern SaaS Form (Clean, Attractive, Fast) */}
-        {/* Order 1 on mobile (form first), Order 2 on desktop       */}
-        {/* ========================================================= */}
         <div className="lg:col-span-6 order-1 lg:order-2 p-5 sm:p-7 lg:p-8 flex flex-col justify-center bg-white relative overflow-y-visible lg:overflow-y-auto lg:max-h-[94vh] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Subtle Top Right Floating Ambient Heart */}
           <div className="absolute top-4 right-4 text-pink-200/50 pointer-events-none">
@@ -268,28 +310,26 @@ export default function Login({ initialMode = "login" }) {
 
           {/* Segmented Tab Switcher (16px border-radius) */}
           <div className="bg-[#FAFAFC] p-1 rounded-2xl border border-slate-200/90 flex items-center max-w-xs mx-auto w-full mb-3.5 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setMode("login")}
-              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+            <Link
+              to="/login"
+              className={`flex-1 py-1.5 sm:py-2 text-center rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                 mode === "login"
                   ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
                   : "text-[#64748b] hover:text-[#17151A]"
               }`}
             >
               Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+            </Link>
+            <Link
+              to="/register"
+              className={`flex-1 py-1.5 sm:py-2 text-center rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                 mode === "signup"
                   ? "bg-[#FFE7F0] text-[#FF2D72] shadow-xs"
                   : "text-[#64748b] hover:text-[#17151A]"
               }`}
             >
               Sign Up
-            </button>
+            </Link>
           </div>
 
           {/* Authentication Form */}
@@ -297,6 +337,12 @@ export default function Login({ initialMode = "login" }) {
             onSubmit={handleSubmit}
             className="space-y-2.5 max-w-xs mx-auto w-full"
           >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-3.5 py-2 rounded-xl text-xs font-semibold text-center animate-fadeIn">
+                {error}
+              </div>
+            )}
+
             {/* If Sign Up: Name Field */}
             {mode === "signup" && (
               <div className="relative">
@@ -328,9 +374,7 @@ export default function Login({ initialMode = "login" }) {
             <div className="relative">
               <div
                 className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
-                  focusedField === "email"
-                    ? "text-[#FF2D72]"
-                    : "text-slate-400"
+                  focusedField === "email" ? "text-[#FF2D72]" : "text-slate-400"
                 }`}
               >
                 <Mail className="w-4 h-4" />
@@ -366,13 +410,17 @@ export default function Login({ initialMode = "login" }) {
                 <input
                   type="tel"
                   required
+                  maxLength={10}
                   placeholder="Mobile / Phone Number"
                   value={formData.phone}
                   onFocus={() => setFocusedField("phone")}
                   onBlur={() => setFocusedField(null)}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const phone = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 10);
+                    setFormData({ ...formData, phone });
+                  }}
                   className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
                 />
               </div>
@@ -430,10 +478,21 @@ export default function Login({ initialMode = "login" }) {
             {/* Primary Action Button (Gradient, Elevated Shadow, Micro-Hover) */}
             <button
               type="submit"
-              className="group w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] hover:brightness-105 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#FF2D72]/25 hover:shadow-lg hover:shadow-[#FF2D72]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer mt-1"
+              disabled={loading}
+              className="group w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] hover:brightness-105 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#FF2D72]/25 hover:shadow-lg hover:shadow-[#FF2D72]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span>{mode === "login" ? "Login" : "Sign Up"}</span>
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
+              <span>
+                {loading
+                  ? mode === "login"
+                    ? "Logging in..."
+                    : "Creating account..."
+                  : mode === "login"
+                    ? "Login"
+                    : "Sign Up"}
+              </span>
+              {!loading && (
+                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
+              )}
             </button>
           </form>
 
@@ -474,21 +533,6 @@ export default function Login({ initialMode = "login" }) {
               </svg>
               <span>Continue with Google</span>
             </button>
-
-            {/* Apple Login */}
-            <button
-              type="button"
-              onClick={() => alert("Apple authentication triggered")}
-              className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-[#17151A] font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-            >
-              <svg
-                className="w-4 h-4 fill-current shrink-0"
-                viewBox="0 0 170 170"
-              >
-                <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12-14.43-6.2-9.47-11.22-20.08-15.07-31.83-3.84-11.75-5.77-22.75-5.77-33 0-14.7 3.6-26.68 10.79-35.94 7.2-9.26 16.27-13.98 27.22-14.16 4.8 0 10.15 1.25 16.06 3.76 5.91 2.5 9.77 3.82 11.59 3.96 1.45-.14 5.31-1.46 11.59-3.96 6.28-2.51 11.63-3.76 16.06-3.76 8.5 0 16.14 2.37 22.92 7.12 6.78 4.75 11.59 11.16 14.42 19.23-7.53 4.58-12.83 10.75-15.9 18.5-3.07 7.76-3.65 15.82-1.74 24.18 1.91 8.36 6.09 15.24 12.54 20.65 6.45 5.4 13.91 8.71 22.39 9.93-1.63 5.43-3.74 10.77-6.33 16.02zM119.22 31.86c0-7.72 2.76-15.11 8.29-22.18 5.53-7.07 12.39-11.39 20.58-12.96.44 1.5.66 3.01.66 4.54 0 7.82-2.83 15.22-8.5 22.18-5.66 6.96-12.67 11.23-21.03 12.8-.23-1.45-.35-2.91-.35-4.38z" />
-              </svg>
-              <span>Continue with Apple</span>
-            </button>
           </div>
 
           {/* Bottom Switch Mode / Create Account Link */}
@@ -497,24 +541,22 @@ export default function Login({ initialMode = "login" }) {
               {mode === "login" ? (
                 <>
                   Don't have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signup")}
+                  <Link
+                    to="/register"
                     className="font-bold text-[#FF2D72] hover:underline cursor-pointer"
                   >
                     Create Account
-                  </button>
+                  </Link>
                 </>
               ) : (
                 <>
                   Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("login")}
+                  <Link
+                    to="/login"
                     className="font-bold text-[#FF2D72] hover:underline cursor-pointer"
                   >
                     Login
-                  </button>
+                  </Link>
                 </>
               )}
             </p>

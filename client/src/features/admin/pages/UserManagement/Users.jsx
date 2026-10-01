@@ -574,12 +574,6 @@ export default function AdminUsers() {
                                 <div>
                                   <div className="font-bold text-gray-900 flex items-center gap-1.5">
                                     {user.name}
-                                    <span className="text-[10px] text-gray-400 font-normal">
-                                      ({user.gender[0]}, {user.age})
-                                    </span>
-                                  </div>
-                                  <div className="text-gray-400 text-[11px]">
-                                    {user.email}
                                   </div>
                                 </div>
                               </div>
@@ -608,9 +602,6 @@ export default function AdminUsers() {
                             <td className="py-3.5">
                               <div className="font-semibold text-gray-700">
                                 {user.joinDate}
-                              </div>
-                              <div className="text-gray-400 text-[10px]">
-                                {user.joinTime}
                               </div>
                             </td>
                             <td className="py-3.5 text-gray-600 font-medium">
@@ -801,32 +792,6 @@ export default function AdminUsers() {
                       </span>
                     </div>
 
-                    {/* Activity Stats */}
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <div className="bg-pink-50/50 p-2.5 rounded-xl border border-pink-100 text-center">
-                        <span className="text-[10px] text-gray-400 font-semibold block">
-                          Matches
-                        </span>
-                        <span
-                          className="font-extrabold text-sm"
-                          style={{ color: COLORS.pink }}
-                        >
-                          {currentSelectedUser.matchesCount}
-                        </span>
-                      </div>
-                      <div className="bg-purple-50/50 p-2.5 rounded-xl border border-purple-100 text-center">
-                        <span className="text-[10px] text-gray-400 font-semibold block">
-                          Likes Sent
-                        </span>
-                        <span
-                          className="font-extrabold text-sm"
-                          style={{ color: COLORS.purple }}
-                        >
-                          {currentSelectedUser.likesCount}
-                        </span>
-                      </div>
-                    </div>
-
                     {/* User Photos Grid */}
                     <div className="pt-2">
                       <h4 className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-2">
@@ -872,3 +837,4 @@ export default function AdminUsers() {
     </div>
   );
 }
+

@@ -11,6 +11,7 @@ import {
   Check,
   X,
   Trash2,
+  Users,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
@@ -36,6 +37,12 @@ export default function ChatManagement() {
   const [copiedId, setCopiedId] = useState(false);
 
   const kpiCards = [
+    {
+      title: "Total Users",
+      value: "50,000",
+      bgColor: "#FF2D72",
+      icon: Users,
+    },
     {
       title: "Total Conversations",
       value: "56,789",
@@ -604,7 +611,7 @@ export default function ChatManagement() {
           </div>
 
           {/* TOP 3 KPI CARDS (Total Conversations, Active Chats, Reported Chats) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             {kpiCards.map((kpi, idx) => {
               const Icon = kpi.icon;
               return (
@@ -747,10 +754,6 @@ export default function ChatManagement() {
                                   <div className="font-bold text-gray-900">
                                     {item.userA.name}
                                   </div>
-                                  <div className="text-gray-400 text-[10px]">
-                                    {item.userA.age} yrs •{" "}
-                                    {item.userA.location.split(",")[0]}
-                                  </div>
                                 </div>
                               </div>
                             </td>
@@ -775,9 +778,6 @@ export default function ChatManagement() {
                             <td className="py-3">
                               <div className="font-semibold text-gray-800">
                                 {item.lastActivityDate}
-                              </div>
-                              <div className="text-gray-400 text-[10px]">
-                                {item.lastActivityTime}
                               </div>
                             </td>
 

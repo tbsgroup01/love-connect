@@ -230,20 +230,6 @@ export default function DashboardLayout({
               </span>
             </button>
 
-            {/* Nav: Settings */}
-            <button
-              type="button"
-              onClick={() => navigate("/settings")}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "settings"
-                  ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs"
-                  : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </button>
-
             {/* Nav: Help & Support */}
             <button
               type="button"

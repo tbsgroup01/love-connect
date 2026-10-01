@@ -2,6 +2,8 @@ import { Users, Admin } from "../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { Op } from "sequelize";
+import { sendEmail } from "../utils/sendEmail.js";
 
 const userRegister = async (req, res) => {
   try {
@@ -45,11 +47,23 @@ const userRegister = async (req, res) => {
       password: hashedPassword,
     });
 
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: "user",
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+
     const { password: removedPassword, ...userData } = user.toJSON();
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: userData,
+      token,
+      user: { ...userData, role: "user" },
     });
   } catch (error) {
     console.log(error);
@@ -126,64 +140,74 @@ const adminCreate = async (req, res) => {
     });
   }
 };
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({
-        message: "Email and password are required",
+        message: "Email/Phone and password are required",
       });
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const user = await Users.findOne({
-      where: { email: normalizedEmail },
+    const identifier = email.trim();
+    let user = await Users.findOne({
+      where: {
+        [Op.or]: [
+          { email: identifier.toLowerCase() },
+          { phone: identifier },
+        ],
+      },
     });
+    let role = "user";
+
+    if (!user) {
+      const admin = await Admin.findOne({
+        where: {
+          [Op.or]: [
+            { email: identifier.toLowerCase() },
+            { phone: identifier },
+          ],
+        },
+      });
+      if (admin) {
+        user = admin;
+        role = "admin";
+      }
+    }
 
     if (!user) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message: "Invalid email/phone or password",
       });
     }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message: "Invalid email/phone or password",
       });
     }
-
     const token = jwt.sign(
       {
         id: user.id,
-        role: "user",
+        role,
       },
       process.env.JWT_SECRET,
       {
         expiresIn: "1d",
       },
     );
-
     const { password: removedPassword, ...userData } = user.toJSON();
-
     return res.status(200).json({
       message: "Login successful",
       token,
-      user: userData,
+      user: { ...userData, role },
     });
   } catch (error) {
     console.log(error);
-
     return res.status(500).json({
       message: "Internal server error",
     });
   }
 };
-
 const forgetPassword = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
@@ -208,9 +232,7 @@ const forgetPassword = async (req, res) => {
 
     user.reset_otp = await bcrypt.hash(otp, 10);
     user.reset_otp_expires = new Date(Date.now() + 5 * 60 * 1000);
-
     await user.save();
-
     await sendEmail({
       to: user.email,
       subject: "LoveConnect Password Reset OTP",
@@ -283,7 +305,6 @@ const verifyResetOtp = async (req, res) => {
     });
   }
 };
-
 const resetPassword = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
@@ -297,10 +318,10 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    if (password.length < 8) {
+    if (password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters",
+        message: "Password must be at least 6 characters",
       });
     }
 
