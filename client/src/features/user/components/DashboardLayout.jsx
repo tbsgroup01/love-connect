@@ -16,6 +16,7 @@ import {
   Flame,
   ArrowRight,
   User,
+  LogOut,
 } from "lucide-react";
 
 import loveConnectLogo from "../../../assets/loveconnect.png";
@@ -242,6 +243,25 @@ export default function DashboardLayout({
             >
               <HelpCircle className="w-4 h-4" />
               <span>Help & Support</span>
+            </button>
+
+            {/* Nav: Logout */}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem("loveconnect_admin_token");
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  sessionStorage.removeItem("loveconnect_admin_session");
+                } catch (_) {}
+                window.dispatchEvent(new Event("loveconnect_auth_change"));
+                navigate("/");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-rose-500" />
+              <span>Log Out</span>
             </button>
           </div>
 

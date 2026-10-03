@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   UserCheck,
@@ -24,9 +24,16 @@ import {
   Unlock,
   X,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
+import {
+  getAllUsers,
+  getUserById,
+  deleteUser,
+  updateUserStatus,
+} from "../../../../services/usersServices";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -41,296 +48,304 @@ const COLORS = {
   blue: "#3B82F6",
 };
 
-const INITIAL_USERS = [
-  {
-    id: 1,
-    name: "Aaradhya Sharma",
-    email: "aaradhya@gmail.com",
-    phone: "+91 98765 43210",
-    gender: "Female",
-    age: 24,
-    location: "Delhi, India",
-    joinDate: "15 Sep 2026",
-    joinTime: "10:24 AM",
-    subscription: "Premium",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 142,
-    likesCount: 580,
-  },
-  {
-    id: 2,
-    name: "Rohit Mehta",
-    email: "rohitm@gmail.com",
-    phone: "+91 98123 45678",
-    gender: "Male",
-    age: 27,
-    location: "Mumbai, India",
-    joinDate: "15 Sep 2026",
-    joinTime: "09:18 AM",
-    subscription: "Free",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 45,
-    likesCount: 120,
-  },
-  {
-    id: 3,
-    name: "Priya Singh",
-    email: "priya@gmail.com",
-    phone: "+91 99887 66554",
-    gender: "Female",
-    age: 23,
-    location: "Bangalore, India",
-    joinDate: "14 Sep 2026",
-    joinTime: "05:42 PM",
-    subscription: "VIP Gold",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 210,
-    likesCount: 890,
-  },
-  {
-    id: 4,
-    name: "Karan Verma",
-    email: "karan@gmail.com",
-    phone: "+91 97112 23344",
-    gender: "Male",
-    age: 29,
-    location: "Hyderabad, India",
-    joinDate: "14 Sep 2026",
-    joinTime: "03:21 PM",
-    subscription: "Free",
-    status: "Inactive",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 12,
-    likesCount: 35,
-  },
-  {
-    id: 5,
-    name: "Neha Patel",
-    email: "neha@gmail.com",
-    phone: "+91 96543 21098",
-    gender: "Female",
-    age: 25,
-    location: "Chennai, India",
-    joinDate: "14 Sep 2026",
-    joinTime: "11:12 AM",
-    subscription: "Premium",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 98,
-    likesCount: 430,
-  },
-  {
-    id: 6,
-    name: "Vikram Singh",
-    email: "vikramsingh@gmail.com",
-    phone: "+91 95432 10987",
-    gender: "Male",
-    age: 28,
-    location: "Delhi, India",
-    joinDate: "13 Sep 2026",
-    joinTime: "09:36 PM",
-    subscription: "Free",
-    status: "Suspended",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 3,
-    likesCount: 15,
-  },
-  {
-    id: 7,
-    name: "Riya Malhotra",
-    email: "riya@gmail.com",
-    phone: "+91 94321 09876",
-    gender: "Female",
-    age: 22,
-    location: "Pune, India",
-    joinDate: "13 Sep 2026",
-    joinTime: "12:24 PM",
-    subscription: "Premium",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 175,
-    likesCount: 640,
-  },
-  {
-    id: 8,
-    name: "Amit Kumar",
-    email: "amit@gmail.com",
-    phone: "+91 93210 98765",
-    gender: "Male",
-    age: 30,
-    location: "Kolkata, India",
-    joinDate: "12 Sep 2026",
-    joinTime: "06:18 PM",
-    subscription: "Free",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 32,
-    likesCount: 95,
-  },
-  {
-    id: 9,
-    name: "Sneha Reddy",
-    email: "sneha@gmail.com",
-    phone: "+91 92109 87654",
-    gender: "Female",
-    age: 26,
-    location: "Hyderabad, India",
-    joinDate: "12 Sep 2026",
-    joinTime: "04:50 PM",
-    subscription: "VIP Gold",
-    status: "Active",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 240,
-    likesCount: 920,
-  },
-  {
-    id: 10,
-    name: "Pooja Verma",
-    email: "pooja@gmail.com",
-    phone: "+91 91098 76543",
-    gender: "Female",
-    age: 24,
-    location: "Jaipur, India",
-    joinDate: "11 Sep 2026",
-    joinTime: "02:14 PM",
-    subscription: "Free",
-    status: "Inactive",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-    ],
-    matchesCount: 18,
-    likesCount: 65,
-  },
-];
+const normalizeUser = (u) => {
+  const planName =
+    u.subscription ||
+    (u.subscriptions && u.subscriptions.length > 0
+      ? u.subscriptions[0]?.plan?.name || "Free"
+      : "Free");
+
+  const avatar =
+    u.avatar ||
+    u.profile_image ||
+    u.profile?.profile_picture ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || "User")}&background=FF2D72&color=fff`;
+
+  const location =
+    u.location ||
+    [u.profile?.city, u.profile?.state, u.profile?.country]
+      .filter(Boolean)
+      .join(", ") ||
+    "Not specified";
+
+  let joinDate = u.joinDate;
+  let joinTime = u.joinTime;
+  if (!joinDate && u.createdAt) {
+    const d = new Date(u.createdAt);
+    if (!isNaN(d.getTime())) {
+      joinDate = d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      joinTime = d.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+  }
+
+  const rawStatus = (u.status || "active").toLowerCase();
+  const displayStatus =
+    rawStatus === "active"
+      ? "Active"
+      : rawStatus === "suspended"
+        ? "Suspended"
+        : "Inactive";
+
+  const photos =
+    u.photos && u.photos.length > 0
+      ? u.photos
+      : u.profile?.profile_picture
+        ? [u.profile.profile_picture]
+        : [];
+
+  return {
+    ...u,
+    id: u.id,
+    name: u.name || "Unnamed User",
+    email: u.email || "No email",
+    phone: u.phone || "No phone",
+    gender: u.gender || u.profile?.gender || "Not specified",
+    location: location || "Not specified",
+    subscription: planName,
+    status: displayStatus,
+    rawStatus,
+    avatar,
+    photos,
+    joinDate: joinDate || "Recent",
+    joinTime: joinTime || "",
+  };
+};
 
 export default function AdminUsers() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Users");
   const [selectedTabFilter, setSelectedTabFilter] = useState("All");
+  const [selectedGender, setSelectedGender] = useState("All");
+  const [selectedPlan, setSelectedPlan] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [usersData, setUsersData] = useState(INITIAL_USERS);
+  const [usersData, setUsersData] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const fetchUsersList = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllUsers();
+      const rawUsers = response.data?.users || response.data || [];
+      const normalized = Array.isArray(rawUsers)
+        ? rawUsers.map(normalizeUser)
+        : [];
+      setUsersData(normalized);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersList();
+  }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedTabFilter, selectedGender, selectedPlan]);
+
+  const totalCount = usersData.length;
+  const activeCount = usersData.filter(
+    (u) => (u.rawStatus || u.status || "").toLowerCase() === "active"
+  ).length;
+  const suspendedCount = usersData.filter(
+    (u) => (u.rawStatus || u.status || "").toLowerCase() === "suspended"
+  ).length;
+  const inactiveCount = usersData.filter(
+    (u) => (u.rawStatus || u.status || "").toLowerCase() === "inactive"
+  ).length;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const newTodayCount = usersData.filter((u) => {
+    if (!u.createdAt) return false;
+    return new Date(u.createdAt).toISOString().slice(0, 10) === todayStr;
+  }).length;
 
   const kpiCards = [
     {
       title: "Total Users",
-      value: "24,568",
+      value: totalCount,
       bgColor: "#FF2D72",
       icon: Users,
     },
     {
       title: "Active Users",
-      value: "18,432",
+      value: activeCount,
       bgColor: "#3B82F6",
       icon: UserCheck,
     },
     {
       title: "Suspended Users",
-      value: "428",
+      value: suspendedCount,
       bgColor: "#EF4444",
       icon: UserX,
     },
     {
       title: "New Today",
-      value: "116",
+      value: newTodayCount,
       bgColor: "#22C55E",
       icon: Clock,
     },
   ];
 
   const filteredUsers = usersData.filter((user) => {
+    const userStatus = (user.status || "active").toLowerCase();
     const matchesTab =
       selectedTabFilter === "All" ||
-      user.status.toLowerCase() === selectedTabFilter.toLowerCase();
-    const term = searchTerm.toLowerCase();
+      userStatus === selectedTabFilter.toLowerCase();
+
+    const matchesGender =
+      selectedGender === "All" ||
+      (user.gender || "").toLowerCase() === selectedGender.toLowerCase();
+
+    const matchesPlan =
+      selectedPlan === "All" ||
+      (user.subscription || "").toLowerCase() === selectedPlan.toLowerCase();
+
+    const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      !searchTerm ||
-      user.name.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term) ||
-      user.phone.toLowerCase().includes(term);
-    return matchesTab && matchesSearch;
+      !term ||
+      user.name?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term) ||
+      user.phone?.toLowerCase().includes(term);
+
+    return matchesTab && matchesGender && matchesPlan && matchesSearch;
   });
 
-  // Selected user preview (null by default)
+  const totalPages = Math.ceil(filteredUsers.length / pageSize) || 1;
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Selected user preview
   const currentSelectedUser =
     selectedUser && usersData.some((u) => u.id === selectedUser.id)
-      ? selectedUser
+      ? usersData.find((u) => u.id === selectedUser.id) || selectedUser
       : null;
 
   const isAllSelected =
-    filteredUsers.length > 0 &&
-    filteredUsers.every((u) => selectedUserIds.includes(u.id));
+    paginatedUsers.length > 0 &&
+    paginatedUsers.every((u) => selectedUserIds.includes(u.id));
 
   const handleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedUserIds([]);
+      setSelectedUserIds((prev) =>
+        prev.filter((id) => !paginatedUsers.some((u) => u.id === id))
+      );
     } else {
-      setSelectedUserIds(filteredUsers.map((u) => u.id));
+      const pageIds = paginatedUsers.map((u) => u.id);
+      setSelectedUserIds((prev) => [...new Set([...prev, ...pageIds])]);
     }
   };
 
   const handleToggleSelect = (id) => {
     setSelectedUserIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedUserIds.length === 0) return;
-    setUsersData((prev) => prev.filter((u) => !selectedUserIds.includes(u.id)));
-    setSelectedUserIds([]);
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedUserIds.length} users?`
+      )
+    )
+      return;
+    try {
+      await Promise.all(selectedUserIds.map((id) => deleteUser(id)));
+      setUsersData((prev) =>
+        prev.filter((u) => !selectedUserIds.includes(u.id))
+      );
+      if (selectedUser && selectedUserIds.includes(selectedUser.id)) {
+        setSelectedUser(null);
+      }
+      setSelectedUserIds([]);
+    } catch (error) {
+      console.error("Failed to delete selected users:", error);
+    }
   };
 
-  const handleDeleteUser = (id) => {
-    setUsersData((prev) => prev.filter((u) => u.id !== id));
-    setSelectedUserIds((prev) => prev.filter((item) => item !== id));
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      await deleteUser(id);
+
+      setUsersData((prev) => prev.filter((u) => u.id !== id));
+      setSelectedUserIds((prev) => prev.filter((item) => item !== id));
+
+      if (selectedUser?.id === id) {
+        setSelectedUser(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+    }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      await updateUserStatus(id, status);
+
+      const displayStatus =
+        status === "active"
+          ? "Active"
+          : status === "suspended"
+            ? "Suspended"
+            : "Inactive";
+
+      setUsersData((prev) =>
+        prev.map((user) =>
+          user.id === id
+            ? { ...user, status: displayStatus, rawStatus: status }
+            : user
+        )
+      );
+
+      setSelectedUser((prev) =>
+        prev && prev.id === id
+          ? { ...prev, status: displayStatus, rawStatus: status }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to update user status:", error);
+    }
+  };
+
+  const getStatusBadgeStyle = (status) => {
+    const s = (status || "").toLowerCase();
+    if (s === "active") {
+      return { bg: "#DCFCE7", text: "#16A34A" };
+    }
+    if (s === "suspended") {
+      return { bg: "#FEE2E2", text: "#EF4444" };
+    }
+    return { bg: "#F3F4F6", text: "#6B7280" };
+  };
+
+  const getPlanBadgeStyle = (plan) => {
+    const p = (plan || "").toLowerCase();
+    if (p.includes("vip") || p.includes("gold")) {
+      return { bg: "#FEF3C7", text: "#D97706" };
+    }
+    if (p.includes("premium")) {
+      return { bg: COLORS.lightPink, text: COLORS.pink };
+    }
+    return { bg: "#F3F4F6", text: "#6B7280" };
   };
 
   return (
@@ -365,6 +380,13 @@ export default function AdminUsers() {
                 Manage, inspect and review registered application users
               </p>
             </div>
+            <button
+              onClick={fetchUsersList}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 shadow-xs cursor-pointer transition-all self-start sm:self-auto"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
           </div>
 
           {/* TOP 4 KPI CARDS */}
@@ -400,15 +422,17 @@ export default function AdminUsers() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
             {/* USERS TABLE & INTEGRATED FILTERS */}
             <div
-              className={`${currentSelectedUser ? "xl:col-span-2" : "xl:col-span-3"} bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}
+              className={`${
+                currentSelectedUser ? "xl:col-span-2" : "xl:col-span-3"
+              } bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}
             >
               {/* Status Filter Pills */}
               <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
                 {[
-                  { label: "All Users", count: "24,568", key: "All" },
-                  { label: "Active", count: "18,432", key: "Active" },
-                  { label: "Inactive", count: "5,708", key: "Inactive" },
-                  { label: "Suspended", count: "428", key: "Suspended" },
+                  { label: "All Users", count: totalCount, key: "All" },
+                  { label: "Active", count: activeCount, key: "Active" },
+                  { label: "Inactive", count: inactiveCount, key: "Inactive" },
+                  { label: "Suspended", count: suspendedCount, key: "Suspended" },
                 ].map((tab) => (
                   <button
                     key={tab.key}
@@ -444,31 +468,33 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none flex-1 md:flex-none">
-                    <option>Gender: All</option>
-                    <option>Female</option>
-                    <option>Male</option>
-                  </select>
-
-                  <select className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none flex-1 md:flex-none">
-                    <option>Plan: All</option>
-                    <option>Free</option>
-                    <option>Premium</option>
-                    <option>VIP Gold</option>
-                  </select>
-
-                  <button
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
-                    style={{ backgroundColor: COLORS.pink }}
+                  <select
+                    value={selectedGender}
+                    onChange={(e) => setSelectedGender(e.target.value)}
+                    className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none flex-1 md:flex-none cursor-pointer"
                   >
-                    <Filter className="w-3.5 h-3.5" />
-                    <span>Filter</span>
-                  </button>
+                    <option value="All">Gender: All</option>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                  </select>
+
+                  <select
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2.5 focus:outline-none flex-1 md:flex-none cursor-pointer"
+                  >
+                    <option value="All">Plan: All</option>
+                    <option value="Free">Free</option>
+                    <option value="Premium">Premium</option>
+                    <option value="VIP Gold">VIP Gold</option>
+                  </select>
 
                   <button
                     onClick={() => {
                       setSearchTerm("");
                       setSelectedTabFilter("All");
+                      setSelectedGender("All");
+                      setSelectedPlan("All");
                     }}
                     className="text-xs font-bold text-gray-400 hover:text-gray-600 px-2 py-2.5 cursor-pointer"
                   >
@@ -521,7 +547,21 @@ export default function AdminUsers() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredUsers.length === 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="py-12 text-center text-gray-400"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin text-[#FF2D72]" />
+                            <span className="text-xs font-medium">
+                              Loading users...
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : paginatedUsers.length === 0 ? (
                       <tr>
                         <td
                           colSpan="7"
@@ -531,11 +571,14 @@ export default function AdminUsers() {
                         </td>
                       </tr>
                     ) : (
-                      filteredUsers.map((user) => {
+                      paginatedUsers.map((user) => {
                         const isSelected =
                           currentSelectedUser &&
                           currentSelectedUser.id === user.id;
                         const isChecked = selectedUserIds.includes(user.id);
+                        const statusStyle = getStatusBadgeStyle(user.status);
+                        const planStyle = getPlanBadgeStyle(user.subscription);
+
                         return (
                           <tr
                             key={user.id}
@@ -570,10 +613,19 @@ export default function AdminUsers() {
                                       ? COLORS.pink
                                       : "#E5E7EB",
                                   }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                      user.name || "User"
+                                    )}&background=FF2D72&color=fff`;
+                                  }}
                                 />
                                 <div>
                                   <div className="font-bold text-gray-900 flex items-center gap-1.5">
                                     {user.name}
+                                  </div>
+                                  <div className="text-[11px] text-gray-400">
+                                    {user.email}
                                   </div>
                                 </div>
                               </div>
@@ -582,18 +634,8 @@ export default function AdminUsers() {
                               <span
                                 className="px-2.5 py-1 rounded-md font-bold text-[10px] inline-block"
                                 style={{
-                                  backgroundColor:
-                                    user.subscription === "VIP Gold"
-                                      ? "#FEF3C7"
-                                      : user.subscription === "Premium"
-                                        ? COLORS.lightPink
-                                        : "#F3F4F6",
-                                  color:
-                                    user.subscription === "VIP Gold"
-                                      ? "#D97706"
-                                      : user.subscription === "Premium"
-                                        ? COLORS.pink
-                                        : "#6B7280",
+                                  backgroundColor: planStyle.bg,
+                                  color: planStyle.text,
                                 }}
                               >
                                 {user.subscription}
@@ -611,18 +653,8 @@ export default function AdminUsers() {
                               <span
                                 className="px-2.5 py-1 rounded-md font-bold text-[10px] inline-block"
                                 style={{
-                                  backgroundColor:
-                                    user.status === "Active"
-                                      ? "#DCFCE7"
-                                      : user.status === "Inactive"
-                                        ? "#F3F4F6"
-                                        : "#FEE2E2",
-                                  color:
-                                    user.status === "Active"
-                                      ? "#16A34A"
-                                      : user.status === "Inactive"
-                                        ? "#6B7280"
-                                        : "#EF4444",
+                                  backgroundColor: statusStyle.bg,
+                                  color: statusStyle.text,
                                 }}
                               >
                                 {user.status}
@@ -670,31 +702,65 @@ export default function AdminUsers() {
               {/* Pagination */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
                 <span>
-                  Showing {filteredUsers.length > 0 ? 1 : 0} to{" "}
-                  {filteredUsers.length} of {usersData.length} users
+                  Showing {filteredUsers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
+                  {Math.min(currentPage * pageSize, filteredUsers.length)} of{" "}
+                  {filteredUsers.length} users
                 </span>
                 <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
                   </select>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1 rounded-lg ${
+                        currentPage === 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100 text-gray-600 cursor-pointer"
+                      }`}
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (pg) => (
+                        <button
+                          key={pg}
+                          onClick={() => setCurrentPage(pg)}
+                          className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                            currentPage === pg
+                              ? "text-white shadow-xs"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          style={{
+                            backgroundColor:
+                              currentPage === pg ? COLORS.pink : "transparent",
+                          }}
+                        >
+                          {pg}
+                        </button>
+                      )
+                    )}
                     <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className={`p-1 rounded-lg ${
+                        currentPage === totalPages
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100 text-gray-600 cursor-pointer"
+                      }`}
                     >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      3
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -729,6 +795,12 @@ export default function AdminUsers() {
                       alt={currentSelectedUser.name}
                       className="w-20 h-20 rounded-full object-cover border-4 shadow-sm"
                       style={{ borderColor: COLORS.pink }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          currentSelectedUser.name || "User"
+                        )}&background=FF2D72&color=fff`;
+                      }}
                     />
                     <h3
                       className="font-extrabold text-base mt-2"
@@ -744,14 +816,12 @@ export default function AdminUsers() {
                       <span
                         className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
                         style={{
-                          backgroundColor:
-                            currentSelectedUser.status === "Active"
-                              ? "#DCFCE7"
-                              : "#FEE2E2",
-                          color:
-                            currentSelectedUser.status === "Active"
-                              ? "#16A34A"
-                              : "#EF4444",
+                          backgroundColor: getStatusBadgeStyle(
+                            currentSelectedUser.status
+                          ).bg,
+                          color: getStatusBadgeStyle(
+                            currentSelectedUser.status
+                          ).text,
                         }}
                       >
                         {currentSelectedUser.status}
@@ -759,8 +829,12 @@ export default function AdminUsers() {
                       <span
                         className="px-2.5 py-0.5 rounded-full font-bold text-[10px]"
                         style={{
-                          backgroundColor: COLORS.lightPink,
-                          color: COLORS.pink,
+                          backgroundColor: getPlanBadgeStyle(
+                            currentSelectedUser.subscription
+                          ).bg,
+                          color: getPlanBadgeStyle(
+                            currentSelectedUser.subscription
+                          ).text,
                         }}
                       >
                         {currentSelectedUser.subscription}
@@ -787,8 +861,10 @@ export default function AdminUsers() {
                     <div className="flex items-center gap-2 text-gray-700 font-medium">
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span>
-                        Joined: {currentSelectedUser.joinDate},{" "}
-                        {currentSelectedUser.joinTime}
+                        Joined: {currentSelectedUser.joinDate}
+                        {currentSelectedUser.joinTime
+                          ? `, ${currentSelectedUser.joinTime}`
+                          : ""}
                       </span>
                     </div>
 
@@ -798,36 +874,66 @@ export default function AdminUsers() {
                         Uploaded Photos (
                         {currentSelectedUser.photos?.length || 0})
                       </h4>
-                      <div className="grid grid-cols-4 gap-2">
-                        {currentSelectedUser.photos?.map((photo, pIdx) => (
-                          <img
-                            key={pIdx}
-                            src={photo}
-                            alt="User upload"
-                            className="w-full h-16 rounded-xl object-cover border border-gray-100"
-                          />
-                        ))}
-                      </div>
+                      {currentSelectedUser.photos &&
+                      currentSelectedUser.photos.length > 0 ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          {currentSelectedUser.photos.map((photo, pIdx) => (
+                            <img
+                              key={pIdx}
+                              src={photo}
+                              alt="User upload"
+                              className="w-full h-16 rounded-xl object-cover border border-gray-100"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-[11px] italic">
+                          No uploaded photos yet
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                  <button
-                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90"
-                    style={{ backgroundColor: COLORS.success }}
-                  >
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Activate</span>
-                  </button>
-                  <button
-                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90"
-                    style={{ backgroundColor: COLORS.danger }}
-                  >
-                    <UserX className="w-3.5 h-3.5" />
-                    <span>Suspend</span>
-                  </button>
+                  {currentSelectedUser.status?.toLowerCase() !== "active" ? (
+                    <button
+                      onClick={() =>
+                        handleStatusChange(currentSelectedUser.id, "active")
+                      }
+                      className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                      style={{ backgroundColor: COLORS.success }}
+                    >
+                      <Unlock className="w-3.5 h-3.5" />
+                      <span>Activate User</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        handleStatusChange(currentSelectedUser.id, "inactive")
+                      }
+                      className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                      style={{ backgroundColor: COLORS.warning }}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Deactivate</span>
+                    </button>
+                  )}
+
+                  {currentSelectedUser.status?.toLowerCase() !==
+                    "suspended" && (
+                    <button
+                      onClick={() =>
+                        handleStatusChange(currentSelectedUser.id, "suspended")
+                      }
+                      className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                      style={{ backgroundColor: COLORS.danger }}
+                    >
+                      <UserX className="w-3.5 h-3.5" />
+                      <span>Suspend</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -837,4 +943,3 @@ export default function AdminUsers() {
     </div>
   );
 }
-

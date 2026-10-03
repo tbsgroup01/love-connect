@@ -9,6 +9,12 @@ import {
   Sparkles
 } from "lucide-react";
 import logo from "../../../assets/loveconnect.png";
+import { createActivity } from "../../../services/activitiesServices.js";
+import { getAdminProfile } from "../../../services/authServices.js";
+import { getImageUrl, updateBrowserFavicon } from "../../../services/uploadServices.js";
+import { getSettings } from "../../../services/settingsServices.js";
+
+
 
 const COLORS = {
   pink: "#FF2D72",
@@ -16,49 +22,128 @@ const COLORS = {
   dark: "#17151A",
 };
 
-const DEFAULT_ADMIN = {
-  name: "Priya Singh",
-  role: "Super Admin",
-  email: "priya.singh@loveconnect.com",
-  avatar:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-  adminId: "ADM-100",
+const getAdminData = () => {
+  try {
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("loveconnect_admin_token");
+    const savedUser = localStorage.getItem("user");
+    const user = savedUser ? JSON.parse(savedUser) : null;
+
+    if (!token || !user || user.role !== "admin") {
+      return null;
+    }
+
+    const name = user.name || "Admin";
+    const email = user.email || "";
+    const role = user.role === "admin" ? "Super Admin" : "Admin";
+    const adminId =
+      user.admin_id ||
+      (user.id ? `ADM-${user.id}` : "ADM-001");
+    const avatar =
+      user.profile_image ||
+      user.avatar ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        name
+      )}&background=FF2D72&color=fff&bold=true`;
+
+    return {
+      id: user.id,
+      name,
+      email,
+      role,
+      adminId,
+      avatar,
+    };
+  } catch (_) {
+    return null;
+  }
 };
 
 export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
-
-  const [adminUser, setAdminUser] = useState(() => {
+  const [adminUser, setAdminUser] = useState(() => getAdminData());
+  const [brandLogo, setBrandLogo] = useState(null);
+  const [brandName, setBrandName] = useState("LoveConnect");
+  const fetchBrandSettings = async () => {
     try {
-      const saved = localStorage.getItem("loveconnect_admin_profile");
-      if (saved) return JSON.parse(saved);
+      const res = await getSettings();
+      if (res.data?.success && res.data?.settings) {
+        const s = res.data.settings;
+        if (s.profilePic) setBrandLogo(getImageUrl(s.profilePic));
+        if (s.brandName) setBrandName(s.brandName);
+        if (s.favicon) updateBrowserFavicon(s.favicon);
+      }
     } catch (_) {}
-    return DEFAULT_ADMIN;
-  });
+  };
 
-  // Listen for profile updates from AppSettings
+  const fetchDbAdminProfile = async () => {
+    try {
+      const res = await getAdminProfile();
+      if (res.data?.success && res.data?.admin) {
+        const a = res.data.admin;
+        setAdminUser({
+          id: a.id,
+          name: a.name || "Admin",
+          email: a.email || "",
+          role: a.role === "admin" ? "Super Admin" : "Admin",
+          adminId: a.admin_id ? `ADM-${a.admin_id}` : (a.id ? `ADM-${a.id}` : "ADM-001"),
+          avatar:
+            a.profile_image ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              a.name || "Admin"
+            )}&background=FF2D72&color=fff&bold=true`,
+        });
+      }
+    } catch (_) {}
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem("loveconnect_admin_profile");
+    } catch (_) {}
+    fetchDbAdminProfile();
+    fetchBrandSettings();
+  }, []);
+
   useEffect(() => {
     const handleProfileUpdate = () => {
-      try {
-        const saved = localStorage.getItem("loveconnect_admin_profile");
-        if (saved) setAdminUser(JSON.parse(saved));
-      } catch (_) {}
+      fetchDbAdminProfile();
+    };
+
+    const handleSettingsUpdate = (e) => {
+      if (e.detail?.profilePic) setBrandLogo(getImageUrl(e.detail.profilePic));
+      if (e.detail?.brandName) setBrandName(e.detail.brandName);
+      if (e.detail?.favicon) updateBrowserFavicon(e.detail.favicon);
+      fetchBrandSettings();
     };
 
     window.addEventListener("admin_profile_updated", handleProfileUpdate);
-    window.addEventListener("storage", handleProfileUpdate);
+    window.addEventListener("loveconnect_auth_change", handleProfileUpdate);
+    window.addEventListener("app_settings_updated", handleSettingsUpdate);
     return () => {
       window.removeEventListener("admin_profile_updated", handleProfileUpdate);
-      window.removeEventListener("storage", handleProfileUpdate);
+      window.removeEventListener("loveconnect_auth_change", handleProfileUpdate);
+      window.removeEventListener("app_settings_updated", handleSettingsUpdate);
     };
   }, []);
 
-  // Close dropdown on click outside or Escape
+  useEffect(() => {
+    if (!adminUser) {
+      navigate("/login", {
+        replace: true,
+        state: {
+          from: window.location.pathname,
+          message: "Please sign in with an admin account to access the Admin Portal.",
+        },
+      });
+    }
+  }, [adminUser, navigate]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -94,13 +179,26 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
     );
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (storedUser?.id) {
+        await createActivity({
+          admin_id: storedUser.role === "admin" ? storedUser.id : null,
+          user_id: storedUser.role === "user" ? storedUser.id : null,
+          role: storedUser.role || "admin",
+          action: "LOGOUT",
+        }).catch(() => {});
+      }
+    } catch (_) {}
+
     try {
       localStorage.removeItem("loveconnect_admin_token");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       sessionStorage.removeItem("loveconnect_admin_session");
     } catch (_) {}
+    window.dispatchEvent(new Event("loveconnect_auth_change"));
     setShowLogoutModal(false);
     showToast("Logged out successfully. Redirecting...");
     setTimeout(() => {
@@ -110,7 +208,6 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <>
-      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-gray-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border border-white/10 animate-in fade-in slide-in-from-top-4 duration-300">
           <Sparkles className="w-4 h-4 text-[#FF2D72]" />
@@ -135,19 +232,16 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
             className="flex items-center gap-2.5 cursor-pointer"
           >
             <img
-              src={logo}
-              alt="LoveConnect Logo"
-              className="h-9 sm:h-11 w-auto object-contain"
+              src={brandLogo || logo}
+              alt={`${brandName} Logo`}
+              className="h-8 sm:h-10 w-auto max-w-[140px] sm:max-w-[180px] object-contain"
             />
             <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-extrabold uppercase tracking-wider">
               Admin Portal
             </span>
           </Link>
         </div>
-
-        {/* Right Section: Notifications + Profile Dropdown */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Notifications */}
           <Link
             to="/admin/reports"
             className="relative cursor-pointer p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors"
@@ -163,125 +257,131 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
           </Link>
 
           <div className="h-7 w-px bg-gray-200"></div>
-
-          {/* Admin Profile Dropdown Trigger */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              className={`flex items-center gap-2.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl cursor-pointer transition-all ${
-                dropdownOpen
-                  ? "bg-pink-50/80 ring-2 ring-[#FF2D72]/20"
-                  : "hover:bg-gray-50"
-              }`}
-              title="Profile & Session Options"
-              aria-expanded={dropdownOpen}
+          {!adminUser ? (
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-xl bg-[#FF2D72] hover:bg-[#E11D48] text-white font-bold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <div className="relative">
-                <img
-                  src={adminUser.avatar}
-                  alt="Admin Avatar"
-                  className="w-8 h-8 rounded-full object-cover border-2 shadow-2xs"
-                  style={{ borderColor: COLORS.pink }}
-                />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 border-white rounded-full"></span>
-              </div>
-
-              <div className="hidden sm:block text-left">
-                <div
-                  className="font-bold text-xs leading-tight"
-                  style={{ color: COLORS.dark }}
-                >
-                  {adminUser.name}
-                </div>
-                <div className="text-[10px] text-gray-400 font-medium">
-                  {adminUser.role}
-                </div>
-              </div>
-
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 hidden sm:block ${
-                  dropdownOpen ? "rotate-180 text-[#FF2D72]" : ""
+              <LogOut className="w-3.5 h-3.5 rotate-180" />
+              <span>Log In</span>
+            </Link>
+          ) : (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className={`flex items-center gap-2.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl cursor-pointer transition-all ${
+                  dropdownOpen
+                    ? "bg-pink-50/80 ring-2 ring-[#FF2D72]/20"
+                    : "hover:bg-gray-50"
                 }`}
-              />
-            </button>
+                title="Profile & Session Options"
+                aria-expanded={dropdownOpen}
+              >
+                <div className="relative">
+                  <img
+                    src={getImageUrl(adminUser.avatar)}
+                    alt={adminUser.name}
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        adminUser.name
+                      )}&background=FF2D72&color=fff&bold=true`;
+                    }}
+                    className="w-8 h-8 rounded-full object-cover border-2 shadow-2xs"
+                    style={{ borderColor: COLORS.pink }}
+                  />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 border-white rounded-full"></span>
+                </div>
 
-            {/* Dropdown Menu - only My Profile and Log Out */}
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
-                {/* Header Card */}
-                <div className="p-4 bg-gradient-to-br from-[#FFE7F0] via-white to-[#F3E8FF] border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src={adminUser.avatar}
-                        alt={adminUser.name}
-                        className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-md"
-                      />
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></span>
-                    </div>
-
-                    <div className="space-y-0.5 flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <h4 className="text-xs font-black text-gray-900 truncate">
-                          {adminUser.name}
-                        </h4>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#F3E8FF] text-[#7C3AED] border border-[#DDD6FE]">
-                          {adminUser.role}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-500 truncate font-medium">
-                        {adminUser.email}
-                      </p>
-                      <div className="text-[10px] font-bold text-green-600 flex items-center gap-1 pt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        <span>Active Session • {adminUser.adminId}</span>
-                      </div>
-                    </div>
+                <div className="hidden sm:block text-left">
+                  <div
+                    className="font-bold text-xs leading-tight"
+                    style={{ color: COLORS.dark }}
+                  >
+                    {adminUser.name}
+                  </div>
+                  <div className="text-[10px] text-gray-400 font-medium">
+                    {adminUser.role}
                   </div>
                 </div>
 
-                {/* Menu Items */}
-                <div className="p-2 space-y-1">
-                  {/* My Profile Action -> Opens Profile Settings tab on App Settings page */}
-                  <button
-                    onClick={handleMyProfileClick}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-pink-50/70 text-gray-700 hover:text-[#FF2D72] text-xs font-bold transition-all text-left group cursor-pointer"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-pink-50 group-hover:bg-[#FF2D72] text-[#FF2D72] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                      <User className="w-4 h-4 stroke-[2.2]" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-extrabold">My Profile</div>
-                      <div className="text-[10px] text-gray-400 group-hover:text-pink-400 font-medium">
-                        View & edit account details
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 hidden sm:block ${
+                    dropdownOpen ? "rotate-180 text-[#FF2D72]" : ""
+                  }`}
+                />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="p-4 bg-gradient-to-br from-[#FFE7F0] via-white to-[#F3E8FF] border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={getImageUrl(adminUser.avatar)}
+                          alt={adminUser.name}
+                          onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              adminUser.name
+                            )}&background=FF2D72&color=fff&bold=true`;
+                          }}
+                          className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-md"
+                        />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></span>
                       </div>
-                    </div>
-                  </button>
-                </div>
 
-                <div className="border-t border-gray-100 p-2">
-                  {/* Logout Action */}
-                  <button
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      setShowLogoutModal(true);
-                    }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-red-50 text-gray-700 hover:text-[#EF4444] text-xs font-bold transition-all text-left group cursor-pointer"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-red-50 group-hover:bg-[#EF4444] text-[#EF4444] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                      <LogOut className="w-4 h-4 stroke-[2.2]" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-extrabold text-[#EF4444]">Log Out</div>
-                      <div className="text-[10px] text-gray-400 group-hover:text-red-400 font-medium">
-                        End admin session safely
+                      <div className="space-y-0.5 flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="text-xs font-black text-gray-900 truncate">
+                            {adminUser.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#F3E8FF] text-[#7C3AED] border border-[#DDD6FE]">
+                            {adminUser.role}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 truncate font-medium">
+                          {adminUser.email}
+                        </p>
+                        
                       </div>
                     </div>
-                  </button>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="p-2 space-y-1">
+                    {/* My Profile Action -> Opens Profile Settings tab on App Settings page */}
+                    <button
+                      onClick={handleMyProfileClick}
+                      className="w-full flex items-center gap-3 rounded-2xl hover:bg-pink-50/70 text-gray-700 hover:text-[#FF2D72] text-xs font-bold transition-all text-left group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-pink-50 group-hover:bg-[#FF2D72] text-[#FF2D72] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                        <User className="w-4 h-4 stroke-[2.2]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-extrabold">My Profile</div>                   
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-100 ">
+                    {/* Logout Action */}
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        setShowLogoutModal(true);
+                      }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-red-50 text-gray-700 hover:text-[#EF4444] text-xs font-bold transition-all text-left group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-red-50 group-hover:bg-[#EF4444] text-[#EF4444] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                        <LogOut className="w-4 h-4 stroke-[2.2]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-extrabold text-[#EF4444]">Log Out</div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 

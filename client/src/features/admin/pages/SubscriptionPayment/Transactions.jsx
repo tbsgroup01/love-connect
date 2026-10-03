@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CreditCard,
   IndianRupee,
@@ -21,10 +21,15 @@ import {
   Wallet,
   Copy,
   Check,
-  Trash2
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import AdminNavbar from '../../components/Navbar';
 import AdminSidebar from '../../components/Sidebar';
+import {
+  getTransactions,
+  deleteTransaction as apiDeleteTransaction,
+} from '../../../../services/paymentServices.js';
 
 const COLORS = {
   pink: '#FF2D72',
@@ -45,34 +50,8 @@ export default function Transactions() {
   const [selectedTabFilter, setSelectedTabFilter] = useState('All');
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [copiedId, setCopiedId] = useState(false);
-
-  // Top 4 KPI Metric Cards
-  const kpiCards = [
-    {
-      title: 'Total Transactions',
-      value: '8,432',
-      bgColor: '#FF2D72',
-      icon: CreditCard,
-    },
-    {
-      title: 'Total Revenue',
-      value: '₹4,26,890',
-      bgColor: '#7C3AED',
-      icon: IndianRupee,
-    },
-    {
-      title: 'Subscription Revenue',
-      value: '₹3,12,450',
-      bgColor: '#3B82F6',
-      icon: Crown,
-    },
-    {
-      title: 'Boost Revenue',
-      value: '₹86,220',
-      bgColor: '#F59E0B',
-      icon: Zap,
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Mock Transactions Table Data matching reference image table rows
   const initialTransactionsData = [
@@ -328,9 +307,96 @@ export default function Transactions() {
     },
   ];
 
-  const [transactionsData, setTransactionsData] = useState(initialTransactionsData);
+  const [transactionsData, setTransactionsData] = useState([]);
   const [selectedTxnIds, setSelectedTxnIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch real transactions from MySQL Database
+  const fetchTransactions = async (isManual = false) => {
+    try {
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
+
+      const res = await getTransactions();
+      const list = res.data?.transactions || [];
+
+      if (list && list.length > 0) {
+        const normalized = list.map((t) => {
+          const userName = t.user?.name || "Member";
+          const userEmail = t.user?.email || "customer@example.com";
+          const userAvatar =
+            t.user?.profile_image ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=FF2D72&color=fff`;
+
+          const planName = t.plan?.name || t.description || "Premium Membership";
+          const amountNum = Number(t.final_amount || t.amount || 0);
+
+          const d = t.createdAt ? new Date(t.createdAt) : new Date();
+          const dateStr = d.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          });
+          const timeStr = d.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          const isSuccess = (t.status || "").toLowerCase() === "success";
+
+          return {
+            id: t.id,
+            txnId: t.transaction_id || `TXN00${t.id}`,
+            order_id: t.order_id || "N/A",
+            user: {
+              name: userName,
+              email: userEmail,
+              avatar: userAvatar,
+              isVerified: true,
+            },
+            item: planName,
+            planBg: planName.toLowerCase().includes("vip")
+              ? "#FEF3C7"
+              : planName.toLowerCase().includes("month")
+              ? "#FFE7F0"
+              : "#F3E8FF",
+            planColor: planName.toLowerCase().includes("vip")
+              ? "#D97706"
+              : planName.toLowerCase().includes("month")
+              ? "#FF2D72"
+              : "#7C3AED",
+            amount: `₹${amountNum.toLocaleString("en-IN")}`,
+            amountNum,
+            paymentMethod: t.payment_method || "Razorpay",
+            methodIcon: "💳",
+            methodColor: "#3B82F6",
+            date: dateStr,
+            time: timeStr,
+            status: isSuccess ? "Success" : "Failed",
+            statusBg: isSuccess ? "#DCFCE7" : "#FEE2E2",
+            statusColor: isSuccess ? "#16A34A" : "#EF4444",
+            paymentId: t.transaction_id || `pay_${t.id}`,
+            duration: t.plan?.duration ? `${t.plan.duration} Days` : "Active Plan",
+            features: t.description || "All Premium Features Active",
+          };
+        });
+        setTransactionsData(normalized);
+      } else {
+        setTransactionsData([]);
+      }
+    } catch (err) {
+      console.error("Failed to load transactions from DB:", err);
+      setTransactionsData([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
   const currentSelected =
     selectedTransaction && transactionsData.some((t) => t.id === selectedTransaction.id)
@@ -369,16 +435,70 @@ export default function Transactions() {
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedTxnIds.length === 0) return;
+    if (!window.confirm(`Delete ${selectedTxnIds.length} transactions?`)) return;
+    try {
+      await Promise.all(selectedTxnIds.map((id) => apiDeleteTransaction(id)));
+    } catch (err) {
+      console.error("Error bulk deleting transactions:", err);
+    }
     setTransactionsData((prev) => prev.filter((item) => !selectedTxnIds.includes(item.id)));
     setSelectedTxnIds([]);
   };
 
-  const handleDeleteTransaction = (id) => {
+  const handleDeleteTransaction = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this transaction record?")) {
+      return;
+    }
+    try {
+      await apiDeleteTransaction(id);
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+    }
     setTransactionsData((prev) => prev.filter((item) => item.id !== id));
     setSelectedTxnIds((prev) => prev.filter((item) => item !== id));
+    if (selectedTransaction?.id === id) setSelectedTransaction(null);
   };
+
+  // Dynamic KPI Card Calculations
+  const totalCount = transactionsData.length;
+  const totalRevenue = transactionsData
+    .filter((t) => t.status === "Success")
+    .reduce((sum, t) => sum + (t.amountNum || 0), 0);
+  const subRevenue = transactionsData
+    .filter((t) => t.status === "Success" && !t.item.toLowerCase().includes("boost"))
+    .reduce((sum, t) => sum + (t.amountNum || 0), 0);
+  const boostRevenue = transactionsData
+    .filter((t) => t.status === "Success" && t.item.toLowerCase().includes("boost"))
+    .reduce((sum, t) => sum + (t.amountNum || 0), 0);
+
+  const kpiCards = [
+    {
+      title: 'Total Transactions',
+      value: totalCount.toLocaleString('en-IN'),
+      bgColor: '#FF2D72',
+      icon: CreditCard,
+    },
+    {
+      title: 'Total Revenue',
+      value: `₹${totalRevenue.toLocaleString('en-IN')}`,
+      bgColor: '#7C3AED',
+      icon: IndianRupee,
+    },
+    {
+      title: 'Subscription Revenue',
+      value: `₹${subRevenue.toLocaleString('en-IN')}`,
+      bgColor: '#3B82F6',
+      icon: Crown,
+    },
+    {
+      title: 'Boost Revenue',
+      value: `₹${boostRevenue.toLocaleString('en-IN')}`,
+      bgColor: '#F59E0B',
+      icon: Zap,
+    },
+  ];
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -392,13 +512,26 @@ export default function Transactions() {
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {/* PAGE TITLE & HEADER */}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
-              Transactions & Payments
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">
-              View and manage all payment transactions
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: COLORS.dark }}>
+                Transactions & Payments
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                View and manage live Razorpay payment transactions and subscriptions
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fetchTransactions(true)}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md transition-all hover:opacity-95 cursor-pointer self-start sm:self-auto"
+              style={{ backgroundColor: COLORS.pink }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 stroke-[2.5] ${refreshing ? "animate-spin" : ""}`} />
+              <span>Sync Database</span>
+            </button>
           </div>
 
           {/* TOP 4 KPI CARDS */}
@@ -504,10 +637,19 @@ export default function Transactions() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredTransactions.length === 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan={8} className="py-12 text-center text-gray-400">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin text-[#FF2D72]" />
+                            <span className="text-xs font-medium">Loading transactions from database...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredTransactions.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">
-                          No transactions found
+                          No transactions found in database
                         </td>
                       </tr>
                     ) : (

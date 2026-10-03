@@ -5,10 +5,12 @@ import {
   getPlans,
   getPlanById,
   updatePlan,
+  seedPlans,
 } from "../controllers/plansController.js";
 
 const router = express.Router();
 
+router.post("/seed", seedPlans);
 router.post("/", createPlan);
 router.get("/", getPlans);
 router.get("/:id", getPlanById);

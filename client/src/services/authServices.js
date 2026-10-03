@@ -7,3 +7,5 @@ export const forgetPassword = (data) => api.post("/auth/forgot-password", data);
 export const verifyResetOtp = (data) =>
   api.post("/auth/verify-reset-otp", data);
 export const resetPassword = (data) => api.post("/auth/reset-password", data);
+export const getAdminProfile = () => api.get("/auth/admin/profile");
+export const updateAdminProfile = (data) => api.put("/auth/admin/profile", data);

@@ -1,19 +1,27 @@
 import { Faqs } from "../models/index.js";
+import { initialFaqsData } from "../seeders/faqSeeder.js";
+
+const normalizeStatus = (status) => {
+  if (!status) return "active";
+  if (status === "Published" || status === "active") return "active";
+  if (status === "Draft" || status === "inactive") return "inactive";
+  return "active";
+};
 
 const createFaqs = async (req, res) => {
   try {
     const { faq_id, question, answer, category, status } = req.body;
-    if (!question || !answer || !category) {
+    if (!question || !answer) {
       return res.status(400).json({
-        message: "All fields are required",
+        message: "Question and answer are required",
       });
     }
     const faq = await Faqs.create({
       faq_id: faq_id || Math.floor(100000 + Math.random() * 900000),
       question,
       answer,
-      category,
-      status: status || "active",
+      category: category || "General",
+      status: normalizeStatus(status),
     });
     const { ...faqData } = faq.toJSON();
     return res.status(201).json({
@@ -27,9 +35,12 @@ const createFaqs = async (req, res) => {
     });
   }
 };
+
 const getFaqs = async (req, res) => {
   try {
-    const faqs = await Faqs.findAll();
+    const faqs = await Faqs.findAll({
+      order: [["id", "ASC"]],
+    });
     return res.status(200).json({
       message: "Faqs fetched successfully",
       faqs,
@@ -41,16 +52,19 @@ const getFaqs = async (req, res) => {
     });
   }
 };
+
 const getFaqsById = async (req, res) => {
   try {
     const faqId = req.params.faq_id || req.params.id;
-    const faq = await Faqs.findOne({
-      where: {
-        ...(isNaN(faqId) ? {} : { id: faqId }),
-      },
-    }) || await Faqs.findOne({
-      where: { faq_id: faqId },
-    });
+    const faq =
+      (await Faqs.findOne({
+        where: {
+          ...(isNaN(faqId) ? {} : { id: faqId }),
+        },
+      })) ||
+      (await Faqs.findOne({
+        where: { faq_id: faqId },
+      }));
     if (!faq) {
       return res.status(404).json({
         message: "Faqs not found",
@@ -67,16 +81,25 @@ const getFaqsById = async (req, res) => {
     });
   }
 };
+
 const updateFaqs = async (req, res) => {
   try {
     const faqId = req.params.faq_id || req.params.id;
-    const faq = (await Faqs.findByPk(faqId)) || (await Faqs.findOne({ where: { faq_id: faqId } }));
+    const faq =
+      (await Faqs.findByPk(faqId)) ||
+      (await Faqs.findOne({ where: { faq_id: faqId } }));
     if (!faq) {
       return res.status(404).json({
         message: "Faqs not found",
       });
     }
-    const updatedFaq = await faq.update(req.body);
+
+    const updatePayload = { ...req.body };
+    if (updatePayload.status) {
+      updatePayload.status = normalizeStatus(updatePayload.status);
+    }
+
+    const updatedFaq = await faq.update(updatePayload);
     return res.status(200).json({
       message: "Faqs updated successfully",
       faq: updatedFaq,
@@ -88,10 +111,13 @@ const updateFaqs = async (req, res) => {
     });
   }
 };
+
 const deleteFaqs = async (req, res) => {
   try {
     const faqId = req.params.faq_id || req.params.id;
-    const faq = (await Faqs.findByPk(faqId)) || (await Faqs.findOne({ where: { faq_id: faqId } }));
+    const faq =
+      (await Faqs.findByPk(faqId)) ||
+      (await Faqs.findOne({ where: { faq_id: faqId } }));
     if (!faq) {
       return res.status(404).json({
         message: "Faqs not found",
@@ -108,6 +134,44 @@ const deleteFaqs = async (req, res) => {
     });
   }
 };
+
+const seedFaqs = async (req, res) => {
+  try {
+    let insertedCount = 0;
+    let existingCount = 0;
+
+    for (const item of initialFaqsData) {
+      const existing = await Faqs.findOne({
+        where: { question: item.question },
+      });
+
+      if (!existing) {
+        await Faqs.create(item);
+        insertedCount++;
+      } else {
+        existingCount++;
+      }
+    }
+
+    const faqs = await Faqs.findAll({
+      order: [["id", "ASC"]],
+    });
+
+    return res.status(200).json({
+      message: `Initial FAQs seeded successfully (${insertedCount} new added, ${existingCount} already existed)`,
+      faqs,
+      insertedCount,
+      existingCount,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error while seeding FAQs",
+      error: error.message,
+    });
+  }
+};
+
 export {
   createFaqs,
   createFaqs as createFaq,
@@ -118,5 +182,7 @@ export {
   updateFaqs as updateFaq,
   deleteFaqs,
   deleteFaqs as deleteFaq,
+  seedFaqs,
 };
+
 

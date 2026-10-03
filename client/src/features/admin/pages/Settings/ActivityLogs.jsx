@@ -1,228 +1,155 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   History,
   Search,
-  Download,
-  X,
   Clock,
   Globe,
   LogIn,
-  UserX,
-  ShieldCheck,
-  CreditCard,
+  LogOut,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
-  Copy,
+  Trash2,
+  RefreshCw,
+  User,
+  Shield,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
+import {
+  getActivities,
+  deleteActivity,
+} from "../../../../services/activitiesServices.js";
 
 export default function ActivityLogs() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Activity Logs");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModuleFilter, setSelectedModuleFilter] = useState("All");
-  const [copied, setCopied] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const itemsPerPage = 8;
 
-  // Initial Activity Logs Data covering all 7 Tracked Activities
-  const logsData = [
-    {
-      id: "LOG-8801",
-      admin: {
-        name: "Alexander Wright",
-        email: "alexander.w@loveconnect.com",
-        role: "Super Admin",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      },
-      action: "Successful login via 2FA authentication to admin dashboard",
-      ip: "192.168.1.105",
-      date: "29 Sep 2026",
-      time: "10:42 AM",
-      module: "Admin Login",
-      status: "Success",
-      details:
-        "Authenticated from Chrome 128 / Windows 11 with hardware security token.",
-    },
-    {
-      id: "LOG-8802",
-      admin: {
-        name: "Sophia Chen",
-        email: "sophia.chen@loveconnect.com",
-        role: "Moderator",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Suspended user account @rohit_kumar for 30 days due to harassment policy violation",
-      ip: "103.21.124.89",
-      date: "29 Sep 2026",
-      time: "10:15 AM",
-      module: "Login",
-      status: "Success",
-      details:
-        "User ID: #USR-9104. Triggered following 4 verified chat abuse reports from matched members.",
-    },
-    {
-      id: "LOG-8803",
-      admin: {
-        name: "Sophia Chen",
-        email: "sophia.chen@loveconnect.com",
-        role: "Moderator",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Approved biometric selfie and Govt ID profile verification for Aanya Sen",
-      ip: "103.21.124.89",
-      date: "29 Sep 2026",
-      time: "09:50 AM",
-      module: "Login",
-      status: "Success",
-      details:
-        "User ID: #USR-8492. Aadhaar card & live selfie face-match passed with 99.4% confidence.",
-    },
-    {
-      id: "LOG-8804",
-      admin: {
-        name: "Priya Sharma",
-        email: "priya.s@loveconnect.com",
-        role: "Finance Admin",
-        avatar:
-          "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Updated Razorpay webhook endpoints and enabled automated instant UPI refunds",
-      ip: "49.36.120.14",
-      date: "29 Sep 2026",
-      time: "09:12 AM",
-      module: "Logout",
-      status: "Success",
-      details:
-        "Updated webhook URL to production gateway route. Auto-settlement threshold set to ₹50,000.",
-    },
-    {
-      id: "LOG-8805",
-      admin: {
-        name: "Alexander Wright",
-        email: "alexander.w@loveconnect.com",
-        role: "Super Admin",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Modified Platinum 3-Month VIP subscription package pricing from ₹1,299 to ₹1,199",
-      ip: "192.168.1.105",
-      date: "28 Sep 2026",
-      time: "06:30 PM",
-      module: "login",
-      status: "Success",
-      details:
-        "Plan ID: PLAN-PLAT-03. Adjusted seasonal promotional discount to 20% for festive season.",
-    },
-    {
-      id: "LOG-8806",
-      admin: {
-        name: "Alexander Wright",
-        email: "alexander.w@loveconnect.com",
-        role: "Super Admin",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Updated application security settings: changed idle session timeout from 120m to 60m",
-      ip: "192.168.1.105",
-      date: "28 Sep 2026",
-      time: "04:15 PM",
-      module: "logout",
-      status: "Success",
-      details:
-        "Enforced stricter admin session duration and auto-lock after 15 minutes of inactivity.",
-    },
-    {
-      id: "LOG-8807",
-      admin: {
-        name: "Rahul Verma",
-        email: "rahul.v@loveconnect.com",
-        role: "Moderator",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        'Published new promotional banner "Navratri Love Festival 2026" on Discovery feed',
-      ip: "157.34.89.21",
-      date: "28 Sep 2026",
-      time: "02:40 PM",
-      module: "Login",
-      status: "Success",
-      details:
-        "Banner ID: BAN-2026-09. Linked directly to Premium subscription checkout discount.",
-    },
-    {
-      id: "LOG-8808",
-      admin: {
-        name: "Vikram Malhotra",
-        email: "vikram.m@loveconnect.com",
-        role: "Support Admin",
-        avatar:
-          "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Permanently suspended fraudulent user account #USR-1094 following scam reports",
-      ip: "182.73.19.45",
-      date: "28 Sep 2026",
-      time: "01:10 PM",
-      module: "Login",
-      status: "Success",
-      details:
-        "Account banned indefinitely and device identifier blacklisted to prevent re-registration.",
-    },
-    {
-      id: "LOG-8809",
-      admin: {
-        name: "Sophia Chen",
-        email: "sophia.chen@loveconnect.com",
-        role: "Moderator",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-      },
-      action:
-        "Approved blue verified badge for public figure profile @tanya_mehra",
-      ip: "103.21.124.89",
-      date: "28 Sep 2026",
-      time: "11:25 AM",
-      module: "Login",
-      status: "Success",
-      details:
-        "Verified creator documentation and cross-referenced with official Instagram credentials.",
-    },
+  const fetchLogs = async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
 
-  ];
+      const res = await getActivities();
+      const rawList = res.data?.activities || [];
+
+      const formatted = rawList.map((item) => {
+        const isUser = item.role === "user";
+        const actor = isUser ? item.user : item.admin;
+        const actorName = actor?.name || (isUser ? "App User" : "Admin");
+        const actorEmail =
+          actor?.email || (isUser ? "user@loveconnect.com" : "admin@loveconnect.com");
+        const actorRole = isUser ? "User" : actor?.role || "Admin";
+        const actorAvatar =
+          actor?.profile_image ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(actorName)}&background=FFE7F0&color=FF2D72&bold=true`;
+
+        const timestamp = item.loginAt || item.logoutAt || item.createdAt;
+        const dateObj = timestamp ? new Date(timestamp) : new Date();
+        const dateStr = !isNaN(dateObj)
+          ? dateObj.toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "N/A";
+        const timeStr = !isNaN(dateObj)
+          ? dateObj.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "N/A";
+
+        const isLogin = item.action?.toUpperCase() === "LOGIN";
+        const rawIp = item.ipAddress || "127.0.0.1";
+        const cleanIp =
+          rawIp.startsWith("::ffff:")
+            ? rawIp.replace("::ffff:", "")
+            : rawIp === "::1"
+            ? "127.0.0.1"
+            : rawIp;
+
+        return {
+          id: `LOG-${String(item.id).padStart(4, "0")}`,
+          rawId: item.id,
+          role: item.role,
+          actor: {
+            name: actorName,
+            email: actorEmail,
+            role: actorRole,
+            avatar: actorAvatar,
+          },
+          ip: cleanIp,
+          date: dateStr,
+          time: timeStr,
+          rawDate: dateObj,
+          module: isLogin ? "Login" : "Logout",
+          status: "Success",
+        };
+      });
+
+      setLogs(formatted);
+    } catch (err) {
+      console.error("Failed to fetch activities:", err);
+      setError("Failed to load activity logs from server.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const handleDelete = async (rawId, e) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this activity log?")) {
+      return;
+    }
+
+    try {
+      setDeletingId(rawId);
+      await deleteActivity(rawId);
+      setLogs((prev) => prev.filter((l) => l.rawId !== rawId));
+    } catch (err) {
+      console.error("Error deleting activity:", err);
+      alert("Failed to delete activity log.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // Filter items based on active module tab and search term
-  const filteredLogs = logsData.filter((item) => {
+  const filteredLogs = logs.filter((item) => {
     if (
       selectedModuleFilter !== "All" &&
-      item.module !== selectedModuleFilter
+      item.module.toLowerCase() !== selectedModuleFilter.toLowerCase()
     ) {
       return false;
     }
 
     if (searchTerm.trim() !== "") {
       const q = searchTerm.toLowerCase();
-      const matchAdmin =
-        item.admin.name.toLowerCase().includes(q) ||
-        item.admin.email.toLowerCase().includes(q);
-      const matchAction = item.action.toLowerCase().includes(q);
+      const matchActor =
+        item.actor.name.toLowerCase().includes(q) ||
+        item.actor.email.toLowerCase().includes(q);
       const matchIp = item.ip.toLowerCase().includes(q);
       const matchDate =
         item.date.toLowerCase().includes(q) ||
         item.time.toLowerCase().includes(q);
       const matchModule = item.module.toLowerCase().includes(q);
-      return matchAdmin || matchAction || matchIp || matchDate || matchModule;
+      return matchActor || matchIp || matchDate || matchModule;
     }
 
     return true;
@@ -235,52 +162,6 @@ export default function ActivityLogs() {
     currentPage * itemsPerPage,
   );
 
-  const handleCopyPayload = () => {
-    if (selectedLog) {
-      navigator.clipboard.writeText(
-        `[${selectedLog.id}] ${selectedLog.date} ${selectedLog.time}\nAdmin: ${selectedLog.admin.name} (${selectedLog.admin.email})\nModule: ${selectedLog.module}\nIP: ${selectedLog.ip}\nAction: ${selectedLog.action}\nDetails: ${selectedLog.details}`,
-      );
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleExportCSV = () => {
-    const headers = [
-      "Log ID",
-      "Admin Name",
-      "Admin Email",
-      "Action",
-      "IP Address",
-      "Date",
-      "Time",
-      "Module",
-    ];
-    const rows = filteredLogs.map((l) => [
-      l.id,
-      `"${l.admin.name}"`,
-      `"${l.admin.email}"`,
-      `"${l.action.replace(/"/g, '""')}"`,
-      l.ip,
-      l.date,
-      l.time,
-      `"${l.module}"`,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `LoveConnect_Activity_Logs_${new Date().toISOString().slice(0, 10)}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
     <div className="h-screen bg-[#FAFAFC] text-[#17151A] font-sans flex flex-col overflow-hidden">
@@ -301,71 +182,146 @@ export default function ActivityLogs() {
           {/* PAGE TITLE & ACTION HEADER */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                Activity Logs
-              </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Track admin logins, user suspensions, verifications, payments,
-                subscriptions, settings, and content changes
-              </p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF2D72]/15 to-[#7C3AED]/15 flex items-center justify-center text-[#FF2D72] shadow-xs">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                    Activity Logs
+                  </h1>
+                  <p className="text-sm text-gray-400">
+                    Real-time audit log of system logins, logouts, and IP addresses
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fetchLogs(true)}
+                disabled={loading || refreshing}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#FF2D72]" : ""}`}
+                />
+                Refresh
+              </button>
             </div>
           </div>
+
           {/* MAIN ACTIVITY LOGS TABLE CONTAINER */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
             {/* SEARCH & FILTER CONTROLS BAR */}
-            <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="relative w-full sm:w-80">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search Admin, Action, IP, Module..."
+                  placeholder="Search User, Admin, IP..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full bg-gray-50/80 border border-gray-200 text-xs rounded-2xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-[#FF2D72] focus:bg-white transition-all text-gray-800 placeholder-gray-400 font-semibold"
+                  className="w-full bg-gray-50/80 border border-gray-200 text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-[#FF2D72] focus:bg-white transition-all text-gray-800 placeholder-gray-400 font-semibold"
                 />
               </div>
+
+              {/* MODULE FILTER TABS */}
+              <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl self-stretch sm:self-auto">
+                {["All", "Login", "Logout"].map((mod) => (
+                  <button
+                    key={mod}
+                    onClick={() => {
+                      setSelectedModuleFilter(mod);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedModuleFilter === mod
+                        ? "bg-white text-gray-900 shadow-xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    {mod}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* ERROR ALERT */}
+            {error && (
+              <div className="p-4 bg-red-50 border-b border-red-100 flex items-center justify-between text-xs text-red-600 font-semibold">
+                <span>{error}</span>
+                <button
+                  onClick={() => fetchLogs()}
+                  className="underline hover:text-red-800 cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
             {/* TABLE GRID */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] uppercase tracking-wider text-gray-400 font-black">
-                    <th className="py-4 px-6">Admin</th>
-                    <th className="py-4 px-6">IP</th>
+                    <th className="py-4 px-6">User / Admin</th>
+                    <th className="py-4 px-6">IP Address</th>
                     <th className="py-4 px-6">Date / Time</th>
-                    <th className="py-4 px-6">Module</th>
+                    <th className="py-4 px-6">Type</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 text-xs">
-                  {paginatedLogs.length > 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center text-gray-400">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <div className="w-8 h-8 border-3 border-[#FF2D72]/20 border-t-[#FF2D72] rounded-full animate-spin" />
+                          <span className="text-xs font-semibold">Loading activity logs...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : paginatedLogs.length > 0 ? (
                     paginatedLogs.map((log) => (
                       <tr
                         key={log.id}
-                        className="hover:bg-[#FFE7F0]/20 transition-colors group cursor-pointer"
-                        onClick={() => setSelectedLog(log)}
+                        className="hover:bg-[#FFE7F0]/20 transition-colors"
                       >
-                        {/* 1. Admin */}
+                        {/* 1. Actor */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <img
-                              src={log.admin.avatar}
-                              alt={log.admin.name}
-                              className="w-10 h-10 rounded-full object-cover ring-2 ring-pink-100 shadow-xs transition-transform group-hover:scale-105"
+                              src={log.actor.avatar}
+                              alt={log.actor.name}
+                              className="w-10 h-10 rounded-full object-cover ring-2 ring-pink-100 shadow-xs"
                             />
                             <div>
-                              <span className="font-extrabold text-gray-900 text-xs block">
-                                {log.admin.name}
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-gray-900 text-xs block">
+                                  {log.actor.name}
+                                </span>
+                                {log.role === "admin" ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-md">
+                                    <Shield className="w-2.5 h-2.5" /> Admin
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md">
+                                    <User className="w-2.5 h-2.5" /> User
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-[10px] font-semibold text-gray-400 block">
-                                {log.admin.email}
+                                {log.actor.email}
                               </span>
                             </div>
                           </div>
                         </td>
-                        {/* 3. IP */}
+
+                        {/* 2. IP */}
                         <td className="py-4 px-6">
                           <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold text-gray-700 bg-gray-100/90 border border-gray-200 px-2.5 py-1 rounded-lg">
                             <Globe className="w-3.5 h-3.5 text-gray-400" />
@@ -373,7 +329,7 @@ export default function ActivityLogs() {
                           </span>
                         </td>
 
-                        {/* 4. Date / Time */}
+                        {/* 3. Date / Time */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-1.5 font-bold text-gray-700">
                             <Clock className="w-3.5 h-3.5 text-gray-400" />
@@ -383,21 +339,49 @@ export default function ActivityLogs() {
                           </div>
                         </td>
 
-                        {/* 5. Module */}
+                        {/* 4. Module */}
                         <td className="py-4 px-6">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-[#FFE7F0] text-[#FF2D72] border border-pink-200/80 shadow-2xs">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                              log.module === "Login"
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                : "bg-gray-100 text-gray-600 border-gray-200"
+                            }`}
+                          >
+                            {log.module === "Login" ? (
+                              <LogIn className="w-3 h-3" />
+                            ) : (
+                              <LogOut className="w-3 h-3" />
+                            )}
                             {log.module}
                           </span>
+                        </td>
+
+                        {/* 5. Actions */}
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={(e) => handleDelete(log.rawId, e)}
+                            disabled={deletingId === log.rawId}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            title="Delete log"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan="4"
-                        className="py-12 text-center text-gray-400 font-medium"
-                      >
-                        No activity logs found matching filter criteria.
+                      <td colSpan="5" className="py-16 text-center text-gray-400 font-medium">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <History className="w-8 h-8 text-gray-300 stroke-[1.5]" />
+                          <span className="text-sm font-semibold text-gray-600">
+                            No activity logs found
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            Activities will be automatically recorded here when users or admins log in/out.
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -463,7 +447,7 @@ export default function ActivityLogs() {
                 </div>
               )}
             </div>
-          </div>{" "}
+          </div>
         </main>
       </div>
     </div>

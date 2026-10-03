@@ -12,9 +12,21 @@ dist
 dist-ssr
 *.local
 
+# Server directories
+server/node_modules
+server/uploads
+server/coverage
+
+# Client directories
+client/node_modules
+client/dist
+client/dist-ssr
+client/coverage
+
+
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
+**/.vscode/
 .idea
 .DS_Store
 *.suo

@@ -1,6 +1,9 @@
 import { Navigate, Routes, Route, useLocation, Outlet } from "react-router-dom";
 import { useEffect } from "react";
+import { getSettings } from "./services/settingsServices.js";
+import { updateBrowserFavicon } from "./services/uploadServices.js";
 import Home from "./features/user/pages/Home";
+
 import SplashScreen from "./features/user/pages/SplashScreen";
 import PrivacyPolicy from "./features/user/pages/PrivacyPolicy";
 import TermsConditions from "./features/user/pages/TermsConditions";
@@ -13,8 +16,8 @@ import LikesPage from "./features/user/pages/LikesPage";
 import MatchesPage from "./features/user/pages/MatchesPage";
 import MessagesPage from "./features/user/pages/MessagesPage";
 import ProfilePage from "./features/user/pages/ProfilePage";
-import PremiumPage from "./features/user/pages/PremiumPage";
 import VideoCall from "./features/user/pages/VideoCall";
+import HelpSupport from "./features/user/pages/HelpSupport";
 
 import AdminDashboard from "./features/admin/pages/Dashboard/Dashboard";
 import AdminUsers from "./features/admin/pages/UserManagement/Users";
@@ -23,11 +26,12 @@ import AdminReportsModeration from "./features/admin/pages/UserManagement/Report
 import AdminMatches from "./features/admin/pages/MatchChats/Matches";
 import AdminChatManagement from "./features/admin/pages/MatchChats/ChatManagement";
 import AdminVideoCallLogs from "./features/admin/pages/MatchChats/VideoCallLogs";
-import AdminSubscriptionPlans from "./features/admin/pages/SubscriptionPayment/SubscriptionPlans";
+import AdminPlans from "./features/admin/pages/SubscriptionPayment/Plans";
 import AdminTransactions from "./features/admin/pages/SubscriptionPayment/Transactions";
 import AdminRevenueReports from "./features/admin/pages/SubscriptionPayment/RevenueReports";
 import AdminBannersAds from "./features/admin/pages/ContentManagement/BannersAds";
-import AdminFAQManagement from "./features/admin/pages/ContentManagement/FAQManagement";
+import AdminSupportManagement from "./features/admin/pages/ContentManagement/SupportManagement";
+// import AdminFAQManagement from "./features/admin/pages/ContentManagement/FAQManagement";
 import AdminAppSettings from "./features/admin/pages/Settings/AppSettings";
 import AdminFeatureManagement from "./features/admin/pages/Settings/FeatureManagement";
 import AdminActivityLogs from "./features/admin/pages/Settings/ActivityLogs";
@@ -87,11 +91,32 @@ function ScrollToTop() {
 }
 
 function App() {
+  useEffect(() => {
+    const initBranding = async () => {
+      try {
+        const res = await getSettings();
+        if (res.data?.success && res.data?.settings) {
+          const s = res.data.settings;
+          if (s.favicon) updateBrowserFavicon(s.favicon);
+          if (s.brandName) document.title = s.brandName;
+        }
+      } catch (_) {}
+    };
+    initBranding();
+
+    const handleSettingsUpdate = (e) => {
+      if (e.detail?.favicon) updateBrowserFavicon(e.detail.favicon);
+      if (e.detail?.brandName) document.title = e.detail.brandName;
+    };
+    window.addEventListener("app_settings_updated", handleSettingsUpdate);
+    return () =>
+      window.removeEventListener("app_settings_updated", handleSettingsUpdate);
+  }, []);
+
   return (
     <>
       <ScrollToTop />
       <Routes>
-        {" "}
         <Route path="/" element={<Home />} />
         <Route path="/splash" element={<SplashScreen />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -107,7 +132,8 @@ function App() {
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/call" element={<VideoCall />} />
-        <Route path="/premium" element={<PremiumPage />} />
+        <Route path="/help" element={<HelpSupport />} />
+        <Route path="/premium" element={<Navigate to="/#pricing" replace />} />
         <Route path="/settings" element={<Navigate to="/profile" replace />} />
         <Route path="/admin" element={<AdminProtectedRoute />}>
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -118,11 +144,12 @@ function App() {
           <Route path="matches" element={<AdminMatches />} />
           <Route path="chats" element={<AdminChatManagement />} />
           <Route path="video-calls" element={<AdminVideoCallLogs />} />
-          <Route path="subscriptions" element={<AdminSubscriptionPlans />} />
+          <Route path="plans" element={<AdminPlans />} />
           <Route path="transactions" element={<AdminTransactions />} />
           <Route path="revenue" element={<AdminRevenueReports />} />
           <Route path="banners" element={<AdminBannersAds />} />
-          <Route path="faq" element={<AdminFAQManagement />} />
+          <Route path="support" element={<AdminSupportManagement />} />
+          {/* <Route path="faq" element={<AdminFAQManagement />} /> */}
           <Route path="app-settings" element={<AdminAppSettings />} />
           <Route
             path="feature-management"

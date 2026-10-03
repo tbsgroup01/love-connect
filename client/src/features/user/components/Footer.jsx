@@ -1,18 +1,10 @@
 import React, { useState } from "react"
 import { Link } from "react-router-dom"
 import {
-  Heart,
   MapPin,
-
   ShieldCheck,
   Sparkles,
-  Smartphone,
-  ArrowUpRight,
-  Mail,
-  Send,
-  CheckCircle2,
   AlertCircle,
-  PhoneCall,
 } from "lucide-react"
 import Logo from "../../../assets/loveconnect.png"
 
@@ -107,21 +99,7 @@ export default function Footer() {
                 Download the App
               </span>
               <div className="flex flex-wrap items-center gap-2.5">
-                {/* App Store */}
-                <a
-                  href="#"
-                  className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#FF2D72]/40 transition-all duration-200 group"
-                >
-                  <Smartphone className="w-5 h-5 text-[#FF2D72]" />
-                  <div className="text-left">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold leading-none">
-                      Download on
-                    </p>
-                    <p className="text-xs font-bold text-white leading-tight mt-0.5 group-hover:text-[#FF2D72] transition-colors">
-                      App Store
-                    </p>
-                  </div>
-                </a>
+ 
 
                 {/* Google Play */}
                 <a

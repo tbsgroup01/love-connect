@@ -5,10 +5,12 @@ import {
   getFaqs,
   getFaqById,
   updateFaq,
+  seedFaqs,
 } from "../controllers/faqsController.js";
 
 const router = express.Router();
 
+router.post("/seed", seedFaqs);
 router.post("/", createFaq);
 router.get("/", getFaqs);
 router.get("/:id", getFaqById);

@@ -28,6 +28,20 @@ import {
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
 import favIcon from "../../../../assets/fav.png";
+import {
+  getAdminProfile,
+  updateAdminProfile,
+} from "../../../../services/authServices.js";
+import {
+  getSettings,
+  updateSettings,
+} from "../../../../services/settingsServices.js";
+import {
+  uploadProfileImage,
+  uploadFavicon,
+  getImageUrl,
+  updateBrowserFavicon,
+} from "../../../../services/uploadServices.js";
 
 export default function AppSettings() {
   const location = useLocation();
@@ -69,18 +83,11 @@ export default function AppSettings() {
   }, []);
 
   // Admin Profile State
-  const [adminProfile, setAdminProfile] = useState(() => {
-    try {
-      const saved = localStorage.getItem("loveconnect_admin_profile");
-      if (saved) return JSON.parse(saved);
-    } catch (_) {}
-    return {
-      name: "Priya Singh",
-      email: "priya.singh@loveconnect.com",
-      phone: "+91 98765 43210",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-    };
+  const [adminProfile, setAdminProfile] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    avatar: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -108,65 +115,120 @@ export default function AppSettings() {
     favicon: favIcon,
   });
 
-  const handleProfileFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setGeneral((prev) => ({
-        ...prev,
-        profilePic: e.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+const handleProfileFile = async (file) => {
+  if (!file) return;
 
-  const handleFaviconFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/") && !file.name.endsWith(".ico")) {
-      alert("Please upload an image or .ico file");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setGeneral((prev) => ({
-        ...prev,
-        favicon: e.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload a valid image file");
+    return;
+  }
+
+  try {
+    const res = await uploadProfileImage(file);
+
+    const imagePath = res.data.path;
+
+    setGeneral((prev) => ({
+      ...prev,
+      profilePic: imagePath,
+    }));
+
+    window.dispatchEvent(
+      new CustomEvent("app_settings_updated", {
+        detail: {
+          profilePic: imagePath,
+          favicon: general.favicon,
+          brandName: general.brandName,
+        },
+      })
+    );
+  } catch (error) {
+    console.error("Profile image upload failed:", error);
+    alert(
+      error.response?.data?.message ||
+        "Profile image upload failed"
+    );
+  }
+};
+const handleFaviconFile = async (file) => {
+  if (!file) return;
+
+  if (!file.type.startsWith("image/") && !file.name.endsWith(".ico")) {
+    alert("Please upload an image or .ico file");
+    return;
+  }
+
+  try {
+    const res = await uploadFavicon(file);
+
+    const imagePath = res.data.path;
+
+    setGeneral((prev) => ({
+      ...prev,
+      favicon: imagePath,
+    }));
+
+    updateBrowserFavicon(imagePath);
+
+    window.dispatchEvent(
+      new CustomEvent("app_settings_updated", {
+        detail: {
+          profilePic: general.profilePic,
+          favicon: imagePath,
+          brandName: general.brandName,
+        },
+      })
+    );
+  } catch (error) {
+    console.error("Favicon upload failed:", error);
+    alert(
+      error.response?.data?.message ||
+        "Favicon upload failed"
+    );
+  }
+};
 
   const handleRemoveProfilePic = (e) => {
     e.stopPropagation();
     setGeneral((prev) => ({ ...prev, profilePic: null }));
     if (profileInputRef.current) profileInputRef.current.value = "";
+    window.dispatchEvent(
+      new CustomEvent("app_settings_updated", {
+        detail: {
+          profilePic: null,
+          favicon: general.favicon,
+          brandName: general.brandName,
+        },
+      })
+    );
   };
 
   const handleRemoveFavicon = (e) => {
     e.stopPropagation();
     setGeneral((prev) => ({ ...prev, favicon: null }));
     if (faviconInputRef.current) faviconInputRef.current.value = "";
+    updateBrowserFavicon("/fav.png");
+    window.dispatchEvent(
+      new CustomEvent("app_settings_updated", {
+        detail: {
+          profilePic: general.profilePic,
+          favicon: null,
+          brandName: general.brandName,
+        },
+      })
+    );
   };
 
-  const [smtpSettings, setSmtpSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem("loveconnect_smtp_settings");
-      if (saved) return JSON.parse(saved);
-    } catch (_) {}
-    return {
-      host: "smtp.gmail.com",
-      port: "465",
-      encryption: "SSL (465)", // "SSL (465)", "TLS (587)", "None"
-      username: "deytaloffice@gmail.com",
-      password: "•••••••••••••••••",
-      fromName: "",
-      fromEmail: "deytaloffice@gmail.com",
-      replyToEmail: "deytaloffice@gmail.com",
-    };
+
+  const [smtpSettings, setSmtpSettings] = useState({
+    host: "smtp.gmail.com",
+    port: "465",
+    encryption: "SSL (465)", // "SSL (465)", "TLS (587)", "None"
+    username: "deytaloffice@gmail.com",
+    password: "•••••••••••••••••",
+    fromName: "",
+    fromEmail: "deytaloffice@gmail.com",
+    replyToEmail: "deytaloffice@gmail.com",
   });
 
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
@@ -205,23 +267,105 @@ export default function AppSettings() {
     currencyCode: "INR",
   });
 
-  const handleAdminPicFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setAdminProfile((prev) => ({
-        ...prev,
-        avatar: e.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+  // Load Admin Profile and App Settings from Database
+  useEffect(() => {
+    // Clear legacy localStorage keys
+    try {
+      localStorage.removeItem("loveconnect_admin_profile");
+      localStorage.removeItem("loveconnect_smtp_settings");
+    } catch (_) {}
 
-  const handleSaveAdminProfile = (e) => {
+    const loadDataFromDb = async () => {
+      try {
+        const [profileRes, settingsRes] = await Promise.allSettled([
+          getAdminProfile(),
+          getSettings(),
+        ]);
+
+        if (profileRes.status === "fulfilled" && profileRes.value.data?.admin) {
+          const a = profileRes.value.data.admin;
+          setAdminProfile({
+            name: a.name || "",
+            email: a.email || "",
+            phone: a.phone || "",
+            avatar: a.profile_image || "",
+          });
+        }
+
+        if (settingsRes.status === "fulfilled" && settingsRes.value.data?.settings) {
+          const s = settingsRes.value.data.settings;
+          setGeneral((prev) => ({
+            ...prev,
+            brandName: s.brandName || prev.brandName,
+            location: s.location || prev.location,
+            contactPhone: s.supportMobile || prev.contactPhone,
+            contactEmail: s.supportEmail || prev.contactEmail,
+            profilePic: s.profilePic || prev.profilePic,
+            favicon: s.favicon || prev.favicon,
+          }));
+
+          if (s.favicon) updateBrowserFavicon(s.favicon);
+          if (s.brandName) document.title = s.brandName;
+
+
+          setSmtpSettings((prev) => ({
+            ...prev,
+            host: s.smtpHost || prev.host,
+            port: s.smtpPort ? String(s.smtpPort) : prev.port,
+            encryption:
+              s.smtpSecurity === "SSL"
+                ? "SSL (465)"
+                : s.smtpSecurity === "TLS"
+                ? "TLS (587)"
+                : s.smtpSecurity === "NONE"
+                ? "None"
+                : prev.encryption,
+            username: s.smtpUsername || prev.username,
+            fromName: s.fromDisplayName || prev.fromName,
+            fromEmail: s.fromEmail || prev.fromEmail,
+            replyToEmail: s.replyToEmail || prev.replyToEmail,
+          }));
+
+          setPayments((prev) => ({
+            ...prev,
+            razorpayKeyId: s.razorpayKeyId || prev.razorpayKeyId,
+            razorpaySecret: s.razorpayKeySecret || prev.razorpaySecret,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load settings from DB:", err);
+      }
+    };
+
+    loadDataFromDb();
+  }, []);
+
+const handleAdminPicFile = async (file) => {
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload a valid image file");
+    return;
+  }
+
+  try {
+    const res = await uploadProfileImage(file);
+
+    const imagePath = res.data.path;
+
+    setAdminProfile((prev) => ({
+      ...prev,
+      avatar: imagePath,
+    }));
+  } catch (error) {
+    console.error("Admin profile image upload failed:", error);
+    alert(
+      error.response?.data?.message ||
+        "Admin profile image upload failed"
+    );
+  }
+};
+  const handleSaveAdminProfile = async (e) => {
     if (e) e.preventDefault();
     if (
       passwordData.newPassword &&
@@ -230,32 +374,118 @@ export default function AppSettings() {
       alert("Passwords do not match!");
       return;
     }
-    try {
-      localStorage.setItem(
-        "loveconnect_admin_profile",
-        JSON.stringify(adminProfile),
-      );
-      window.dispatchEvent(new Event("admin_profile_updated"));
-    } catch (_) {}
-    setPasswordData({ newPassword: "", confirmPassword: "" });
-    setProfileSuccess(true);
-    setTimeout(() => setProfileSuccess(false), 3000);
-  };
-
-  const handleSave = (e) => {
-    if (e) e.preventDefault();
-    if (currentSection === "profile") {
-      handleSaveAdminProfile(e);
+    if (passwordData.newPassword && passwordData.newPassword.length < 6) {
+      alert("Password must be at least 6 characters long!");
       return;
     }
+
     try {
-      localStorage.setItem(
-        "loveconnect_smtp_settings",
-        JSON.stringify(smtpSettings),
-      );
-    } catch (_) {}
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+      const res = await updateAdminProfile({
+        name: adminProfile.name,
+        email: adminProfile.email,
+        phone: adminProfile.phone,
+        profile_image: adminProfile.avatar || null,
+        password: passwordData.newPassword || undefined,
+      });
+
+      if (res.data?.success) {
+        const updated = res.data.admin;
+        setAdminProfile({
+          name: updated.name || "",
+          email: updated.email || "",
+          phone: updated.phone || "",
+          avatar: updated.profile_image || "",
+        });
+
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          try {
+            const u = JSON.parse(stored);
+            localStorage.setItem(
+              "user",
+              JSON.stringify({
+                ...u,
+                name: updated.name,
+                email: updated.email,
+                phone: updated.phone,
+                profile_image: updated.profile_image,
+              })
+            );
+          } catch (_) {}
+        }
+
+        window.dispatchEvent(new Event("admin_profile_updated"));
+        window.dispatchEvent(new Event("loveconnect_auth_change"));
+        setPasswordData({ newPassword: "", confirmPassword: "" });
+        setProfileSuccess(true);
+        setTimeout(() => setProfileSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to save admin profile to DB:", err);
+      alert(err.response?.data?.message || "Failed to save profile changes to database.");
+    }
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    if (currentSection === "profile") {
+      await handleSaveAdminProfile(e);
+      return;
+    }
+
+    try {
+      const securityMap = {
+        "SSL (465)": "SSL",
+        "TLS (587)": "TLS",
+        None: "NONE",
+      };
+
+      const payload = {
+        brandName: general.brandName,
+        location: general.location,
+        supportMobile: general.contactPhone,
+        supportEmail: general.contactEmail,
+        profilePic: general.profilePic,
+        favicon: general.favicon,
+        smtpHost: smtpSettings.host,
+        smtpPort: parseInt(smtpSettings.port) || 465,
+        smtpSecurity: securityMap[smtpSettings.encryption] || "SSL",
+        smtpUsername: smtpSettings.username,
+        smtpPassword:
+          smtpSettings.password === "•••••••••••••••••"
+            ? undefined
+            : smtpSettings.password,
+        fromDisplayName: smtpSettings.fromName,
+        fromEmail: smtpSettings.fromEmail,
+        replyToEmail: smtpSettings.replyToEmail,
+        razorpayKeyId: payments.razorpayKeyId,
+        razorpayKeySecret:
+          payments.razorpaySecret === "••••••••••••••••••••••••••••"
+            ? undefined
+            : payments.razorpaySecret,
+      };
+
+      const res = await updateSettings(payload);
+      if (res.data?.success) {
+        if (general.favicon) updateBrowserFavicon(general.favicon);
+        if (general.brandName) document.title = general.brandName;
+        window.dispatchEvent(
+          new CustomEvent("app_settings_updated", {
+            detail: {
+              profilePic: general.profilePic,
+              favicon: general.favicon,
+              brandName: general.brandName,
+            },
+          })
+        );
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2500);
+      }
+
+    } catch (err) {
+      console.error("Failed to save settings to DB:", err);
+      alert(err.response?.data?.message || "Failed to save settings to database.");
+    }
   };
 
   const sections = [
@@ -400,7 +630,7 @@ export default function AppSettings() {
                           {adminProfile.avatar ? (
                             <>
                               <img
-                                src={adminProfile.avatar}
+                                src={getImageUrl(adminProfile.avatar)}
                                 alt="Admin Avatar Preview"
                                 className="w-full h-full object-cover"
                               />
@@ -664,9 +894,9 @@ export default function AppSettings() {
                           {general.profilePic ? (
                             <>
                               <img
-                                src={general.profilePic}
+                                src={getImageUrl(general.profilePic)}
                                 alt="Profile preview"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                               />
                               <div
                                 onClick={() => profileInputRef.current?.click()}
@@ -770,7 +1000,7 @@ export default function AppSettings() {
                             <>
                               <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center p-1 shadow-2xs">
                                 <img
-                                  src={general.favicon}
+                                  src={getImageUrl(general.favicon)}
                                   alt="Favicon preview"
                                   className="w-full h-full object-contain"
                                 />
@@ -813,7 +1043,7 @@ export default function AppSettings() {
                           {/* Mini browser tab mockup */}
                           <div className="mt-1 flex items-center gap-1.5 px-2 py-0.5 bg-gray-100/90 rounded-md border border-gray-200/70 w-fit text-[10px] text-gray-600">
                             <img
-                              src={general.favicon || favIcon}
+                              src={getImageUrl(general.favicon) || favIcon}
                               alt=""
                               className="w-3 h-3 object-contain shrink-0 rounded-[2px]"
                             />

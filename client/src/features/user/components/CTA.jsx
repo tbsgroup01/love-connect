@@ -1,9 +1,40 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, Heart } from "lucide-react";
 import heroCoupleRomanticImg from "../../../assets/hero_couple_romantic.jpg";
 import priyaProfileImg from "../../../assets/priya_profile.jpg";
 
 export default function CTA() {
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+    try {
+      const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("loveconnect_admin_token");
+      return Boolean(token);
+    } catch (_) {
+      return false;
+    }
+  });
+
+  React.useEffect(() => {
+    const handleAuthChange = () => {
+      try {
+        const token =
+          localStorage.getItem("token") ||
+          localStorage.getItem("loveconnect_admin_token");
+        setIsLoggedIn(Boolean(token));
+      } catch (_) {
+        setIsLoggedIn(false);
+      }
+    };
+    window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("loveconnect_auth_change", handleAuthChange);
+    return () => {
+      window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
+    };
+  }, []);
+
   return (
     <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#FAFAFC] relative overflow-hidden font-poppins">
       <div className="max-w-[1600px] mx-auto">
@@ -41,10 +72,13 @@ export default function CTA() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                <button className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#ff4a86] hover:from-[#e61b61] hover:to-[#ff3377] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#FF2D72]/30 hover:shadow-[#FF2D72]/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer group">
-                  <span>Get Started Free</span>
+                <Link
+                  to={isLoggedIn ? "/discover" : "/register"}
+                  className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#ff4a86] hover:from-[#e61b61] hover:to-[#ff3377] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#FF2D72]/30 hover:shadow-[#FF2D72]/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer group"
+                >
+                  <span>{isLoggedIn ? "Explore Matches" : "Get Started Free"}</span>
                   <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
+                </Link>
               </div>
             </div>
 

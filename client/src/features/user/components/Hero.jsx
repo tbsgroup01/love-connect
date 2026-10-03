@@ -15,6 +15,36 @@ import heroBannerImg from "../../../assets/bannerr.jpeg";
 import priyaProfileImg from "../../../assets/priya_profile.jpg";
 
 export default function Hero() {
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+    try {
+      const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("loveconnect_admin_token");
+      return Boolean(token);
+    } catch (_) {
+      return false;
+    }
+  });
+
+  React.useEffect(() => {
+    const handleAuthChange = () => {
+      try {
+        const token =
+          localStorage.getItem("token") ||
+          localStorage.getItem("loveconnect_admin_token");
+        setIsLoggedIn(Boolean(token));
+      } catch (_) {
+        setIsLoggedIn(false);
+      }
+    };
+    window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("loveconnect_auth_change", handleAuthChange);
+    return () => {
+      window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
+    };
+  }, []);
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3] font-poppins">
       {/* Ambient Sunset Glows matching the reference design background color */}
@@ -62,10 +92,10 @@ export default function Hero() {
             {/* 3. CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-1">
               <Link
-                to="/register"
+                to={isLoggedIn ? "/discover" : "/register"}
                 className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] hover:from-[#e61b61] hover:to-[#7c3aed] text-white font-bold text-sm sm:text-base shadow-[0_12px_28px_rgba(255,45,114,0.3)] hover:shadow-[0_16px_36px_rgba(255,45,114,0.42)] transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer group"
               >
-                <span>Get Started Free</span>
+                <span>{isLoggedIn ? "Explore Matches" : "Get Started Free"}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

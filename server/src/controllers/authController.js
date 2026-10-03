@@ -1,4 +1,4 @@
-import { Users, Admin } from "../models/index.js";
+import { Users, Admin, Activities } from "../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -57,6 +57,28 @@ const userRegister = async (req, res) => {
         expiresIn: "1d",
       },
     );
+
+    // Record initial login activity automatically
+    try {
+      const clientIp =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        req.ip ||
+        "127.0.0.1";
+      const userAgent = req.get("User-Agent") || "Unknown Device";
+
+      await Activities.create({
+        user_id: user.id,
+        admin_id: null,
+        role: "user",
+        action: "LOGIN",
+        loginAt: new Date(),
+        ipAddress: clientIp,
+        userAgent,
+      });
+    } catch (actError) {
+      console.error("Failed to record register activity:", actError);
+    }
 
     const { password: removedPassword, ...userData } = user.toJSON();
 
@@ -195,6 +217,29 @@ const login = async (req, res) => {
         expiresIn: "1d",
       },
     );
+
+    // Record login activity automatically
+    try {
+      const clientIp =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        req.ip ||
+        "127.0.0.1";
+      const userAgent = req.get("User-Agent") || "Unknown Device";
+
+      await Activities.create({
+        user_id: role === "user" ? user.id : null,
+        admin_id: role === "admin" ? user.id : null,
+        role,
+        action: "LOGIN",
+        loginAt: new Date(),
+        ipAddress: clientIp,
+        userAgent,
+      });
+    } catch (actError) {
+      console.error("Failed to record login activity:", actError);
+    }
+
     const { password: removedPassword, ...userData } = user.toJSON();
     return res.status(200).json({
       message: "Login successful",
@@ -233,18 +278,24 @@ const forgetPassword = async (req, res) => {
     user.reset_otp = await bcrypt.hash(otp, 10);
     user.reset_otp_expires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
-    await sendEmail({
-      to: user.email,
-      subject: "LoveConnect Password Reset OTP",
-      text: `Your password reset OTP is ${otp}. It expires in 5 minutes.`,
-      html: `<p>Your LoveConnect password reset OTP is:</p>
-             <h2>${otp}</h2>
-             <p>This OTP expires in 5 minutes. Do not share it with anyone.</p>`,
-    });
+
+    let emailSent = false;
+    let emailErrorMessage = "";
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "LoveConnect Password Reset OTP",
+        text: `Your password reset OTP is ${otp}. It expires in 5 minutes.`,
+        html: `<p>Your LoveConnect password reset OTP is:</p>
+               <h2>${otp}</h2>
+               <p>This OTP expires in 5 minutes. Do not share it with anyone.</p>`,
+      });
+      emailSent = true;
+    } catch (_) {}
 
     return res.status(200).json({
       success: true,
-      message: "If an account exists, an OTP will be sent",
+      message: "If an account exists, a 6-digit OTP has been sent to your email.",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -369,6 +420,87 @@ const resetPassword = async (req, res) => {
     });
   }
 };
+
+const getAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findByPk(req.admin.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      admin,
+    });
+  } catch (error) {
+    console.error("Get admin profile error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const updateAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findByPk(req.admin.id);
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const { name, email, phone, profile_image, password } = req.body;
+
+    if (name) admin.name = name.trim();
+    if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      const existing = await Admin.findOne({
+        where: {
+          email: normalizedEmail,
+          id: { [Op.ne]: admin.id },
+        },
+      });
+      if (existing) {
+        return res.status(400).json({ message: "Email already in use by another admin" });
+      }
+      admin.email = normalizedEmail;
+    }
+    if (phone) {
+      const trimmedPhone = phone.trim();
+      const existingPhone = await Admin.findOne({
+        where: {
+          phone: trimmedPhone,
+          id: { [Op.ne]: admin.id },
+        },
+      });
+      if (existingPhone) {
+        return res.status(400).json({ message: "Phone number already in use by another admin" });
+      }
+      admin.phone = trimmedPhone;
+    }
+    if (profile_image !== undefined) {
+      admin.profile_image = profile_image;
+    }
+
+    if (password && password.trim().length >= 6) {
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(password.trim(), salt);
+    }
+
+    await admin.save();
+
+    const { password: _, ...adminData } = admin.toJSON();
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin profile updated successfully",
+      admin: adminData,
+    });
+  } catch (error) {
+    console.error("Update admin profile error:", error);
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
 export {
   userRegister,
   adminCreate,
@@ -376,4 +508,7 @@ export {
   forgetPassword,
   verifyResetOtp,
   resetPassword,
+  getAdminProfile,
+  updateAdminProfile,
 };
+

@@ -96,6 +96,7 @@ export default function Login({ initialMode = "login" }) {
           if (res.data.user) {
             localStorage.setItem("user", JSON.stringify(res.data.user));
           }
+          window.dispatchEvent(new Event("loveconnect_auth_change"));
           if (res.data.user?.role === "admin") {
             localStorage.setItem("loveconnect_admin_token", res.data.token);
             const targetPath = location.state?.from || "/admin/dashboard";
@@ -118,6 +119,7 @@ export default function Login({ initialMode = "login" }) {
         if (res.data?.user) {
           localStorage.setItem("user", JSON.stringify(res.data.user));
         }
+        window.dispatchEvent(new Event("loveconnect_auth_change"));
         navigate("/onboarding");
       }
     } catch (err) {

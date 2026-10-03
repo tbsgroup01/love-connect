@@ -15,6 +15,7 @@ import {
   FileText,
   Image,
   HelpCircle,
+  Headphones,
   Settings,
   Sliders,
   Globe,
@@ -173,7 +174,7 @@ export default function AdminSidebar({
         {
           name: "Subscription Plans",
           icon: CreditCard,
-          path: "/admin/subscriptions",
+          path: "/admin/plans",
         },
         { name: "Transactions", icon: Receipt, path: "/admin/transactions" },
       ],
@@ -182,7 +183,8 @@ export default function AdminSidebar({
       title: "CONTENT MANAGEMENT",
       items: [
         { name: "Banners & Ads", icon: Image, path: "/admin/banners" },
-        { name: "FAQ Management", icon: HelpCircle, path: "/admin/faq" },
+        { name: "Support Requests", icon: Headphones, path: "/admin/support" },
+        // { name: "FAQ Management", icon: HelpCircle, path: "/admin/faq" },
       ],
     },
     {

@@ -36,6 +36,10 @@ const Admin = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    profile_image: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true,
+    },
 
     role: {
       type: DataTypes.ENUM("admin"),

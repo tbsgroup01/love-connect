@@ -13,12 +13,9 @@ import Activities from "./activitiesModel.js";
 import Banners from "./bannersModel.js";
 import Faqs from "./faqsModel.js";
 import Settings from "./settingsModel.js";
+import Support from "./supportModel.js";
 
-// ==========================================
-// ASSOCIATIONS
-// ==========================================
 
-// 1. Users <-> Profiles (One-to-One)
 Users.hasOne(Profiles, {
   foreignKey: "user_id",
   as: "profile",
@@ -225,6 +222,7 @@ export {
   Banners,
   Faqs,
   Settings,
+  Support,
 };
 
 export default {
@@ -243,4 +241,5 @@ export default {
   Banners,
   Faqs,
   Settings,
+  Support,
 };

@@ -27,6 +27,14 @@ const Settings = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    profilePic: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    favicon: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
 
     // Email Setup
     smtpHost: {

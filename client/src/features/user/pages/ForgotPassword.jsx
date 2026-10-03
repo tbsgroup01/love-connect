@@ -27,7 +27,6 @@ import {
 export default function ForgotPassword() {
   const navigate = useNavigate();
 
-  // Wizard Steps: "email" | "otp" | "password" | "success"
   const [step, setStep] = useState("email");
 
   const [email, setEmail] = useState("");
@@ -41,7 +40,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [isFocused, setIsFocused] = useState(null);
 
-  // Resend OTP Countdown Timer (60s)
+
   const [resendCountdown, setResendCountdown] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
 
@@ -75,6 +74,7 @@ export default function ForgotPassword() {
       const res = await forgetPassword({ email: cleanEmail });
       if (res.data?.success !== false) {
         setStep("otp");
+        setOtp("");
         setResendCountdown(60);
       } else {
         setError(res.data?.message || "Unable to send reset code. Please try again.");
@@ -99,6 +99,7 @@ export default function ForgotPassword() {
     try {
       const res = await forgetPassword({ email: email.trim().toLowerCase() });
       if (res.data?.success !== false) {
+        setOtp("");
         setResendCountdown(60);
       } else {
         setError(res.data?.message || "Failed to resend code.");
