@@ -13,6 +13,7 @@ import {
   User,
   Sparkles,
   LockKeyhole,
+  AlertCircle,
 } from "lucide-react";
 import loginCoupleImg from "../../../assets/login_couple.jpg";
 import loveConnectLogo from "../../../assets/loveconnect.png";
@@ -65,12 +66,16 @@ export default function Login({ initialMode = "login" }) {
   ];
 
   useEffect(() => {
-    if (location.state?.message) {
+    const searchParams = new URLSearchParams(location.search);
+    const warning = searchParams.get("status_warning");
+    if (warning) {
+      setError(decodeURIComponent(warning));
+    } else if (location.state?.message) {
       setError(location.state.message);
     } else {
       setError("");
     }
-  }, [mode, location.state]);
+  }, [mode, location.state, location.search]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -340,8 +345,9 @@ export default function Login({ initialMode = "login" }) {
             className="space-y-2.5 max-w-xs mx-auto w-full"
           >
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-3.5 py-2 rounded-xl text-xs font-semibold text-center animate-fadeIn">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-center animate-fadeIn flex items-center justify-center gap-2 shadow-2xs">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>{error}</span>
               </div>
             )}
 

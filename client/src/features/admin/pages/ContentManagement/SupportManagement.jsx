@@ -88,11 +88,11 @@ export default function SupportManagement() {
       }
 
       if (isManual) {
-        showFeedback("success", "Support inquiries refreshed from database");
+        showFeedback("success", "Support inquiries refreshed");
       }
     } catch (err) {
       console.error("Failed to fetch support requests:", err);
-      showFeedback("error", "Failed to load support requests from database");
+      showFeedback("error", "Failed to load support requests");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -116,7 +116,7 @@ export default function SupportManagement() {
     }
     try {
       await deleteSupportMessage(id);
-      showFeedback("success", "Support message deleted successfully from database");
+      showFeedback("success", "Support message deleted successfully.");
       if (selectedSupport?.id === id) {
         setSelectedSupport(null);
       }
@@ -192,7 +192,7 @@ export default function SupportManagement() {
                 style={{ backgroundColor: COLORS.pink }}
               >
                 <RefreshCw className={`w-4 h-4 stroke-[2.5] ${refreshing ? "animate-spin" : ""}`} />
-                <span>Sync Live Database</span>
+                <span>Sync Live </span>
               </button>
             </div>
           </div>

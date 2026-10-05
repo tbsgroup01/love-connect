@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flag,
   Clock,
@@ -390,6 +390,8 @@ export default function ReportsModeration() {
 
   const [reportsData, setReportsData] = useState(initialReportsData);
   const [selectedReportIds, setSelectedReportIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredData = reportsData.filter((item) => {
     if (!searchTerm) return true;
@@ -403,20 +405,30 @@ export default function ReportsModeration() {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const currentSelected =
     selectedReport && reportsData.some((r) => r.id === selectedReport.id)
       ? selectedReport
       : null;
 
   const isAllSelected =
-    filteredData.length > 0 &&
-    filteredData.every((item) => selectedReportIds.includes(item.id));
+    paginatedData.length > 0 &&
+    paginatedData.every((item) => selectedReportIds.includes(item.id));
 
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedReportIds([]);
     } else {
-      setSelectedReportIds(filteredData.map((item) => item.id));
+      setSelectedReportIds(paginatedData.map((item) => item.id));
     }
   };
 
@@ -579,7 +591,7 @@ export default function ReportsModeration() {
                         </td>
                       </tr>
                     ) : (
-                      filteredData.map((item) => {
+                      paginatedData.map((item) => {
                         const isSelected =
                           currentSelected && currentSelected.id === item.id;
                         const isChecked = selectedReportIds.includes(item.id);
@@ -705,44 +717,57 @@ export default function ReportsModeration() {
                 </table>
               </div>
 
-              {/* Pagination matching reference image */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
+              {/* Pagination */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
                 <span>
-                  Showing {filteredData.length > 0 ? 1 : 0} to{" "}
-                  {filteredData.length} of {reportsData.length} reports
+                  Showing {filteredData.length > 0 ? startIndex + 1 : 0} to{" "}
+                  {endIndex} of {filteredData.length} reports
                 </span>
                 <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
                   </select>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={validCurrentPage <= 1}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Previous Page"
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                          validCurrentPage === pageNum
+                            ? "text-white shadow-xs"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        style={validCurrentPage === pageNum ? { backgroundColor: COLORS.pink } : {}}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
                     <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={validCurrentPage >= totalPages}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Next Page"
                     >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      3
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      4
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      5
-                    </button>
-                    <span className="text-gray-400">...</span>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      15
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>

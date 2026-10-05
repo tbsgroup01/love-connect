@@ -101,7 +101,7 @@ export default function HelpSupport() {
 
   return (
     <DashboardLayout activeTab="help">
-      <div className="w-full max-w-3xl mx-auto space-y-6 animate-fadeIn pb-12 font-poppins">
+      <div className="w-full mx-auto space-y-6 animate-fadeIn pb-12 font-poppins">
         {/* PAGE HEADER */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#FF2D72]/20">

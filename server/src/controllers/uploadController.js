@@ -1,3 +1,6 @@
+import Users from "../models/usersModel.js";
+import Profiles from "../models/profilesModel.js";
+
 export const uploadProfile = async (req, res) => {
   try {
     if (!req.file) {
@@ -7,15 +10,36 @@ export const uploadProfile = async (req, res) => {
     }
 
     const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    const userId = req.body.userId || req.body.user_id;
+
+    if (userId) {
+      try {
+        const user = await Users.findByPk(userId);
+        if (user) {
+          user.profile_image = fileUrl;
+          await user.save();
+        }
+
+        const profile = await Profiles.findOne({ where: { user_id: userId } });
+        if (profile) {
+          profile.profile_picture = fileUrl;
+          await profile.save();
+        }
+      } catch (dbErr) {
+        console.error("DB update error in uploadProfile:", dbErr);
+      }
+    }
 
     return res.status(200).json({
-      message: "Profile image uploaded successfully",
+      success: true,
+      message: "Profile image uploaded and connected with database successfully",
       file: req.file.filename,
       path: fileUrl,
       url: fileUrl,
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Profile image upload failed",
       error: error.message,
     });

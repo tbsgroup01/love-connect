@@ -207,6 +207,31 @@ const login = async (req, res) => {
         message: "Invalid email/phone or password",
       });
     }
+
+    // Block deactivated or suspended accounts from logging in
+    if (role === "user") {
+      if (user.status === "suspended") {
+        return res.status(403).json({
+          success: false,
+          code: "ACCOUNT_SUSPENDED",
+          message: "Your account has been suspended. Please contact admin.",
+        });
+      }
+      if (user.status === "inactive") {
+        return res.status(403).json({
+          success: false,
+          code: "ACCOUNT_DEACTIVATED",
+          message: "Your account has been deactivated. Please contact admin.",
+        });
+      }
+    } else if (role === "admin" && user.status && user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        code: "ACCOUNT_INACTIVE",
+        message: "Your admin account is inactive. Please contact system administrator.",
+      });
+    }
+
     const token = jwt.sign(
       {
         id: user.id,

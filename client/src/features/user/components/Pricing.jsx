@@ -17,12 +17,16 @@ import {
   Loader2,
   CheckCircle2,
   ArrowRight,
+  Calendar,
+  AlertCircle,
+  ArrowUpRight,
 } from "lucide-react";
 import { getPlans } from "../../../services/plansServices.js";
 import {
   createPaymentOrder,
   verifyPayment,
 } from "../../../services/paymentServices.js";
+import { checkActiveSubscription } from "../../../services/subscriptionsServices.js";
 
 // Helper to dynamically load Razorpay script if needed
 const loadRazorpayScript = () => {
@@ -39,6 +43,21 @@ const loadRazorpayScript = () => {
   });
 };
 
+// Date formatter
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch (_) {
+    return String(dateStr);
+  }
+};
+
 // Helper to format DB plans for Home Pricing Cards
 const formatPlanFromDb = (plan) => {
   const duration = Number(plan.duration) || 0;
@@ -47,8 +66,9 @@ const formatPlanFromDb = (plan) => {
   // 1. FREE PLAN (₹0)
   if (duration === 0) {
     return {
-      id: "plan-free",
+      id: plan.id || "plan-free",
       plan_id: plan.plan_id || plan.id,
+      duration: 0,
       name: plan.name || "Free Starter",
       badge: "Free Forever",
       subtitle: "10 likes aur 1 chat conversation se shuru karein",
@@ -76,8 +96,9 @@ const formatPlanFromDb = (plan) => {
   // 2. 1 MONTH PLAN (₹499 / 30 Days)
   if (duration <= 30) {
     return {
-      id: "plan-1m",
+      id: plan.id || "plan-1m",
       plan_id: plan.plan_id || plan.id,
+      duration: duration,
       name: plan.name || "1 Month Premium",
       badge: "Most Popular",
       subtitle: "Full unlimited access to multiply matches for 30 days",
@@ -107,8 +128,9 @@ const formatPlanFromDb = (plan) => {
   // 3. 3 MONTHS PLAN (₹1,199 / 90 Days)
   if (duration <= 90) {
     return {
-      id: "plan-3m",
+      id: plan.id || "plan-3m",
       plan_id: plan.plan_id || plan.id,
+      duration: duration,
       name: plan.name || "3 Months Premium",
       badge: "Save 20%",
       subtitle: "Full unlimited access for 90 days with quarterly savings",
@@ -136,8 +158,9 @@ const formatPlanFromDb = (plan) => {
 
   // 4. 1 YEAR VIP ELITE (₹3,899 / 365 Days)
   return {
-    id: "plan-1y",
+    id: plan.id || "plan-1y",
     plan_id: plan.plan_id || plan.id,
+    duration: duration,
     name: plan.name || "1 Year VIP Elite",
     badge: "Best Value (35% OFF)",
     subtitle: "Maximum visibility, worldwide passport, and VIP concierge",
@@ -210,7 +233,34 @@ export default function Pricing() {
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [successModalData, setSuccessModalData] = useState(null);
 
-  // Load latest plans from MySQL Database API
+  // Active Subscription State
+  const [activeSubscription, setActiveSubscription] = useState(null);
+  const [loadingSub, setLoadingSub] = useState(false);
+  const [upgradeConfirmPlan, setUpgradeConfirmPlan] = useState(null);
+
+  // Fetch active subscription for the logged-in user
+  const fetchActiveSubscription = async () => {
+    try {
+      const saved = localStorage.getItem("user");
+      if (!saved) return;
+      const user = JSON.parse(saved);
+      if (!user?.id) return;
+
+      setLoadingSub(true);
+      const res = await checkActiveSubscription(user.id);
+      if (res.data?.hasActivePlan && res.data?.subscription) {
+        setActiveSubscription(res.data.subscription);
+      } else {
+        setActiveSubscription(null);
+      }
+    } catch (err) {
+      console.error("Failed to check active subscription:", err);
+    } finally {
+      setLoadingSub(false);
+    }
+  };
+
+  // Load latest plans from MySQL Database API & check active sub
   useEffect(() => {
     getPlans()
       .then((res) => {
@@ -222,24 +272,55 @@ export default function Pricing() {
       .catch((err) => {
         console.error("Failed to load plans from DB:", err);
       });
+
+    fetchActiveSubscription();
   }, []);
 
   // Format plans for display
   const plans = dbPlans.map(formatPlanFromDb);
 
-  const handleSelectPlan = async (plan) => {
-    // 1. FREE PLAN CLICK (₹0)
-    if (!plan.priceNum || plan.priceNum === 0) {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/register", { state: { selectedPlan: plan } });
-      } else {
-        navigate("/discover", { state: { selectedPlan: plan } });
-      }
-      return;
-    }
+  // Helper to determine if a plan card represents the currently active subscription
+  const isCurrentPlan = (plan) => {
+    if (!activeSubscription) return false;
+    const activePlanId = Number(activeSubscription.plan_id);
+    const activePlanObj = activeSubscription.plan;
+    const pId = Number(plan.id);
+    const pPlanId = Number(plan.plan_id);
 
-    // 2. PAID PLANS (1 Month, 3 Months, 1 Year)
+    if (activePlanId && (activePlanId === pId || activePlanId === pPlanId)) {
+      return true;
+    }
+    if (activePlanObj) {
+      if (Number(activePlanObj.id) === pId || Number(activePlanObj.id) === pPlanId) {
+        return true;
+      }
+      if (Number(activePlanObj.plan_id) === pId || Number(activePlanObj.plan_id) === pPlanId) {
+        return true;
+      }
+      if (
+        activePlanObj.name &&
+        plan.name &&
+        activePlanObj.name.trim().toLowerCase() === plan.name.trim().toLowerCase()
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Calculate projected new expiry date when upgrading or extending
+  const calculateNewEndDate = (planDuration) => {
+    const baseDate =
+      activeSubscription && new Date(activeSubscription.end_date) > new Date()
+        ? new Date(activeSubscription.end_date)
+        : new Date();
+    const newDate = new Date(baseDate);
+    newDate.setDate(newDate.getDate() + Number(planDuration || 0));
+    return formatDate(newDate);
+  };
+
+  // Primary Payment Execution via Razorpay
+  const executePayment = async (plan) => {
     const token = localStorage.getItem("token");
     let currentUser = null;
     try {
@@ -247,11 +328,11 @@ export default function Pricing() {
       if (saved) currentUser = JSON.parse(saved);
     } catch (_) {}
 
-    if (!token) {
+    if (!token || !currentUser) {
       navigate("/login", {
         state: {
           redirectAfterLogin: "/#pricing",
-          message: `Please log in to upgrade to the ${plan.name} plan.`,
+          message: `Please log in to proceed with the ${plan.name} plan.`,
           selectedPlan: plan,
         },
       });
@@ -260,6 +341,7 @@ export default function Pricing() {
 
     try {
       setProcessingPlanId(plan.id);
+      setUpgradeConfirmPlan(null); // Close confirmation modal if open
 
       // Ensure Razorpay SDK is ready
       const isLoaded = await loadRazorpayScript();
@@ -272,7 +354,7 @@ export default function Pricing() {
       // Step A: Create order in backend via Razorpay Orders API
       const res = await createPaymentOrder({
         amount: plan.priceNum,
-        plan_id: plan.plan_id,
+        plan_id: plan.plan_id || plan.id,
       });
 
       const { order, key_id } = res.data;
@@ -281,25 +363,30 @@ export default function Pricing() {
         throw new Error("Invalid order generated by payment server.");
       }
 
+      const isUpgrading = Boolean(activeSubscription);
+
       // Step B: Configure Razorpay Checkout modal
       const options = {
         key: key_id || "rzp_test_T9N9rWQ7myNslf",
         amount: order.amount,
         currency: order.currency || "INR",
         name: "LoveConnect",
-        description: `${plan.name} Membership`,
+        description: isUpgrading
+          ? `Upgrade/Extend ${plan.name} Membership`
+          : `${plan.name} Membership`,
         image: "https://ui-avatars.com/api/?name=LoveConnect&background=FF2D72&color=fff",
         order_id: order.id,
         handler: async function (response) {
           try {
             setVerifyingPayment(true);
+
             // Step C: Verify payment signature and save transaction in DB
             const verifyRes = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               user_id: currentUser?.id,
-              plan_id: plan.plan_id,
+              plan_id: plan.plan_id || plan.id,
               amount: plan.priceNum,
               payment_method: "Razorpay",
             });
@@ -310,11 +397,16 @@ export default function Pricing() {
               localStorage.setItem("user", JSON.stringify(currentUser));
             }
 
+            // Refresh active subscription state immediately from server!
+            await fetchActiveSubscription();
+
             // Step D: Show success modal
             setSuccessModalData({
               plan,
               paymentId: response.razorpay_payment_id,
               orderId: response.razorpay_order_id,
+              isUpgrade: isUpgrading,
+              newEndDate: verifyRes.data?.subscription?.end_date,
             });
           } catch (err) {
             console.error("Payment verification failed:", err);
@@ -354,6 +446,33 @@ export default function Pricing() {
     }
   };
 
+  // Button Click Handler for Plan Cards
+  const handleSelectPlan = async (plan) => {
+    // 1. FREE PLAN (₹0)
+    if (!plan.priceNum || plan.priceNum === 0) {
+      if (activeSubscription) {
+        alert("You already have an active Premium membership!");
+        return;
+      }
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/register", { state: { selectedPlan: plan } });
+      } else {
+        navigate("/discover", { state: { selectedPlan: plan } });
+      }
+      return;
+    }
+
+    // 2. If user already has an active subscription, open the Upgrade / Extension confirmation modal
+    if (activeSubscription) {
+      setUpgradeConfirmPlan(plan);
+      return;
+    }
+
+    // 3. New Plan purchase (no prior active subscription)
+    await executePayment(plan);
+  };
+
   return (
     <section
       id="pricing"
@@ -365,7 +484,7 @@ export default function Pricing() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header (Centered) */}
-        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-xs font-bold tracking-wider uppercase mb-3 border border-[#FF2D72]/20">
             <Zap className="w-3.5 h-3.5" />
             <span>FLEXIBLE PLANS</span>
@@ -377,10 +496,48 @@ export default function Pricing() {
             </span>
           </h2>
           <p className="text-[#64748b] text-sm sm:text-base leading-relaxed font-normal">
-            Find the right pace for your love story. Upgrade anytime or cancel
-            with one click.
+            Find the right pace for your love story. Upgrade anytime or extend your validity with one click.
           </p>
         </div>
+
+        {/* ACTIVE MEMBERSHIP HIGHLIGHT BANNER */}
+        {activeSubscription && (
+          <div className="mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FFE7F0] via-white to-[#F5F3FF] border-2 border-[#FF2D72]/30 shadow-md shadow-pink-500/5 flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
+            <div className="flex items-center gap-3.5 w-full md:w-auto">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-white shrink-0 shadow-md shadow-[#FF2D72]/25">
+                <Crown className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FF2D72] bg-[#FFE7F0] px-2 py-0.5 rounded-full border border-[#FF2D72]/30">
+                    Active Membership
+                  </span>
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-xs font-bold text-emerald-700">Currently Active</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-[#17151A] mt-0.5">
+                  {activeSubscription.plan?.name || "Premium Plan"}
+                  <span className="text-xs font-normal text-slate-500 ml-2">
+                    (Valid till:{" "}
+                    <span className="font-bold text-[#17151A]">
+                      {formatDate(activeSubscription.end_date)}
+                    </span>
+                    )
+                  </span>
+                </h3>
+              </div>
+            </div>
+            <div className="text-xs text-slate-600 md:text-right bg-white/90 px-4 py-2 rounded-2xl border border-slate-200/70 shadow-2xs w-full md:w-auto">
+              <p className="font-bold text-slate-800">Want to upgrade or extend?</p>
+              <p className="text-[11px] text-slate-500">
+                Remaining days will automatically carry forward to your new plan!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* LOADING SPINNER */}
         {loading ? (
@@ -396,15 +553,31 @@ export default function Pricing() {
             {plans.map((plan) => {
               const IconComp = plan.icon;
               const isProcessing = processingPlanId === plan.id;
+              const current = isCurrentPlan(plan);
+              const hasActive = Boolean(activeSubscription);
+
+              // Dynamic button labels based on subscription status
+              let dynamicButtonText = plan.buttonText;
+              if (plan.priceNum === 0) {
+                dynamicButtonText = hasActive ? "Included in Plan" : "Get Started Free";
+              } else if (current) {
+                dynamicButtonText = `Extend Plan (+${plan.duration} Days)`;
+              } else if (hasActive) {
+                dynamicButtonText = `Upgrade to ${plan.name}`;
+              }
 
               if (plan.isVip) {
                 return (
                   /* VIP Luxury Amethyst Card (1 Year) */
                   <div
                     key={plan.id}
-                    className="relative rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 bg-gradient-to-b from-[#1b1528] via-[#161224] to-[#0f0c1a] text-white border border-purple-500/30 shadow-[0_12px_36px_rgba(124,58,237,0.18)] hover:shadow-[0_20px_45px_rgba(124,58,237,0.3)] hover:-translate-y-1 group overflow-hidden h-full"
+                    className={`relative rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 bg-gradient-to-b from-[#1b1528] via-[#161224] to-[#0f0c1a] text-white border shadow-[0_12px_36px_rgba(124,58,237,0.18)] hover:shadow-[0_20px_45px_rgba(124,58,237,0.3)] hover:-translate-y-1 group overflow-hidden h-full ${
+                      current
+                        ? "border-emerald-400 ring-2 ring-emerald-400/40"
+                        : "border-purple-500/30"
+                    }`}
                   >
-                    {/* Subtle Corner Ambient Glow */}
+                    {/* Corner Ambient Glow */}
                     <div className="absolute -top-20 -right-20 w-40 h-40 bg-purple-500/20 blur-2xl rounded-full pointer-events-none" />
 
                     {/* Top Content Area */}
@@ -418,8 +591,14 @@ export default function Pricing() {
                             <IconComp className="w-5 h-5" />
                           </div>
                           <div>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 font-bold text-[10px] tracking-wide uppercase">
-                              {plan.badge}
+                            <span
+                              className={`px-2 py-0.5 rounded-full font-bold text-[10px] tracking-wide uppercase border ${
+                                current
+                                  ? "bg-emerald-500/20 border-emerald-400 text-emerald-300"
+                                  : "bg-amber-400/15 border-amber-400/30 text-amber-300"
+                              }`}
+                            >
+                              {current ? "Active Plan" : plan.badge}
                             </span>
                             <h3 className="text-lg sm:text-xl font-black tracking-tight mt-0.5 text-white">
                               {plan.name}
@@ -471,9 +650,11 @@ export default function Pricing() {
                       type="button"
                       onClick={() => handleSelectPlan(plan)}
                       disabled={isProcessing || verifyingPayment}
-                      className={`w-full py-3 rounded-xl font-bold text-xs tracking-wide transition-all duration-200 cursor-pointer active:scale-98 relative z-10 flex items-center justify-center gap-2 ${plan.buttonStyle} ${
-                        isProcessing ? "opacity-75 cursor-wait" : ""
-                      }`}
+                      className={`w-full py-3 rounded-xl font-bold text-xs tracking-wide transition-all duration-200 cursor-pointer active:scale-98 relative z-10 flex items-center justify-center gap-2 ${
+                        current
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:brightness-105"
+                          : plan.buttonStyle
+                      } ${isProcessing ? "opacity-75 cursor-wait" : ""}`}
                     >
                       {isProcessing ? (
                         <>
@@ -481,7 +662,12 @@ export default function Pricing() {
                           <span>Connecting Razorpay...</span>
                         </>
                       ) : (
-                        <span>{plan.buttonText}</span>
+                        <>
+                          <span>{dynamicButtonText}</span>
+                          {!current && hasActive && (
+                            <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                          )}
+                        </>
                       )}
                     </button>
                   </div>
@@ -493,22 +679,35 @@ export default function Pricing() {
                 <div
                   key={plan.id}
                   className={`relative rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 overflow-hidden h-full ${
-                    plan.popular
+                    current
+                      ? "bg-gradient-to-b from-emerald-50/60 via-white to-emerald-50/20 border-2 border-emerald-500 shadow-[0_12px_36px_rgba(16,185,129,0.18)] ring-2 ring-emerald-400/30 -translate-y-1 group"
+                      : plan.popular
                       ? "bg-gradient-to-b from-[#FFE7F0]/60 via-white to-[#FFE7F0]/20 border-2 border-[#FF2D72] shadow-[0_12px_36px_rgba(255,45,114,0.16)] hover:shadow-[0_20px_45px_rgba(255,45,114,0.25)] md:-translate-y-1.5 group"
                       : "bg-white border border-[#FFE7F0] shadow-xs hover:border-[#FF2D72]/40 hover:shadow-lg hover:-translate-y-1"
                   }`}
                 >
                   {/* Floating Pill Badge */}
-                  {plan.badge && (
+                  {(current || plan.badge) && (
                     <div
                       className={`absolute -top-0.5 right-6 px-3 py-0.5 rounded-b-lg font-extrabold text-[10px] uppercase tracking-wider shadow-sm flex items-center gap-1 ${
-                        plan.popular
+                        current
+                          ? "bg-emerald-600 text-white"
+                          : plan.popular
                           ? "bg-[#FF2D72] text-white"
                           : "bg-slate-100 text-[#64748b]"
                       }`}
                     >
-                      {plan.popular && <Sparkles className="w-3 h-3" />}
-                      <span>{plan.badge}</span>
+                      {current ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Active Plan</span>
+                        </>
+                      ) : (
+                        <>
+                          {plan.popular && <Sparkles className="w-3 h-3" />}
+                          <span>{plan.badge}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -560,7 +759,9 @@ export default function Pricing() {
                           >
                             <div
                               className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                                plan.popular
+                                current
+                                  ? "bg-emerald-100 text-emerald-600"
+                                  : plan.popular
                                   ? "bg-[#FFE7F0] text-[#FF2D72]"
                                   : "bg-slate-100 text-[#64748b]"
                               }`}
@@ -578,10 +779,18 @@ export default function Pricing() {
                   <button
                     type="button"
                     onClick={() => handleSelectPlan(plan)}
-                    disabled={isProcessing || verifyingPayment}
-                    className={`w-full py-3 rounded-xl font-bold text-xs sm:text-sm tracking-wide transition-all duration-200 cursor-pointer active:scale-98 flex items-center justify-center gap-2 ${plan.buttonStyle} ${
-                      isProcessing ? "opacity-75 cursor-wait" : ""
-                    }`}
+                    disabled={
+                      isProcessing ||
+                      verifyingPayment ||
+                      (plan.priceNum === 0 && hasActive)
+                    }
+                    className={`w-full py-3 rounded-xl font-semibold text-xs sm:text-xs tracking-wide transition-all duration-200 cursor-pointer active:scale-98 flex items-center justify-center gap-2 ${
+                      current
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:brightness-105"
+                        : plan.priceNum === 0 && hasActive
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                        : plan.buttonStyle
+                    } ${isProcessing ? "opacity-75 cursor-wait" : ""}`}
                   >
                     {isProcessing ? (
                       <>
@@ -589,7 +798,12 @@ export default function Pricing() {
                         <span>Connecting Razorpay...</span>
                       </>
                     ) : (
-                      <span>{plan.buttonText}</span>
+                      <>
+                        <span>{dynamicButtonText}</span>
+                        {!current && hasActive && plan.priceNum > 0 && (
+                          <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                        )}
+                      </>
                     )}
                   </button>
                 </div>
@@ -599,6 +813,101 @@ export default function Pricing() {
         )}
       </div>
 
+      {/* UPGRADE / EXTEND CONFIRMATION MODAL */}
+      {upgradeConfirmPlan && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-pink-100 space-y-5 animate-scaleUp relative">
+            <button
+              onClick={() => setUpgradeConfirmPlan(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center shrink-0">
+                <Crown className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FFE7F0] text-[#FF2D72]">
+                  {isCurrentPlan(upgradeConfirmPlan)
+                    ? "Extend Validity"
+                    : "Plan Upgrade"}
+                </span>
+                <h3 className="text-xl font-black text-gray-900 mt-0.5">
+                  {isCurrentPlan(upgradeConfirmPlan)
+                    ? `Extend ${upgradeConfirmPlan.name}`
+                    : `Upgrade to ${upgradeConfirmPlan.name}`}
+                </h3>
+              </div>
+            </div>
+
+            {/* Upgrade Details Card */}
+            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3 text-xs">
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="text-slate-400">Current Plan:</span>
+                <span className="font-bold text-slate-800">
+                  {activeSubscription?.plan?.name || "Active Plan"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="text-slate-400">Current Expiry:</span>
+                <span className="font-semibold text-slate-700">
+                  {formatDate(activeSubscription?.end_date)}
+                </span>
+              </div>
+              <div className="h-px bg-slate-200/80 my-1" />
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="text-slate-400">Duration Added:</span>
+                <span className="font-bold text-emerald-600">
+                  +{upgradeConfirmPlan.duration} Days
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="text-slate-400">New Expiry Date:</span>
+                <span className="font-black text-[#FF2D72]">
+                  {calculateNewEndDate(upgradeConfirmPlan.duration)}
+                </span>
+              </div>
+              <div className="h-px bg-slate-200/80 my-1" />
+              <div className="flex justify-between items-center text-slate-900 text-sm font-black">
+                <span>Amount to Pay:</span>
+                <span className="text-lg text-emerald-600">
+                  {upgradeConfirmPlan.priceDisplay}
+                </span>
+              </div>
+            </div>
+
+            {/* Informational Notice */}
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-800 text-[11px] leading-snug">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <p>
+                <strong>No days lost!</strong> Your remaining days from the current plan are preserved. The new {upgradeConfirmPlan.duration} days will be added on top of your existing expiry date.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setUpgradeConfirmPlan(null)}
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => executePayment(upgradeConfirmPlan)}
+                className="flex-2 py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] via-[#ff4382] to-[#7C3AED] text-white font-bold text-xs shadow-md shadow-[#FF2D72]/20 hover:brightness-105 transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>Proceed to Pay {upgradeConfirmPlan.priceDisplay}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* VERIFYING PAYMENT FULLSCREEN OVERLAY */}
       {verifyingPayment && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -606,7 +915,7 @@ export default function Pricing() {
             <Loader2 className="w-12 h-12 text-[#FF2D72] animate-spin mx-auto" />
             <h3 className="text-lg font-black text-gray-900">Verifying Payment</h3>
             <p className="text-xs text-gray-500">
-              Please wait while we confirm your Razorpay transaction and activate your plan...
+              Please wait while we confirm your Razorpay transaction and update your subscription...
             </p>
           </div>
         </div>
@@ -632,18 +941,32 @@ export default function Pricing() {
                 Payment Verified
               </span>
               <h3 className="text-2xl font-black text-gray-900 mt-2">
-                Subscription Activated! 🎉
+                {successModalData.isUpgrade
+                  ? "Plan Upgraded Successfully! 🎉"
+                  : "Subscription Activated! 🎉"}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                You are now upgraded to{" "}
-                <span className="font-bold text-[#FF2D72]">
-                  {successModalData.plan.name}
-                </span>
-                . Unlimited likes, messaging, and premium benefits are now unlocked!
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                {successModalData.isUpgrade ? (
+                  <>
+                    Your plan has been upgraded to{" "}
+                    <strong className="text-[#FF2D72]">
+                      {successModalData.plan.name}
+                    </strong>
+                    . Your remaining validity has been extended!
+                  </>
+                ) : (
+                  <>
+                    You are now subscribed to{" "}
+                    <strong className="text-[#FF2D72]">
+                      {successModalData.plan.name}
+                    </strong>
+                    . Unlimited likes, messaging, and premium benefits are now unlocked!
+                  </>
+                )}
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-gray-50 text-left text-xs space-y-1.5 border border-gray-100 font-mono">
+            <div className="p-3.5 rounded-2xl bg-gray-50 text-left text-xs space-y-2 border border-gray-100 font-mono">
               <div className="flex justify-between text-gray-400 text-[10px] uppercase font-bold">
                 <span>Plan</span>
                 <span className="text-gray-800">{successModalData.plan.name}</span>
@@ -652,6 +975,14 @@ export default function Pricing() {
                 <span>Amount Paid</span>
                 <span className="text-green-600 font-bold">{successModalData.plan.priceDisplay}</span>
               </div>
+              {successModalData.newEndDate && (
+                <div className="flex justify-between text-gray-400 text-[10px] uppercase font-bold">
+                  <span>New Expiry Date</span>
+                  <span className="text-pink-600 font-bold">
+                    {formatDate(successModalData.newEndDate)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-400 text-[10px] uppercase font-bold truncate">
                 <span>Transaction ID</span>
                 <span className="text-gray-600 truncate max-w-[180px]">

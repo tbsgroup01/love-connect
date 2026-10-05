@@ -242,7 +242,7 @@ export default function Plans() {
       setPlans(mapped);
     } catch (err) {
       console.error('Failed to load plans from DB:', err);
-      showToast('Failed to load subscription plans from database', 'error');
+      showToast('Failed to load subscription plans.', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -262,7 +262,7 @@ export default function Plans() {
       await fetchPlansList(true);
     } catch (err) {
       console.error('Failed to seed plans:', err);
-      showToast('Failed to seed default plans into database', 'error');
+      showToast('Failed to seed default plans.', 'error');
     } finally {
       setSeeding(false);
     }
@@ -456,17 +456,17 @@ export default function Plans() {
 
       if (modalMode === 'create') {
         await createPlan(payload);
-        showToast(`Plan "${formData.name}" created successfully in database.`);
+        showToast(`Plan "${formData.name}" created successfully.`);
       } else {
         await updatePlan(formData.id, payload);
-        showToast(`Plan "${formData.name}" updated successfully in database.`);
+        showToast(`Plan "${formData.name}" updated successfully.`);
       }
 
       setModalOpen(false);
       await fetchPlansList(true);
     } catch (err) {
       console.error('Error saving plan:', err);
-      showToast(err.response?.data?.message || 'Failed to save plan in database', 'error');
+      showToast(err.response?.data?.message || 'Failed to save plan.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -485,7 +485,7 @@ export default function Plans() {
       await fetchPlansList(true);
     } catch (err) {
       console.error('Failed to delete plan:', err);
-      showToast(err.response?.data?.message || 'Failed to delete plan from database', 'error');
+      showToast(err.response?.data?.message || 'Failed to delete plan', 'error');
     } finally {
       setDeleting(false);
     }
@@ -548,7 +548,7 @@ export default function Plans() {
               <button
                 onClick={() => fetchPlansList(true)}
                 disabled={refreshing || loading}
-                title="Refresh Plans from Database"
+                title="Refresh Plans"
                 className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw
@@ -628,7 +628,7 @@ export default function Plans() {
               <div className="bg-white rounded-2xl p-16 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center space-y-3">
                 <Loader2 className="w-9 h-9 text-[#FF2D72] animate-spin" />
                 <p className="text-sm font-bold text-gray-700">
-                  Loading Subscription Plans from Database...
+                  Loading Subscription Plans...
                 </p>
               </div>
             ) : plans.length === 0 ? (
@@ -639,10 +639,10 @@ export default function Plans() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-900">
-                    No Subscription Plans Found in Database
+                    No Subscription Plans Found
                   </h3>
                   <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
-                    Your database currently does not have any subscription plans configured. Seed the default plans or create a new plan to get started.
+                    There are currently no subscription plans configured. Seed the default plans or create a new plan to get started.
                   </p>
                 </div>
                 <div className="flex items-center justify-center gap-3 pt-2">

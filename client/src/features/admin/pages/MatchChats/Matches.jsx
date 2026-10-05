@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Heart,
   Sparkles,
@@ -13,9 +13,12 @@ import {
   Check,
   X,
   Trash2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
+import { getAllMatches, deleteMatch } from "../../../../services/matchesServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -35,334 +38,165 @@ export default function AdminMatches() {
   const [activeTab, setActiveTab] = useState("Matches");
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [matchesData, setMatchesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMatchIds, setSelectedMatchIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Top 4 KPI Metric Cards specified by user:
-  // Total Matches, Daily Matches, Successful Matches, Unmatches
+  const defaultAvatar =
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80";
+
+  const calculateAge = (dobString) => {
+    if (!dobString) return null;
+    const dob = new Date(dobString);
+    if (isNaN(dob.getTime())) return null;
+    const diffMs = Date.now() - dob.getTime();
+    const ageDt = new Date(diffMs);
+    return Math.abs(ageDt.getUTCFullYear() - 1970);
+  };
+
+  const getInterests = (interestStr, partnerPrefs) => {
+    let list = [];
+    if (interestStr) {
+      try {
+        const parsed =
+          typeof interestStr === "string" ? JSON.parse(interestStr) : interestStr;
+        if (Array.isArray(parsed)) list = parsed.filter(Boolean);
+      } catch (_) {
+        if (typeof interestStr === "string") {
+          list = interestStr.split(",").map((s) => s.trim()).filter(Boolean);
+        }
+      }
+    }
+    if (list.length === 0 && partnerPrefs) {
+      try {
+        const prefs =
+          typeof partnerPrefs === "string" ? JSON.parse(partnerPrefs) : partnerPrefs;
+        if (Array.isArray(prefs?.interests)) list = prefs.interests;
+      } catch (_) {}
+    }
+    return list.length > 0 ? list : ["Dating", "Lifestyle"];
+  };
+
+  const isWithinPast24Hours = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    return Date.now() - d.getTime() <= 24 * 60 * 60 * 1000;
+  };
+
+  const fetchMatches = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllMatches();
+      const rawMatches = response.data?.matches || [];
+
+      const formatted = rawMatches.map((m) => {
+        const uA = m.userOne || {};
+        const pA = uA.profile || {};
+        const uB = m.userTwo || {};
+        const pB = uB.profile || {};
+
+        const interestsA = getInterests(uA.interest, pA.partner_preferences);
+        const interestsB = getInterests(uB.interest, pB.partner_preferences);
+
+        const rawDate = m.matched_at || m.createdAt;
+        const matchDateObj = new Date(rawDate);
+        const formattedDate = !isNaN(matchDateObj.getTime())
+          ? matchDateObj.toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "Recent";
+        const formattedTime = !isNaN(matchDateObj.getTime())
+          ? matchDateObj.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "";
+
+        return {
+          id: m.id,
+          matchId: `MCH-${String(m.id).padStart(6, "0")}`,
+          rawDate,
+          userA: {
+            id: uA.id,
+            name: pA.full_name || uA.name || "User A",
+            age: uA.age || calculateAge(pA.date_of_birth) || "N/A",
+            phone: uA.phone || "N/A",
+            location: pA.city
+              ? `${pA.city}, ${pA.country || "India"}`
+              : pA.country || "India",
+            avatar: pA.profile_picture || uA.profile_image || defaultAvatar,
+            interests: interestsA,
+          },
+          userB: {
+            id: uB.id,
+            name: pB.full_name || uB.name || "User B",
+            age: uB.age || calculateAge(pB.date_of_birth) || "N/A",
+            phone: uB.phone || "N/A",
+            location: pB.city
+              ? `${pB.city}, ${pB.country || "India"}`
+              : pB.country || "India",
+            avatar: pB.profile_picture || uB.profile_image || defaultAvatar,
+            interests: interestsB,
+          },
+          matchDate: formattedDate,
+          matchTime: formattedTime,
+          status: "Successful",
+          statusBg: "#DCFCE7",
+          statusColor: "#16A34A",
+          messagesCount: m.conversation?.id ? 1 : 0,
+          lastInteraction: "Active now",
+        };
+      });
+
+      setMatchesData(formatted);
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, pageSize]);
+
   const kpiCards = [
     {
       title: "Total Matches",
-      value: "24,580",
+      value: matchesData.length,
       bgColor: "#FF2D72",
       icon: Heart,
     },
     {
       title: "Daily Matches",
-      value: "1,280",
+      value: matchesData.filter((match) => isWithinPast24Hours(match.rawDate)).length,
       bgColor: "#3B82F6",
       icon: Sparkles,
     },
     {
       title: "Successful Matches",
-      value: "18,420",
+      value: matchesData.length,
       bgColor: "#22C55E",
       icon: CheckCircle2,
     },
     {
       title: "Unmatches",
-      value: "3,140",
+      value: 0,
       bgColor: "#EF4444",
       icon: HeartOff,
     },
   ];
-
-  // Mock Matches Table Data matching user requirements:
-  // User A, User B, Match Date, Status, Actions
-  const initialMatchesData = [
-    {
-      id: 1,
-      matchId: "MCH-009241",
-      userA: {
-        name: "Rohan Mehta",
-        age: 28,
-        phone: "98xxxxxxxx",
-        location: "Mumbai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        interests: ["Travel", "Photography", "Fitness"],
-      },
-      userB: {
-        name: "Aaradhya Sharma",
-        age: 25,
-        phone: "98xxxxxxxx",
-        location: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        interests: ["Music", "Coffee", "Yoga"],
-      },
-      matchDate: "15 Sep 2026",
-      matchTime: "10:24 AM",
-      status: "Successful",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      messagesCount: 142,
-      lastInteraction: "10 mins ago",
-    },
-    {
-      id: 2,
-      matchId: "MCH-009240",
-      userA: {
-        name: "Karan Verma",
-        age: 29,
-        phone: "98xxxxxxxx",
-        location: "Bangalore, India",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-        interests: ["Startups", "Badminton", "Movies"],
-      },
-      userB: {
-        name: "Priya Singh",
-        age: 26,
-        phone: "98xxxxxxxx",
-        location: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        interests: ["Cooking", "Art", "Dogs"],
-      },
-      matchDate: "15 Sep 2026",
-      matchTime: "09:18 AM",
-      status: "Daily Matches",
-      statusBg: "#DBEAFE",
-      statusColor: "#2563EB",
-      messagesCount: 68,
-      lastInteraction: "1 hour ago",
-    },
-    {
-      id: 3,
-      matchId: "MCH-009239",
-      userA: {
-        name: "Rahul Mehta",
-        age: 32,
-        phone: "98xxxxxxxx",
-        location: "Gurgaon, India",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80",
-        interests: ["Reading", "Cricket", "Finance"],
-      },
-      userB: {
-        name: "Neha Patel",
-        age: 28,
-        phone: "98xxxxxxxx",
-        location: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80",
-        interests: ["Travel", "Writing", "Pets"],
-      },
-      matchDate: "14 Sep 2026",
-      matchTime: "08:55 PM",
-      status: "Successful",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      messagesCount: 215,
-      lastInteraction: "Yesterday",
-    },
-    {
-      id: 4,
-      matchId: "MCH-009238",
-      userA: {
-        name: "Amit Kumar",
-        age: 29,
-        phone: "98xxxxxxxx",
-        location: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80",
-        interests: ["Gaming", "Tech", "Music"],
-      },
-      userB: {
-        name: "Sneha Reddy",
-        age: 27,
-        phone: "98xxxxxxxx",
-        location: "Hyderabad, India",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80",
-        interests: ["Dancing", "Design", "Anime"],
-      },
-      matchDate: "14 Sep 2026",
-      matchTime: "07:42 PM",
-      status: "Daily Matches",
-      statusBg: "#DBEAFE",
-      statusColor: "#2563EB",
-      messagesCount: 42,
-      lastInteraction: "2 hours ago",
-    },
-    {
-      id: 5,
-      matchId: "MCH-009237",
-      userA: {
-        name: "Vikram Singh",
-        age: 31,
-        phone: "98xxxxxxxx",
-        location: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80",
-        interests: ["Gym", "Biking", "Rock Music"],
-      },
-      userB: {
-        name: "Pooja Verma",
-        age: 29,
-        phone: "98xxxxxxxx",
-        location: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
-        interests: ["Baking", "Yoga", "Podcasts"],
-      },
-      matchDate: "14 Sep 2026",
-      matchTime: "05:21 PM",
-      status: "Unmatches",
-      statusBg: "#FFE4E6",
-      statusColor: "#E11D48",
-      messagesCount: 14,
-      lastInteraction: "Unmatched 14 Sep",
-    },
-    {
-      id: 6,
-      matchId: "MCH-009236",
-      userA: {
-        name: "Alisha Verma",
-        age: 25,
-        phone: "98xxxxxxxx",
-        location: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        interests: ["Fashion", "Singing", "Travel"],
-      },
-      userB: {
-        name: "Riya Malhotra",
-        age: 26,
-        phone: "98xxxxxxxx",
-        location: "Noida, India",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        interests: ["Poetry", "Coffee", "Nature"],
-      },
-      matchDate: "14 Sep 2026",
-      matchTime: "03:12 PM",
-      status: "Successful",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      messagesCount: 310,
-      lastInteraction: "Active now",
-    },
-    {
-      id: 7,
-      matchId: "MCH-009235",
-      userA: {
-        name: "Karan Sharma",
-        age: 30,
-        phone: "98xxxxxxxx",
-        location: "Bangalore, India",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        interests: ["Hiking", "Guitar", "Dogs"],
-      },
-      userB: {
-        name: "Simran Kaur",
-        age: 28,
-        phone: "98xxxxxxxx",
-        location: "Chandigarh, India",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80",
-        interests: ["Literature", "Cafes", "Bhangra"],
-      },
-      matchDate: "13 Sep 2026",
-      matchTime: "11:24 AM",
-      status: "Daily Matches",
-      statusBg: "#DBEAFE",
-      statusColor: "#2563EB",
-      messagesCount: 55,
-      lastInteraction: "Yesterday",
-    },
-    {
-      id: 8,
-      matchId: "MCH-009234",
-      userA: {
-        name: "Tanya Gupta",
-        age: 24,
-        phone: "98xxxxxxxx",
-        location: "Lucknow, India",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80",
-        interests: ["Painting", "Food", "Cinema"],
-      },
-      userB: {
-        name: "Vikram Singh",
-        age: 31,
-        phone: "98xxxxxxxx",
-        location: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&auto=format&fit=crop&q=80",
-        interests: ["Fitness", "Adventure", "Music"],
-      },
-      matchDate: "13 Sep 2026",
-      matchTime: "10:10 AM",
-      status: "Successful",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      messagesCount: 184,
-      lastInteraction: "3 hours ago",
-    },
-    {
-      id: 9,
-      matchId: "MCH-009233",
-      userA: {
-        name: "Dev Malhotra",
-        age: 32,
-        phone: "98xxxxxxxx",
-        location: "Noida, India",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80",
-        interests: ["Running", "Podcasts", "Cars"],
-      },
-      userB: {
-        name: "Nisha Kapoor",
-        age: 28,
-        phone: "98xxxxxxxx",
-        location: "Chennai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
-        interests: ["Coding", "Board Games", "Cats"],
-      },
-      matchDate: "12 Sep 2026",
-      matchTime: "08:36 PM",
-      status: "Unmatches",
-      statusBg: "#FFE4E6",
-      statusColor: "#E11D48",
-      messagesCount: 8,
-      lastInteraction: "Unmatched 12 Sep",
-    },
-    {
-      id: 10,
-      matchId: "MCH-009232",
-      userA: {
-        name: "Rahul Das",
-        age: 27,
-        phone: "98xxxxxxxx",
-        location: "Kolkata, India",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-        interests: ["Football", "Street Food", "Philosophy"],
-      },
-      userB: {
-        name: "Sneha Reddy",
-        age: 27,
-        phone: "98xxxxxxxx",
-        location: "Hyderabad, India",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        interests: ["Design", "Reading", "Travel"],
-      },
-      matchDate: "12 Sep 2026",
-      matchTime: "06:14 PM",
-      status: "Daily Matches",
-      statusBg: "#DBEAFE",
-      statusColor: "#2563EB",
-      messagesCount: 76,
-      lastInteraction: "12 Sep 2026",
-    },
-  ];
-
-  const [matchesData, setMatchesData] = useState(initialMatchesData);
-  const [selectedMatchIds, setSelectedMatchIds] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredMatches = matchesData.filter((item) => {
     if (!searchTerm) return true;
@@ -377,20 +211,44 @@ export default function AdminMatches() {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredMatches.length / pageSize));
+  const activePage = Math.min(currentPage, totalPages);
+
+  const paginatedMatches = filteredMatches.slice(
+    (activePage - 1) * pageSize,
+    activePage * pageSize
+  );
+
+  const getPageNumbers = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (activePage <= 3) {
+      return [1, 2, 3, "...", totalPages];
+    }
+    if (activePage >= totalPages - 2) {
+      return [1, "...", totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", activePage, "...", totalPages];
+  };
+
   const currentSelected =
     selectedMatch && matchesData.some((m) => m.id === selectedMatch.id)
       ? selectedMatch
       : null;
 
   const isAllSelected =
-    filteredMatches.length > 0 &&
-    filteredMatches.every((item) => selectedMatchIds.includes(item.id));
+    paginatedMatches.length > 0 &&
+    paginatedMatches.every((item) => selectedMatchIds.includes(item.id));
 
   const handleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedMatchIds([]);
+      setSelectedMatchIds((prev) =>
+        prev.filter((id) => !paginatedMatches.some((item) => item.id === id))
+      );
     } else {
-      setSelectedMatchIds(filteredMatches.map((item) => item.id));
+      const pageIds = paginatedMatches.map((item) => item.id);
+      setSelectedMatchIds((prev) => [...new Set([...prev, ...pageIds])]);
     }
   };
 
@@ -400,17 +258,40 @@ export default function AdminMatches() {
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedMatchIds.length === 0) return;
-    setMatchesData((prev) =>
-      prev.filter((item) => !selectedMatchIds.includes(item.id)),
-    );
-    setSelectedMatchIds([]);
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedMatchIds.length} selected match(es)?`,
+      )
+    )
+      return;
+    try {
+      await Promise.all(selectedMatchIds.map((id) => deleteMatch(id)));
+      setMatchesData((prev) =>
+        prev.filter((item) => !selectedMatchIds.includes(item.id)),
+      );
+      if (selectedMatch && selectedMatchIds.includes(selectedMatch.id)) {
+        setSelectedMatch(null);
+      }
+      setSelectedMatchIds([]);
+    } catch (error) {
+      console.error("Failed to delete selected matches:", error);
+    }
   };
 
-  const handleDeleteMatch = (id) => {
-    setMatchesData((prev) => prev.filter((item) => item.id !== id));
-    setSelectedMatchIds((prev) => prev.filter((item) => item !== id));
+  const handleDeleteMatch = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this match?")) return;
+    try {
+      await deleteMatch(id);
+      setMatchesData((prev) => prev.filter((item) => item.id !== id));
+      setSelectedMatchIds((prev) => prev.filter((item) => item !== id));
+      if (selectedMatch?.id === id) {
+        setSelectedMatch(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete match:", error);
+    }
   };
 
   return (
@@ -487,8 +368,21 @@ export default function AdminMatches() {
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gray-700">
-                    All Matches
+                    All Matches ({filteredMatches.length})
                   </span>
+                  <button
+                    type="button"
+                    onClick={fetchMatches}
+                    disabled={loading}
+                    className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 transition-colors cursor-pointer"
+                    title="Refresh Matches"
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 ${
+                        loading ? "animate-spin text-[#FF2D72]" : ""
+                      }`}
+                    />
+                  </button>
                   {selectedMatchIds.length > 0 && (
                     <button
                       onClick={handleDeleteSelected}
@@ -543,17 +437,36 @@ export default function AdminMatches() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredMatches.length === 0 ? (
+                    {loading ? (
                       <tr>
                         <td
                           colSpan="7"
-                          className="py-8 text-center text-gray-400"
+                          className="py-12 text-center text-gray-400"
                         >
-                          No matches found
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin text-[#FF2D72]" />
+                            <span className="text-xs font-semibold">
+                              Loading matches...
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredMatches.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="py-12 text-center text-gray-400"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Heart className="w-8 h-8 text-gray-300 stroke-[1.5]" />
+                            <span className="text-xs font-semibold">
+                              No matches found
+                            </span>
+                          </div>
                         </td>
                       </tr>
                     ) : (
-                      filteredMatches.map((item) => {
+                      paginatedMatches.map((item) => {
                         const isSelected =
                           currentSelected && currentSelected.id === item.id;
                         const isChecked = selectedMatchIds.includes(item.id);
@@ -671,35 +584,66 @@ export default function AdminMatches() {
               {/* Pagination */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
                 <span>
-                  Showing {filteredMatches.length > 0 ? 1 : 0} to{" "}
-                  {filteredMatches.length} of {matchesData.length} matches
+                  Showing {filteredMatches.length > 0 ? (activePage - 1) * pageSize + 1 : 0} to{" "}
+                  {Math.min(activePage * pageSize, filteredMatches.length)} of {filteredMatches.length} matches
                 </span>
                 <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
                   </select>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={activePage <= 1}
+                      className={`p-1 rounded-lg ${
+                        activePage <= 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100 text-gray-600 cursor-pointer"
+                      }`}
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
+                    {getPageNumbers().map((pg, idx) =>
+                      pg === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="px-1 text-gray-400">
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={pg}
+                          onClick={() => setCurrentPage(pg)}
+                          className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                            activePage === pg
+                              ? "text-white shadow-xs"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          style={{
+                            backgroundColor:
+                              activePage === pg ? COLORS.pink : "transparent",
+                          }}
+                        >
+                          {pg}
+                        </button>
+                      )
+                    )}
                     <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={activePage >= totalPages}
+                      className={`p-1 rounded-lg ${
+                        activePage >= totalPages
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100 text-gray-600 cursor-pointer"
+                      }`}
                     >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      3
-                    </button>
-                    <span className="text-gray-400">...</span>
-                    <button className="w-7 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      844
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -815,7 +759,7 @@ export default function AdminMatches() {
                       Common Interests
                     </span>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {currentSelected.userA.interests.map((interest, iIdx) => (
+                      {(currentSelected.userA?.interests || []).map((interest, iIdx) => (
                         <span
                           key={iIdx}
                           className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-100"

@@ -2,6 +2,7 @@ import { Navigate, Routes, Route, useLocation, Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import { getSettings } from "./services/settingsServices.js";
 import { updateBrowserFavicon } from "./services/uploadServices.js";
+import api from "./services/api.js";
 import Home from "./features/user/pages/Home";
 
 import SplashScreen from "./features/user/pages/SplashScreen";
@@ -67,6 +68,36 @@ function AdminProtectedRoute() {
   return <Outlet />;
 }
 
+function UserProtectedRoute() {
+  const location = useLocation();
+  const token = localStorage.getItem("token");
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "null");
+  } catch (_) {
+    user = null;
+  }
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (user.status && user.status !== "active") {
+    const statusText = user.status === "suspended" ? "suspended" : "deactivated";
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          message: `Your account has been ${statusText}. Please contact admin.`,
+        }}
+      />
+    );
+  }
+
+  return <Outlet />;
+}
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
 
@@ -91,6 +122,8 @@ function ScrollToTop() {
 }
 
 function App() {
+  const location = useLocation();
+
   useEffect(() => {
     const initBranding = async () => {
       try {
@@ -113,6 +146,33 @@ function App() {
       window.removeEventListener("app_settings_updated", handleSettingsUpdate);
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (_) {}
+
+    if (!token || !user || user.role === "admin") return;
+
+    const verifyStatus = async () => {
+      try {
+        await api.get("/auth/check-status");
+      } catch (_) {
+       
+      }
+    };
+
+    verifyStatus();
+    const interval = setInterval(verifyStatus, 6000);
+    window.addEventListener("focus", verifyStatus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", verifyStatus);
+    };
+  }, [location.pathname]);
+
   return (
     <>
       <ScrollToTop />
@@ -124,15 +184,17 @@ function App() {
         <Route path="/login" element={<Login initialMode="login" />} />
         <Route path="/register" element={<Login initialMode="signup" />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/create-profile" element={<ProfileCreation />} />
-        <Route path="/discover" element={<Discover />} />
-        <Route path="/likes" element={<LikesPage />} />
-        <Route path="/matches" element={<MatchesPage />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/call" element={<VideoCall />} />
-        <Route path="/help" element={<HelpSupport />} />
+        <Route element={<UserProtectedRoute />}>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/create-profile" element={<ProfileCreation />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/likes" element={<LikesPage />} />
+          <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/call" element={<VideoCall />} />
+          <Route path="/help" element={<HelpSupport />} />
+        </Route>
         <Route path="/premium" element={<Navigate to="/#pricing" replace />} />
         <Route path="/settings" element={<Navigate to="/profile" replace />} />
         <Route path="/admin" element={<AdminProtectedRoute />}>

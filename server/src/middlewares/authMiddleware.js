@@ -69,6 +69,23 @@ export const authMiddleware = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    if (decoded.role === "admin") {
+      const admin = await Admin.findByPk(decoded.id);
+      if (!admin) {
+        return res.status(401).json({
+          message: "Admin account not found.",
+        });
+      }
+      if (admin.status !== "active") {
+        return res.status(403).json({
+          message: "Your admin account is inactive.",
+        });
+      }
+      req.user = admin;
+      req.admin = admin;
+      return next();
+    }
+
     const user = await Users.findByPk(decoded.id);
 
     if (!user) {
@@ -78,8 +95,12 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     if (user.status && user.status !== "active") {
+      const statusText = user.status === "suspended" ? "suspended" : "deactivated";
       return res.status(403).json({
-        message: "Your account is not active.",
+        success: false,
+        code: user.status === "suspended" ? "ACCOUNT_SUSPENDED" : "ACCOUNT_DEACTIVATED",
+        accountStatus: user.status,
+        message: `Your account has been ${statusText}. Please contact admin.`,
       });
     }
 
@@ -102,4 +123,5 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
+export const protect = authMiddleware;
 export default authMiddleware;

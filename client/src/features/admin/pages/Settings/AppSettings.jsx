@@ -422,7 +422,7 @@ const handleAdminPicFile = async (file) => {
       }
     } catch (err) {
       console.error("Failed to save admin profile to DB:", err);
-      alert(err.response?.data?.message || "Failed to save profile changes to database.");
+      alert(err.response?.data?.message || "Failed to save profile changes.");
     }
   };
 
@@ -484,7 +484,7 @@ const handleAdminPicFile = async (file) => {
 
     } catch (err) {
       console.error("Failed to save settings to DB:", err);
-      alert(err.response?.data?.message || "Failed to save settings to database.");
+      alert(err.response?.data?.message || "Failed to save settings.");
     }
   };
 

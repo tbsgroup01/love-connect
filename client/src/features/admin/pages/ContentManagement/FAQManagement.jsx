@@ -96,11 +96,11 @@ export default function FAQManagement() {
       }
       showFeedback(
         "success",
-        res.data?.message || "Default FAQs seeded successfully into database!"
+        res.data?.message || "Default FAQs seeded successfully!"
       );
     } catch (err) {
       console.error("Failed to seed FAQs:", err);
-      showFeedback("error", "Failed to seed default FAQs into database");
+      showFeedback("error", "Failed to seed default FAQs");
     } finally {
       setSeeding(false);
     }
@@ -337,7 +337,7 @@ export default function FAQManagement() {
                 <h3 className="text-base font-bold text-gray-900">
                   {searchTerm
                     ? "No matching questions found"
-                    : "No FAQs in database yet"}
+                    : "No FAQs in yet"}
                 </h3>
                 <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
                   {searchTerm

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -11,7 +11,20 @@ import {
   ShieldCheck,
   Briefcase,
   GraduationCap,
+  RefreshCw,
+  User,
+  Wine,
+  Cigarette,
+  Utensils,
+  PawPrint,
+  Dumbbell,
+  Loader2,
+  Check,
+  PlayingCardsFan,
 } from "lucide-react";
+
+import { getAllUsers } from "../../../services/usersServices.js";
+import { likeUser } from "../../../services/likesServices.js";
 
 import ananyaImg from "../../../assets/hero_woman.jpg";
 import priyaImg from "../../../assets/priya_profile.jpg";
@@ -20,83 +33,197 @@ import rheaImg from "../../../assets/hero_woman_exact.png";
 
 export default function Discover() {
   const navigate = useNavigate();
-
-  // Category filter in Discover header: "all" | "nearby" | "new" | "verified"
+  let currentUser = null;
+  try {
+    const saved = localStorage.getItem("user");
+    if (saved) currentUser = JSON.parse(saved);
+  } catch (_) {}
+  const [filterGender, setFilterGender] = useState("all");
+  const [filterVerified, setFilterVerified] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
-
-  // Profile Deck Data for Discover tab
-  const profiles = [
-    {
-      id: 1,
-      name: "Ananya",
-      age: 24,
-      image: ananyaImg,
-      profession: "Product Designer at Google",
-      education: "Delhi University",
-      location: "Noida, India",
-      photoIndex: "1/5",
-      bio: "Love exploring new places, good food and meaningful conversations. Looking to meet genuine people with big dreams! ✨",
-      interests: ["Travel", "Music", "Food", "Photography"],
-      moreInterestsCount: 3,
-    },
-    {
-      id: 2,
-      name: "Priya",
-      age: 25,
-      image: priyaImg,
-      profession: "Senior Software Engineer at Microsoft",
-      education: "IIT Delhi",
-      location: "Gurugram, India",
-      photoIndex: "1/4",
-      bio: "Coffee enthusiast, weekend trekker, and indie pop lover. Seeking genuine smiles and shared adventures. ☕🏕️",
-      interests: ["Coffee", "Fitness", "Coding", "Trekking"],
-      moreInterestsCount: 2,
-    },
-    {
-      id: 3,
-      name: "Meera",
-      age: 23,
-      image: meeraImg,
-      profession: "Architect at Design Studio",
-      education: "School of Planning & Architecture",
-      location: "New Delhi, India",
-      photoIndex: "1/6",
-      bio: "Passionate about minimalist architecture, street photography and deep late-night conversations over tea. 🎨",
-      interests: ["Art", "Reading", "Architecture", "Tea"],
-      moreInterestsCount: 4,
-    },
-    {
-      id: 4,
-      name: "Rhea",
-      age: 24,
-      image: rheaImg,
-      profession: "Content Strategist at Zomato",
-      education: "St. Xavier's College",
-      location: "South Delhi, India",
-      photoIndex: "1/5",
-      bio: "Sunset chaser, beach lover, and dog parent. Let's explore local eateries and make every moment memorable. 🐕🌊",
-      interests: ["Pets", "Movies", "Foodie", "Gaming"],
-      moreInterestsCount: 5,
-    },
-  ];
-
+  const [loading, setLoading] = useState(true);
+  const [dbProfiles, setDbProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [matchModal, setMatchModal] = useState(null);
+  const [profileModal, setProfileModal] = useState(null); 
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const currentProfile = profiles[currentIndex % profiles.length];
+  const calculateAge = (dobString) => {
+    if (!dobString) return null;
+    const dob = new Date(dobString);
+    if (isNaN(dob.getTime())) return null;
+    const diffMs = Date.now() - dob.getTime();
+    const ageDt = new Date(diffMs);
+    return Math.abs(ageDt.getUTCFullYear() - 1970);
+  };
 
-  const handleAction = (direction) => {
-    setSwipeDirection(direction);
-
-    setTimeout(() => {
-      setSwipeDirection(null);
-      if (direction === "right" || direction === "up") {
-        setMatchModal(currentProfile);
-      } else {
-        setCurrentIndex((prev) => prev + 1);
+  const getParsedPreferences = (pref) => {
+    if (!pref) return {};
+    if (typeof pref === "object") return pref;
+    if (typeof pref === "string") {
+      try {
+        return JSON.parse(pref);
+      } catch (_) {
+        return {};
       }
-    }, 300);
+    }
+    return {};
+  };
+
+  // Fetch real users from DB via usersServices (ONLY Database Users)
+  const fetchDiscoverProfiles = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllUsers();
+      if (res.data?.users && Array.isArray(res.data.users)) {
+        const currentUserId = currentUser?.id;
+
+        // Strictly real users from database (excluding logged-in user and suspended accounts)
+        const realUsers = res.data.users
+          .filter((u) => u.id !== currentUserId && u.status !== "suspended")
+          .map((u) => {
+            const p = u.profile || {};
+            const prefs = getParsedPreferences(p.partner_preferences);
+
+            // 1. Interests (STRICT DB ONLY - NO MOCK FALLBACK)
+            let parsedInterests = [];
+            if (u.interest) {
+              try {
+                const parsed =
+                  typeof u.interest === "string"
+                    ? JSON.parse(u.interest)
+                    : u.interest;
+                if (Array.isArray(parsed)) {
+                  parsedInterests = parsed.filter(Boolean);
+                } else if (typeof parsed === "string") {
+                  parsedInterests = parsed
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                }
+              } catch (_) {
+                if (typeof u.interest === "string") {
+                  parsedInterests = u.interest
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                }
+              }
+            }
+
+            // 2. Profile Image (STRICT DB ONLY)
+            const rawImg = p.profile_picture || u.profile_image || null;
+
+            // 3. Age (STRICT DB ONLY)
+            const calculatedAge =
+              u.age || (p.date_of_birth ? calculateAge(p.date_of_birth) : null);
+
+            // 4. Gender (STRICT DB ONLY)
+            const userGender = (p.gender || u.gender || "").toLowerCase();
+
+            // 5. Location (STRICT DB ONLY)
+            let locString = "";
+            if (p.city && p.country) locString = `${p.city}, ${p.country}`;
+            else if (p.city) locString = p.city;
+            else if (p.country) locString = p.country;
+
+            return {
+              id: u.id,
+              name: p.full_name || u.name || "",
+              age: calculatedAge,
+              gender: userGender,
+              image: rawImg,
+              profession: prefs.profession || "",
+              education: prefs.education || "",
+              location: locString,
+              city: p.city || "",
+              state: p.state || "",
+              country: p.country || "",
+              bio: p.about_me || "",
+              interests: parsedInterests,
+              lifestyle: prefs.lifestyle || null,
+              height: prefs.height || "",
+              verified: Boolean(u.status === "active"),
+              rawUser: u,
+            };
+          });
+
+        // ONLY DB users are set into state
+        setDbProfiles(realUsers);
+      } else {
+        setDbProfiles([]);
+      }
+    } catch (err) {
+      console.error("Could not fetch real database users:", err);
+      setDbProfiles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDiscoverProfiles();
+  }, []);
+
+  const filteredProfiles = dbProfiles.filter((item) => {
+    if (filterGender === "women") {
+      if (item.gender !== "female" && item.gender !== "woman") return false;
+    } else if (filterGender === "men") {
+      if (item.gender !== "male" && item.gender !== "man") return false;
+    } else if (filterGender === "others") {
+      if (item.gender === "female" || item.gender === "male") return false;
+    }
+
+    if (filterVerified && !item.verified) {
+      return false;
+    }
+    if (categoryFilter === "verified" && !item.verified) return false;
+    if (categoryFilter === "nearby" && item.city && currentUser?.profile?.city) {
+      if (
+        item.city.toLowerCase() !== currentUser.profile.city.toLowerCase()
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  const currentProfile =
+    filteredProfiles.length > 0
+      ? filteredProfiles[currentIndex % filteredProfiles.length]
+      : null;
+
+  const isDeckCompleted =
+    filteredProfiles.length > 0 && currentIndex >= filteredProfiles.length;
+
+  const handleAction = async (direction) => {
+    if (!currentProfile || actionLoading) return;
+
+    setSwipeDirection(direction);
+    setActionLoading(true);
+
+    try {
+      if (direction === "right" || direction === "up") {
+        if (currentProfile?.id) {
+          try {
+            const res = await likeUser(currentProfile.id);
+            if (res.data?.matched) {
+              setMatchModal(currentProfile);
+            }
+          } catch (likeErr) {
+            // Silently handle if already liked or network error
+          }
+        }
+      }
+    } finally {
+      setTimeout(() => {
+        setSwipeDirection(null);
+        setActionLoading(false);
+        setCurrentIndex((prev) => prev + 1);
+      }, 300);
+    }
   };
 
   const handleRewind = () => {
@@ -105,10 +232,22 @@ export default function Discover() {
     }
   };
 
+  const handleResetDeck = () => {
+    setCurrentIndex(0);
+    fetchDiscoverProfiles();
+  };
+
   return (
-    <DashboardLayout activeTab="discover">
-      <div className="w-full flex flex-col items-center animate-fadeIn">
-        <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <DashboardLayout
+      activeTab="discover"
+      filterGender={filterGender}
+      setFilterGender={setFilterGender}
+      filterVerified={filterVerified}
+      setFilterVerified={setFilterVerified}
+    >
+      <div className="w-full flex flex-col items-center animate-fadeIn select-none">
+        {/* HEADER SECTION */}
+        <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
               <span>Discover</span>
@@ -118,91 +257,186 @@ export default function Discover() {
               Find amazing genuine people around you
             </p>
           </div>
-        </div>
-        <div className="relative w-full max-w-[440px] h-[520px] flex items-center justify-center my-2">
-          <div className="absolute w-[92%] h-[480px] bg-slate-200/70 rounded-[32px] transform -rotate-6 scale-95 opacity-50 shadow-md blur-[1px] pointer-events-none" />
-          <div className="absolute w-[95%] h-[500px] bg-slate-300/60 rounded-[32px] transform rotate-3 scale-98 opacity-75 shadow-lg pointer-events-none" />
-          <div
-            className={`relative w-full h-[520px] rounded-[32px] overflow-hidden bg-[#17151A] shadow-2xl shadow-purple-950/20 border-2 border-[#FFFFFF]/90 transition-all duration-300 ${
-              swipeDirection === "right"
-                ? "translate-x-full rotate-12 opacity-0"
-                : swipeDirection === "left"
-                  ? "-translate-x-full -rotate-12 opacity-0"
-                  : swipeDirection === "up"
-                    ? "-translate-y-full scale-105 opacity-0"
-                    : "translate-x-0 rotate-0 opacity-100"
-            }`}
-          >
-            <img
-              src={currentProfile.image}
-              alt={currentProfile.name}
-              className="w-full h-full object-cover object-top"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/95 via-[#17151A]/40 to-transparent pointer-events-none" />
-            <button
-              type="button"
-              onClick={() => handleAction("up")}
-              className="absolute right-4 bottom-[225px] z-30 px-3.5 py-2 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] text-xs font-extrabold shadow-lg shadow-pink-500/40 flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            >
-              <Star className="w-4 h-4 fill-[#FFFFFF]" />
-              <span>Super Like</span>
-            </button>
 
-            <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 text-[#FFFFFF] z-20 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md">
-                    {currentProfile.name}, {currentProfile.age}
-                  </h2>
-                  <span className="w-5 h-5 rounded-full bg-[#0095F6] text-[#FFFFFF] flex items-center justify-center text-[10px] font-black shadow-xs">
-                    ✓
-                  </span>
-                </div>
-                <span className="px-3 py-1 rounded-full bg-[#FFFFFF]/20 backdrop-blur-md text-[#FFFFFF] text-xs font-bold border border-[#FFFFFF]/20 flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-pink-300" />
-                  <span>{currentProfile.location}</span>
-                </span>
-              </div>
-
-              <div className="space-y-0.5 text-xs text-slate-200 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5 text-pink-400 shrink-0" />
-                  <span className="truncate">{currentProfile.profession}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-pink-400 shrink-0" />
-                  <span className="truncate">{currentProfile.education}</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {currentProfile.interests.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 rounded-lg bg-[#FFFFFF]/15 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FFFFFF]/15"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {currentProfile.moreInterestsCount > 0 && (
-                  <span className="px-2.5 py-1 rounded-lg bg-[#FF2D72]/40 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FF2D72]/40">
-                    +{currentProfile.moreInterestsCount}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs text-slate-300 leading-snug line-clamp-2 pt-1 font-normal">
-                {currentProfile.bio}
-              </p>
-            </div>
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-slate-200/80 shadow-2xs self-start sm:self-auto">
+            {[
+              { id: "all", label: "All" },
+              { id: "nearby", label: "Nearby" },
+              { id: "verified", label: "Verified" },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setCategoryFilter(cat.id);
+                  setCurrentIndex(0);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  categoryFilter === cat.id
+                    ? "bg-[#FF2D72] text-white shadow-2xs"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 z-30">
+        {/* LOADING STATE */}
+        {loading ? (
+          <div className="w-full max-w-[440px] h-[520px] rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center space-y-3 my-2">
+            <Loader2 className="w-10 h-10 text-[#FF2D72] animate-spin" />
+            <p className="text-xs font-bold text-slate-500">
+              Loading profiles from database...
+            </p>
+          </div>
+        ) : filteredProfiles.length === 0 || isDeckCompleted ? (
+          /* ALL PROFILES SWIPED / EMPTY STATE */
+          <div className="w-full max-w-[440px] h-[520px] rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center p-6 text-center space-y-4 my-2">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FF2D72]/15 to-[#7C3AED]/15 flex items-center justify-center text-4xl shadow-inner">
+              ✨
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-[#17151A]">
+                No More Profiles Found
+              </h3>
+            
+            </div>
+            <button
+              type="button"
+              onClick={handleResetDeck}
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md shadow-pink-500/30 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Discover Again</span>
+            </button>
+          </div>
+        ) : (
+          /* PROFILE SWIPING DECK */
+          <div className="relative w-full max-w-[440px] h-[520px] flex items-center justify-center my-2">
+            {/* Background Layer Stacks */}
+            <div className="absolute w-[92%] h-[480px] bg-slate-200/70 rounded-[32px] transform -rotate-6 scale-95 opacity-50 shadow-md blur-[1px] pointer-events-none" />
+            <div className="absolute w-[95%] h-[500px] bg-slate-300/60 rounded-[32px] transform rotate-3 scale-98 opacity-75 shadow-lg pointer-events-none" />
+
+            {/* Top Active Profile Card */}
+            <div
+              className={`relative w-full h-[520px] rounded-[32px] overflow-hidden bg-[#17151A] shadow-2xl shadow-purple-950/20 border-2 border-[#FFFFFF]/90 transition-all duration-300 ${
+                swipeDirection === "right"
+                  ? "translate-x-full rotate-12 opacity-0"
+                  : swipeDirection === "left"
+                    ? "-translate-x-full -rotate-12 opacity-0"
+                    : swipeDirection === "up"
+                      ? "-translate-y-full scale-105 opacity-0"
+                      : "translate-x-0 rotate-0 opacity-100"
+              }`}
+            >
+              {/* Profile Main Picture from Database or Initial Card */}
+              {currentProfile.image ? (
+                <img
+                  src={currentProfile.image}
+                  alt={currentProfile.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-4xl font-black text-white shadow-xl shadow-pink-500/20">
+                    {(currentProfile.name || "U").charAt(0).toUpperCase()}
+                  </div>
+                  <span className="mt-3 text-base font-bold text-slate-200">
+                    {currentProfile.name}
+                  </span>
+                </div>
+              )}
+
+              {/* Ambient Bottom Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/95 via-[#17151A]/40 to-transparent pointer-events-none" />
+
+              {/* Profile Card Bottom Info (STRICT DB ONLY) */}
+              <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 text-[#FFFFFF] z-20 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md">
+                      {currentProfile.name}
+                      {currentProfile.age ? `, ${currentProfile.age}` : ""}
+                    </h2>
+                    {currentProfile.verified && (
+                      <span className="w-5 h-5 rounded-full bg-[#0095F6] text-[#FFFFFF] flex items-center justify-center text-[10px] font-black shadow-xs">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  {currentProfile.location ? (
+                    <span className="px-3 py-1 rounded-full bg-[#FFFFFF]/20 backdrop-blur-md text-[#FFFFFF] text-xs font-bold border border-[#FFFFFF]/20 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-pink-300" />
+                      <span>{currentProfile.location}</span>
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Profession & Education (Only show if present in DB) */}
+                <div className="space-y-0.5 text-xs text-slate-200 font-medium">
+                  {currentProfile.profession ? (
+                    <div className="flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <span className="truncate">
+                        {currentProfile.profession}
+                      </span>
+                    </div>
+                  ) : null}
+                  {currentProfile.education ? (
+                    <div className="flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <span className="truncate">
+                        {currentProfile.education}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Interest Chips (Only show if present in DB) */}
+                {Array.isArray(currentProfile.interests) &&
+                  currentProfile.interests.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {currentProfile.interests.slice(0, 4).map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-lg bg-[#FFFFFF]/15 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FFFFFF]/15"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {currentProfile.interests.length > 4 && (
+                        <span className="px-2.5 py-1 rounded-lg bg-[#FF2D72]/40 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FF2D72]/40">
+                          +{currentProfile.interests.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                {/* Bio (Only show if present in DB) */}
+                {currentProfile.bio ? (
+                  <p className="text-xs text-slate-300 leading-snug line-clamp-2 pt-1 font-normal">
+                    {currentProfile.bio}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BOTTOM ACTION BUTTONS CONTROLS */}
+        <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 z-30">
+          {/* Rewind */}
           <div className="flex flex-col items-center gap-1">
             <button
               type="button"
               onClick={handleRewind}
-              className="w-12 h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+              disabled={currentIndex === 0}
+              className={`w-12 h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+                currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               title="Rewind"
             >
               <RotateCcw className="w-5 h-5" />
@@ -210,6 +444,7 @@ export default function Discover() {
             <span className="text-[10px] font-bold text-slate-600">Rewind</span>
           </div>
 
+          {/* Dislike */}
           <div className="flex flex-col items-center gap-1">
             <button
               type="button"
@@ -217,13 +452,14 @@ export default function Discover() {
               className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
               title="Dislike"
             >
-              <X className="w-7 h-7 stroke-[3]" />
+              <PlayingCardsFan className="w-7 h-7 " />
             </button>
             <span className="text-[10px] font-bold text-slate-600">
-              Dislike
+              Swip
             </span>
           </div>
 
+          {/* Like */}
           <div className="flex flex-col items-center gap-1">
             <button
               type="button"
@@ -236,6 +472,7 @@ export default function Discover() {
             <span className="text-[10px] font-bold text-[#FF2D72]">Like</span>
           </div>
 
+          {/* Super Like */}
           <div className="flex flex-col items-center gap-1">
             <button
               type="button"
@@ -250,10 +487,207 @@ export default function Discover() {
             </span>
           </div>
         </div>
+
+        {/* FULL USER PROFILE DETAIL MODAL (Connect with UserProfile) */}
+        {profileModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto scrollbar-none border border-slate-200 shadow-2xl relative">
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setProfileModal(null)}
+                className="absolute top-4 right-4 z-40 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Cover Photo & Avatar Header */}
+              <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden">
+                {profileModal.image ? (
+                  <img
+                    src={profileModal.image}
+                    alt={profileModal.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-3xl font-black text-white shadow-xl">
+                      {(profileModal.name || "U").charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-4 left-5 right-5 text-white">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-black">
+                      {profileModal.name}
+                      {profileModal.age ? `, ${profileModal.age}` : ""}
+                    </h3>
+                    {profileModal.verified && (
+                      <span className="w-5 h-5 rounded-full bg-[#0095F6] text-white flex items-center justify-center text-[10px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  {profileModal.location ? (
+                    <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-pink-400" />
+                      <span>{profileModal.location}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Profile Details Content (STRICT DB ONLY) */}
+              <div className="p-6 space-y-5 text-left">
+                {/* About Me */}
+                {profileModal.bio ? (
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                      About Me
+                    </h4>
+                    <p className="text-sm text-slate-700 leading-relaxed font-normal bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      {profileModal.bio}
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Work & Education */}
+                {(profileModal.profession || profileModal.education) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {profileModal.profession && (
+                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-pink-100 text-[#FF2D72] flex items-center justify-center shrink-0">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Profession
+                          </p>
+                          <p className="text-xs font-extrabold text-[#17151A] truncate">
+                            {profileModal.profession}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileModal.education && (
+                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-[#7C3AED] flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Education
+                          </p>
+                          <p className="text-xs font-extrabold text-[#17151A] truncate">
+                            {profileModal.education}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Lifestyle & Details */}
+                {profileModal.lifestyle && (
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                      Lifestyle & Habits
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {profileModal.lifestyle.diet && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <Utensils className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="font-semibold text-slate-700 truncate">
+                            {profileModal.lifestyle.diet}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.drinking && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <Wine className="w-3.5 h-3.5 text-purple-500" />
+                          <span className="font-semibold text-slate-700 truncate">
+                            {profileModal.lifestyle.drinking}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.smoking && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <Cigarette className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="font-semibold text-slate-700 truncate">
+                            {profileModal.lifestyle.smoking}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.pets && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <PawPrint className="w-3.5 h-3.5 text-rose-500" />
+                          <span className="font-semibold text-slate-700 truncate">
+                            {profileModal.lifestyle.pets}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Passions & Interests */}
+                {Array.isArray(profileModal.interests) &&
+                  profileModal.interests.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                        Interests & Passions
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {profileModal.interests.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1.5 rounded-full bg-pink-50 text-[#FF2D72] text-xs font-bold border border-pink-100"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Quick Action Buttons inside modal */}
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileModal(null);
+                      handleAction("left");
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-extrabold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Pass</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileModal(null);
+                      handleAction("right");
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md shadow-pink-500/20 hover:brightness-105 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Heart className="w-4 h-4 fill-white" />
+                    <span>Connect & Like</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MATCH POPUP MODAL */}
         {matchModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fadeIn">
             <div className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl">
-              <div className="text-4xl animate-bounce"> </div>
+              <div className="text-4xl animate-bounce">💖</div>
               <div>
                 <h3 className="text-2xl font-black text-[#17151A]">
                   It's a Match!
@@ -265,7 +699,7 @@ export default function Discover() {
 
               <div className="flex items-center justify-center gap-3 py-2">
                 <img
-                  src={rheaImg}
+                  src={currentUser?.profile_image || rheaImg}
                   alt="You"
                   className="w-16 h-16 rounded-full object-cover border-4 border-[#FF2D72] shadow-md"
                 />
@@ -273,6 +707,10 @@ export default function Discover() {
                 <img
                   src={matchModal.image}
                   alt={matchModal.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = ananyaImg;
+                  }}
                   className="w-16 h-16 rounded-full object-cover border-4 border-[#7C3AED] shadow-md"
                 />
               </div>
@@ -282,7 +720,6 @@ export default function Discover() {
                   type="button"
                   onClick={() => {
                     setMatchModal(null);
-                    setCurrentIndex((prev) => prev + 1);
                     navigate("/messages");
                   }}
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-extrabold text-xs shadow-md cursor-pointer hover:brightness-105"
@@ -293,7 +730,6 @@ export default function Discover() {
                   type="button"
                   onClick={() => {
                     setMatchModal(null);
-                    setCurrentIndex((prev) => prev + 1);
                   }}
                   className="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
                 >

@@ -41,7 +41,7 @@ const COLORS = {
   blue: '#3B82F6',
 };
 
-export default function ProfilesManagement() {
+export default function Profiles() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Profiles');
   const [selectedTabFilter, setSelectedTabFilter] = useState('All');
@@ -283,13 +283,22 @@ export default function ProfilesManagement() {
     },
   ];
 
-  const currentSelected = selectedProfile || profilesData[0];
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredData = profilesData.filter((item) => {
     if (selectedTabFilter === 'All') return true;
     if (selectedTabFilter === 'Verified') return item.isVerified;
     return item.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  const currentSelected = selectedProfile || paginatedData[0] || profilesData[0];
 
   return (
     <div style={{ backgroundColor: COLORS.background, color: COLORS.dark }} className="h-screen font-sans flex flex-col overflow-hidden">
@@ -432,7 +441,7 @@ export default function ProfilesManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filteredData.map((item) => {
+                  {paginatedData.map((item) => {
                     const isSelected = currentSelected.id === item.id;
                     return (
                       <tr
@@ -542,27 +551,56 @@ export default function ProfilesManagement() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
-                <span>Showing 1 to 6 of 22,840 profiles</span>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
+                <span>
+                  Showing {filteredData.length > 0 ? startIndex + 1 : 0} to{" "}
+                  {endIndex} of {filteredData.length} profiles
+                </span>
                 <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
                   </select>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={validCurrentPage <= 1}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Previous Page"
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                          validCurrentPage === pageNum
+                            ? "text-white shadow-xs"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        style={validCurrentPage === pageNum ? { backgroundColor: COLORS.pink } : {}}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
                     <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={validCurrentPage >= totalPages}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Next Page"
                     >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>

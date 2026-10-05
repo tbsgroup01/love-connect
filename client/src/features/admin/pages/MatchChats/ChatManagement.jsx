@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MessageSquare,
   MessageCircle,
@@ -528,6 +528,8 @@ export default function ChatManagement() {
     initialConversationsData,
   );
   const [selectedChatIds, setSelectedChatIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const currentSelected =
     selectedChat && conversationsData.some((c) => c.id === selectedChat.id)
@@ -544,15 +546,25 @@ export default function ChatManagement() {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredConversations.length / itemsPerPage));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredConversations.length);
+  const paginatedConversations = filteredConversations.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const isAllSelected =
-    filteredConversations.length > 0 &&
-    filteredConversations.every((item) => selectedChatIds.includes(item.id));
+    paginatedConversations.length > 0 &&
+    paginatedConversations.every((item) => selectedChatIds.includes(item.id));
 
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedChatIds([]);
     } else {
-      setSelectedChatIds(filteredConversations.map((item) => item.id));
+      setSelectedChatIds(paginatedConversations.map((item) => item.id));
     }
   };
 
@@ -713,7 +725,7 @@ export default function ChatManagement() {
                         </td>
                       </tr>
                     ) : (
-                      filteredConversations.map((item) => {
+                      paginatedConversations.map((item) => {
                         const isSelected =
                           currentSelected && currentSelected.id === item.id;
                         const isChecked = selectedChatIds.includes(item.id);
@@ -815,38 +827,57 @@ export default function ChatManagement() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-400">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
                 <span>
-                  Showing {filteredConversations.length > 0 ? 1 : 0} to{" "}
-                  {filteredConversations.length} of {conversationsData.length}{" "}
+                  Showing {filteredConversations.length > 0 ? startIndex + 1 : 0} to{" "}
+                  {endIndex} of {filteredConversations.length}{" "}
                   conversations
                 </span>
                 <div className="flex items-center gap-2">
-                  <select className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none">
-                    <option>10 per page</option>
-                    <option>25 per page</option>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
                   </select>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={validCurrentPage <= 1}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Previous Page"
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                          validCurrentPage === pageNum
+                            ? "text-white shadow-xs"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        style={validCurrentPage === pageNum ? { backgroundColor: COLORS.pink } : {}}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
                     <button
-                      className="w-6 h-6 rounded-lg font-bold text-white text-xs flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.pink }}
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={validCurrentPage >= totalPages}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Next Page"
                     >
-                      1
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="w-6 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      3
-                    </button>
-                    <span className="text-gray-400">...</span>
-                    <button className="w-7 h-6 rounded-lg font-bold text-gray-600 text-xs flex items-center justify-center hover:bg-gray-100">
-                      5,679
-                    </button>
-                    <button className="p-1 rounded-lg hover:bg-gray-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>

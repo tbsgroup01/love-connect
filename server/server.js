@@ -1,4 +1,5 @@
 import express from "express";
+import http from "http";
 import cors from "cors";
 import path from "path";
 import "dotenv/config";
@@ -13,10 +14,13 @@ import activitiesRoutes from "./src/routes/activitiesRoutes.js";
 import usersRoutes from "./src/routes/usersRoutes.js";
 import supportRoutes from "./src/routes/supportRoutes.js";
 import paymentRoutes from "./src/routes/paymentsRoutes.js";      
+import subscriptionsRoutes from "./src/routes/subscriptionsRoutes.js";
 import settingsRoutes from "./src/routes/settingsRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
 import likesRoutes from "./src/routes/likesRoutes.js";
 import matchesRoutes from "./src/routes/matchesRoutes.js";
+import chatsRoutes from "./src/routes/chatsRoutes.js";
+import { initializeSocket } from "./src/config/socket.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -68,20 +72,23 @@ app.use("/api/activities", activitiesRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/subscriptions", subscriptionsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/likes", likesRoutes);
-app.use("/api/matches", matchesRoutes );
+app.use("/api/matches", matchesRoutes);
+app.use("/api/chats", chatsRoutes);
 
-
+const server = http.createServer(app);
+initializeSocket(server);
 
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({alter:false})
+    await sequelize.sync({ alter: false });
     console.log("MySQL database connected successfully");
 
-    app.listen(PORT, "0.0.0.0", () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   } catch (error) {

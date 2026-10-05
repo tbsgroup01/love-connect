@@ -3,7 +3,6 @@ import razorpay from "../config/razorpay.js";
 import { Transactions, Users, Plans, Subscriptions } from "../models/index.js";
 import { Op } from "sequelize";
 
-
 export const createOrder = async (req, res) => {
   try {
     const { amount, plan_id } = req.body;
@@ -13,15 +12,40 @@ export const createOrder = async (req, res) => {
         message: "Valid amount is required to create Razorpay order.",
       });
     }
+
+    if (!plan_id) {
+      return res.status(400).json({
+        message: "Plan ID is required.",
+      });
+    }
+
+    const plan =
+      (await Plans.findOne({ where: { plan_id } })) ||
+      (await Plans.findByPk(plan_id));
+
+    if (!plan) {
+      return res.status(404).json({
+        message: "Plan not found.",
+      });
+    }
+
+    if (Number(plan.price) !== Number(amount)) {
+      return res.status(400).json({
+        message: "Payment amount does not match the selected plan.",
+      });
+    }
+
     const options = {
-      amount: Math.round(Number(amount) * 100), 
+      amount: Math.round(Number(plan.price) * 100),
       currency: "INR",
       receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       notes: {
-        plan_id: plan_id ? String(plan_id) : "",
+        plan_id: String(plan.id),
       },
     };
+
     const order = await razorpay.orders.create(options);
+
     return res.status(201).json({
       message: "Razorpay order created successfully",
       order,
@@ -55,7 +79,44 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
+    if (!user_id) {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
+    }
+
+    if (!plan_id) {
+      return res.status(400).json({
+        message: "Plan ID is required",
+      });
+    }
+
+    const user = await Users.findByPk(user_id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const targetPlan =
+      (await Plans.findOne({ where: { plan_id } })) ||
+      (await Plans.findByPk(plan_id));
+
+    if (!targetPlan) {
+      return res.status(404).json({
+        message: "Plan not found",
+      });
+    }
+
+    if (Number(targetPlan.price) !== Number(amount)) {
+      return res.status(400).json({
+        message: "Payment amount does not match the selected plan.",
+      });
+    }
+
     const body = razorpay_order_id + "|" + razorpay_payment_id;
+
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
@@ -67,57 +128,90 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    let targetUserId = user_id;
-    if (!targetUserId) {
-      const firstUser = await Users.findOne();
-      targetUserId = firstUser ? firstUser.id : 1;
-    }
-    let targetPlan = null;
-    if (plan_id) {
-      targetPlan =
-        (await Plans.findOne({ where: { plan_id: plan_id } })) ||
-        (await Plans.findByPk(plan_id));
-    }
-    if (!targetPlan && amount) {
-      targetPlan = await Plans.findOne({
-        where: { price: Number(amount) },
+    const existingTransaction = await Transactions.findOne({
+      where: {
+        transaction_id: razorpay_payment_id,
+      },
+    });
+
+    if (existingTransaction) {
+      return res.status(400).json({
+        message: "Payment has already been processed.",
       });
     }
 
-    const finalPrice = Math.round(Number(amount || targetPlan?.price || 0));
-    const planName = targetPlan ? targetPlan.name : "Premium Access";
+    const finalPrice = Number(amount);
+
     const transaction = await Transactions.create({
-      user_id: targetUserId,
-      plan_id: targetPlan ? targetPlan.id : 11,
+      user_id,
+      plan_id: targetPlan.id,
       amount: finalPrice,
       discount_amount: 0,
       final_amount: finalPrice,
       status: "success",
       transaction_id: razorpay_payment_id,
       order_id: razorpay_order_id,
-      payment_method: payment_method || "UPI / Card",
+      payment_method,
       currency: "INR",
-      description: `${planName} Subscription Purchase via Razorpay`,
+      description: `${targetPlan.name} Subscription Purchase via Razorpay`,
     });
-    const durationDays = targetPlan?.duration || 30;
-    const startDate = new Date();
-    const endDate = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
-    await Subscriptions.update(
-      { status: "inactive" },
-      { where: { user_id: targetUserId, status: "active" } }
-    );
+    const now = new Date();
+
+    const activeSubscription = await Subscriptions.findOne({
+      where: {
+        user_id,
+        status: "active",
+      },
+    });
+
+    let startDate = now;
+    let endDate;
+    let isUpgrade = false;
+
+    if (
+      activeSubscription &&
+      new Date(activeSubscription.end_date) > now
+    ) {
+      isUpgrade = true;
+
+      const oldEndDate = new Date(activeSubscription.end_date);
+
+      endDate = new Date(oldEndDate);
+
+      endDate.setDate(
+        endDate.getDate() + Number(targetPlan.duration)
+      );
+
+      await activeSubscription.update({
+        status: "inactive",
+      });
+    } else {
+      endDate = new Date(now);
+
+      endDate.setDate(
+        endDate.getDate() + Number(targetPlan.duration)
+      );
+
+      if (activeSubscription) {
+        await activeSubscription.update({
+          status: "inactive",
+        });
+      }
+    }
 
     const subscription = await Subscriptions.create({
-      user_id: targetUserId,
-      plan_id: targetPlan ? targetPlan.id : 11,
+      user_id,
+      plan_id: targetPlan.id,
       status: "active",
       start_date: startDate,
       end_date: endDate,
     });
 
     return res.status(200).json({
-      message: "Payment verified and subscription activated successfully!",
+      message: isUpgrade
+        ? "Payment verified and plan upgraded successfully!"
+        : "Payment verified and plan activated successfully!",
       transaction,
       subscription,
       paymentId: razorpay_payment_id,
@@ -133,16 +227,18 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-
 export const getTransactions = async (req, res) => {
   try {
     const { search, status } = req.query;
     const whereClause = {};
+
     if (status && status !== "All") {
       whereClause.status = status.toLowerCase();
     }
+
     if (search && search.trim()) {
       const q = `%${search.trim()}%`;
+
       whereClause[Op.or] = [
         { transaction_id: { [Op.like]: q } },
         { order_id: { [Op.like]: q } },
@@ -150,6 +246,7 @@ export const getTransactions = async (req, res) => {
         { description: { [Op.like]: q } },
       ];
     }
+
     const transactions = await Transactions.findAll({
       where: whereClause,
       include: [
@@ -166,7 +263,11 @@ export const getTransactions = async (req, res) => {
       ],
       order: [["createdAt", "DESC"]],
     });
-    const total = await Transactions.count();
+
+    const total = await Transactions.count({
+      where: whereClause,
+    });
+
     return res.status(200).json({
       message: "Transactions fetched successfully",
       transactions,
@@ -174,6 +275,7 @@ export const getTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching transactions:", error);
+
     return res.status(500).json({
       message: "Internal server error while fetching transactions",
       error: error.message,
@@ -181,10 +283,10 @@ export const getTransactions = async (req, res) => {
   }
 };
 
-
 export const deleteTransaction = async (req, res) => {
   try {
     const { id } = req.params;
+
     const transaction = await Transactions.findByPk(id);
 
     if (!transaction) {
@@ -192,12 +294,15 @@ export const deleteTransaction = async (req, res) => {
         message: "Transaction not found",
       });
     }
+
     await transaction.destroy();
+
     return res.status(200).json({
       message: "Transaction deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting transaction:", error);
+
     return res.status(500).json({
       message: "Internal server error while deleting transaction",
       error: error.message,
