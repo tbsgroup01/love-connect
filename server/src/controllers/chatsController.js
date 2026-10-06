@@ -5,6 +5,8 @@ import {
   Matches,
   Users,
   Profiles,
+  Subscriptions,
+  Plans,
 } from "../models/index.js";
 import { getIO } from "../config/socket.js";
 
@@ -23,7 +25,7 @@ export const getUserConversations = async (req, res) => {
         {
           model: Users,
           as: "userOne",
-          attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+          attributes: ["id", "user_id", "name", "email"],
           include: [
             {
               model: Profiles,
@@ -35,7 +37,7 @@ export const getUserConversations = async (req, res) => {
         {
           model: Users,
           as: "userTwo",
-          attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+          attributes: ["id", "user_id", "name", "email"],
           include: [
             {
               model: Profiles,
@@ -76,6 +78,53 @@ export const getUserConversations = async (req, res) => {
   }
 };
 
+// Reusable helper: Validate if user has permission to chat (enforces 1-chat limit for Free Starter plan)
+export const validateUserChatPermission = async (userId, targetConversationId = null) => {
+  const activeSub = await Subscriptions.findOne({
+    where: {
+      user_id: userId,
+      status: "active",
+    },
+    include: [{ model: Plans, as: "plan" }],
+    order: [["createdAt", "DESC"]],
+  });
+
+  const isPaidUser = Boolean(
+    activeSub &&
+    Number(activeSub.plan?.price) > 0 &&
+    new Date(activeSub.end_date) > new Date()
+  );
+
+  // Paid users have unlimited chat access
+  if (isPaidUser) {
+    return { allowed: true };
+  }
+
+  // Free Starter user: limit to 1 conversation only
+  const userConversations = await Conversation.findAll({
+    where: {
+      [Op.or]: [{ user_one_id: userId }, { user_two_id: userId }],
+    },
+    order: [["createdAt", "ASC"]],
+  });
+
+  if (userConversations.length > 0) {
+    const allowedConvId = Number(userConversations[0].id);
+    const isTargetAllowed =
+      targetConversationId && Number(targetConversationId) === allowedConvId;
+
+    if (!isTargetAllowed) {
+      return {
+        allowed: false,
+        message:
+          "Free Starter plan allows chat with only 1 user. Please upgrade to a Premium plan to chat with multiple people.",
+      };
+    }
+  }
+
+  return { allowed: true };
+};
+
 export const getOrCreateConversation = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -113,15 +162,40 @@ export const getOrCreateConversation = async (req, res) => {
         {
           model: Users,
           as: "userOne",
-          attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+          attributes: ["id", "user_id", "name", "email"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "full_name", "gender", "city", "profile_picture"],
+            },
+          ],
         },
         {
           model: Users,
           as: "userTwo",
-          attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+          attributes: ["id", "user_id", "name", "email"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "full_name", "gender", "city", "profile_picture"],
+            },
+          ],
         },
       ],
     });
+
+    // Enforce 1 user chat limit for Free Starter plan
+    const permission = await validateUserChatPermission(userId, conversation?.id);
+    if (!permission.allowed) {
+      return res.status(403).json({
+        success: false,
+        limitReached: true,
+        upgradeRequired: true,
+        message: permission.message,
+      });
+    }
 
     if (!conversation) {
       conversation = await Conversation.create({
@@ -135,12 +209,26 @@ export const getOrCreateConversation = async (req, res) => {
           {
             model: Users,
             as: "userOne",
-            attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+            attributes: ["id", "user_id", "name", "email"],
+            include: [
+              {
+                model: Profiles,
+                as: "profile",
+                attributes: ["id", "full_name", "gender", "city", "profile_picture"],
+              },
+            ],
           },
           {
             model: Users,
             as: "userTwo",
-            attributes: ["id", "name", "email", "age", "gender", "profile_image"],
+            attributes: ["id", "user_id", "name", "email"],
+            include: [
+              {
+                model: Profiles,
+                as: "profile",
+                attributes: ["id", "full_name", "gender", "city", "profile_picture"],
+              },
+            ],
           },
         ],
       });
@@ -174,7 +262,9 @@ export const getMessages = async (req, res) => {
       });
     }
 
+    const isAdmin = Boolean(req.admin || req.user?.role === "admin");
     const isParticipant =
+      isAdmin ||
       Number(conversation.user_one_id) === Number(userId) ||
       Number(conversation.user_two_id) === Number(userId);
 
@@ -192,7 +282,15 @@ export const getMessages = async (req, res) => {
         {
           model: Users,
           as: "sender",
-          attributes: ["id", "name", "profile_image"],
+          attributes: ["id", "user_id", "name"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "profile_picture"],
+              required: false,
+            },
+          ],
         },
       ],
       order: [["createdAt", "ASC"]],
@@ -246,6 +344,17 @@ export const sendMessage = async (req, res) => {
       });
     }
 
+    // Enforce 1 user chat limit for Free Starter plan
+    const permission = await validateUserChatPermission(userId, conversation_id);
+    if (!permission.allowed) {
+      return res.status(403).json({
+        success: false,
+        limitReached: true,
+        upgradeRequired: true,
+        message: permission.message,
+      });
+    }
+
     const newMessage = await Messages.create({
       conversation_id,
       sender_id: userId,
@@ -260,7 +369,15 @@ export const sendMessage = async (req, res) => {
         {
           model: Users,
           as: "sender",
-          attributes: ["id", "name", "profile_image"],
+          attributes: ["id", "user_id", "name"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "profile_picture"],
+              required: false,
+            },
+          ],
         },
       ],
     });

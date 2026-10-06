@@ -8,7 +8,7 @@ export const getAllMatches = async (req, res) => {
         {
           model: Users,
           as: "userOne",
-          attributes: ["id", "name", "email", "phone", "age", "gender", "interest", "profile_image", "status"],
+          attributes: ["id", "user_id", "name", "email", "phone", "status"],
           include: [
             {
               model: Profiles,
@@ -20,7 +20,7 @@ export const getAllMatches = async (req, res) => {
         {
           model: Users,
           as: "userTwo",
-          attributes: ["id", "name", "email", "phone", "age", "gender", "interest", "profile_image", "status"],
+          attributes: ["id", "user_id", "name", "email", "phone", "status"],
           include: [
             {
               model: Profiles,
@@ -76,7 +76,7 @@ export const getUserMatches = async (req, res) => {
         {
           model: Users,
           as: "userOne",
-          attributes: ["id", "name", "email", "phone", "age", "gender", "interest", "profile_image", "status"],
+          attributes: ["id", "user_id", "name", "email", "phone", "status"],
           include: [
             {
               model: Profiles,
@@ -88,7 +88,7 @@ export const getUserMatches = async (req, res) => {
         {
           model: Users,
           as: "userTwo",
-          attributes: ["id", "name", "email", "phone", "age", "gender", "interest", "profile_image", "status"],
+          attributes: ["id", "user_id", "name", "email", "phone", "status"],
           include: [
             {
               model: Profiles,

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import razorpay from "../config/razorpay.js";
-import { Transactions, Users, Plans, Subscriptions } from "../models/index.js";
+import { Transactions, Users, Plans, Subscriptions, Profiles } from "../models/index.js";
 import { Op } from "sequelize";
 
 export const createOrder = async (req, res) => {
@@ -163,16 +163,26 @@ export const verifyPayment = async (req, res) => {
         user_id,
         status: "active",
       },
+      include: [
+        {
+          model: Plans,
+          as: "plan",
+        },
+      ],
     });
 
     let startDate = now;
     let endDate;
     let isUpgrade = false;
 
-    if (
+    // Only carry forward end_date if previous plan was an active PAID plan
+    const isPreviousPaid =
       activeSubscription &&
-      new Date(activeSubscription.end_date) > now
-    ) {
+      Number(activeSubscription.plan?.price) > 0 &&
+      Number(activeSubscription.plan?.duration) > 0 &&
+      new Date(activeSubscription.end_date) > now;
+
+    if (isPreviousPaid) {
       isUpgrade = true;
 
       const oldEndDate = new Date(activeSubscription.end_date);
@@ -253,7 +263,15 @@ export const getTransactions = async (req, res) => {
         {
           model: Users,
           as: "user",
-          attributes: ["id", "name", "email", "phone", "profile_image"],
+          attributes: ["id", "user_id", "name", "email", "phone"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "profile_picture"],
+              required: false,
+            },
+          ],
         },
         {
           model: Plans,

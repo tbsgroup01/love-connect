@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
-import { Conversation, Messages, Users } from "../models/index.js";
+import { Conversation, Messages, Users, Profiles } from "../models/index.js";
+import { validateUserChatPermission } from "../controllers/chatsController.js";
 
 let io;
 
@@ -74,6 +75,13 @@ export const initializeSocket = (server) => {
           return;
         }
 
+        // Enforce 1 user chat limit for Free Starter plan
+        const permission = await validateUserChatPermission(socket.userId, conversation_id);
+        if (!permission.allowed) {
+          socket.emit("error_message", { message: permission.message });
+          return;
+        }
+
         const newMessage = await Messages.create({
           conversation_id,
           sender_id: socket.userId,
@@ -88,7 +96,15 @@ export const initializeSocket = (server) => {
             {
               model: Users,
               as: "sender",
-              attributes: ["id", "name", "profile_image"],
+              attributes: ["id", "user_id", "name"],
+              include: [
+                {
+                  model: Profiles,
+                  as: "profile",
+                  attributes: ["id", "profile_picture"],
+                  required: false,
+                },
+              ],
             },
           ],
         });

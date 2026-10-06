@@ -1,4 +1,6 @@
-import { Users, Admin, Activities } from "../models/index.js";
+import { Users, Admin, Activities, Profiles } from "../models/index.js";
+import { ensureFreeStarterSubscription } from "./subscriptionsController.js";
+import { calculateCompletion } from "./usersController.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -47,6 +49,11 @@ const userRegister = async (req, res) => {
       password: hashedPassword,
     });
 
+    if (!user.user_id) {
+      user.user_id = user.id;
+      await user.save();
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -80,7 +87,15 @@ const userRegister = async (req, res) => {
       console.error("Failed to record register activity:", actError);
     }
 
+    // Automatically activate Free Starter plan for new user
+    try {
+      await ensureFreeStarterSubscription(user.id);
+    } catch (subError) {
+      console.error("Failed to activate default Free Starter subscription:", subError);
+    }
+
     const { password: removedPassword, ...userData } = user.toJSON();
+    userData.profile_completion = calculateCompletion(userData);
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -266,6 +281,19 @@ const login = async (req, res) => {
     }
 
     const { password: removedPassword, ...userData } = user.toJSON();
+    if (role === "user") {
+      try {
+        const profile = await Profiles.findOne({ where: { user_id: user.id } });
+        if (profile) {
+          userData.profile = profile.toJSON();
+          userData.profile_image = profile.profile_picture || null;
+        }
+      } catch (profErr) {
+        console.error("Failed to load profile on login:", profErr);
+      }
+      userData.profile_completion = calculateCompletion(userData);
+    }
+
     return res.status(200).json({
       message: "Login successful",
       token,

@@ -867,31 +867,6 @@ export default function AdminUsers() {
                           : ""}
                       </span>
                     </div>
-
-                    {/* User Photos Grid */}
-                    <div className="pt-2">
-                      <h4 className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-2">
-                        Uploaded Photos (
-                        {currentSelectedUser.photos?.length || 0})
-                      </h4>
-                      {currentSelectedUser.photos &&
-                      currentSelectedUser.photos.length > 0 ? (
-                        <div className="grid grid-cols-4 gap-2">
-                          {currentSelectedUser.photos.map((photo, pIdx) => (
-                            <img
-                              key={pIdx}
-                              src={photo}
-                              alt="User upload"
-                              className="w-full h-16 rounded-xl object-cover border border-gray-100"
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-400 text-[11px] italic">
-                          No uploaded photos yet
-                        </p>
-                      )}
-                    </div>
                   </div>
                 </div>
 

@@ -7,7 +7,8 @@ import {
   RotateCcw,
   X,
   Heart,
-  Star,
+  Eye,
+  ArrowLeft,
   ShieldCheck,
   Briefcase,
   GraduationCap,
@@ -23,12 +24,10 @@ import {
   PlayingCardsFan,
 } from "lucide-react";
 
-import { getAllUsers } from "../../../services/usersServices.js";
+import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { likeUser } from "../../../services/likesServices.js";
 
 import ananyaImg from "../../../assets/hero_woman.jpg";
-import priyaImg from "../../../assets/priya_profile.jpg";
-import meeraImg from "../../../assets/signup_hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
 
 export default function Discover() {
@@ -37,7 +36,9 @@ export default function Discover() {
   try {
     const saved = localStorage.getItem("user");
     if (saved) currentUser = JSON.parse(saved);
-  } catch (_) {}
+  } catch {
+    currentUser = null;
+  }
   const [filterGender, setFilterGender] = useState("all");
   const [filterVerified, setFilterVerified] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -64,7 +65,7 @@ export default function Discover() {
     if (typeof pref === "string") {
       try {
         return JSON.parse(pref);
-      } catch (_) {
+      } catch {
         return {};
       }
     }
@@ -102,7 +103,7 @@ export default function Discover() {
                     .map((s) => s.trim())
                     .filter(Boolean);
                 }
-              } catch (_) {
+              } catch {
                 if (typeof u.interest === "string") {
                   parsedInterests = u.interest
                     .split(",")
@@ -166,6 +167,17 @@ export default function Discover() {
     fetchDiscoverProfiles();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setProfileModal(null);
+        setMatchModal(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const filteredProfiles = dbProfiles.filter((item) => {
     if (filterGender === "women") {
       if (item.gender !== "female" && item.gender !== "woman") return false;
@@ -212,7 +224,7 @@ export default function Discover() {
             if (res.data?.matched) {
               setMatchModal(currentProfile);
             }
-          } catch (likeErr) {
+          } catch {
             // Silently handle if already liked or network error
           }
         }
@@ -235,6 +247,71 @@ export default function Discover() {
   const handleResetDeck = () => {
     setCurrentIndex(0);
     fetchDiscoverProfiles();
+  };
+
+  const handleViewProfile = async (profile) => {
+    if (!profile) return;
+    setProfileModal(profile);
+    try {
+      const res = await getUserById(profile.id);
+      if (res.data?.success && res.data.user) {
+        const u = res.data.user;
+        const p = u.profile || {};
+        const prefs = getParsedPreferences(p.partner_preferences);
+        const stats = res.data.stats || {};
+
+        let parsedInterests = [];
+        if (u.interest) {
+          try {
+            const parsed =
+              typeof u.interest === "string" ? JSON.parse(u.interest) : u.interest;
+            if (Array.isArray(parsed)) parsedInterests = parsed.filter(Boolean);
+            else if (typeof parsed === "string")
+              parsedInterests = parsed
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+          } catch {
+            if (typeof u.interest === "string")
+              parsedInterests = u.interest
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+          }
+        }
+
+        const calculatedAge =
+          u.age || (p.date_of_birth ? calculateAge(p.date_of_birth) : null);
+        let locString = "";
+        if (p.city && p.country) locString = `${p.city}, ${p.country}`;
+        else if (p.city) locString = p.city;
+        else if (p.country) locString = p.country;
+
+        setProfileModal({
+          ...profile,
+          name: p.full_name || u.name || profile.name,
+          age: calculatedAge ?? profile.age,
+          gender: (p.gender || u.gender || profile.gender || "").toLowerCase(),
+          image: p.profile_picture || u.profile_image || profile.image,
+          profession: prefs.profession || profile.profession || "",
+          education: prefs.education || profile.education || "",
+          location: locString || profile.location,
+          city: p.city || profile.city || "",
+          state: p.state || profile.state || "",
+          country: p.country || profile.country || "",
+          bio: p.about_me || profile.bio || "",
+          interests:
+            parsedInterests.length > 0 ? parsedInterests : profile.interests,
+          lifestyle: prefs.lifestyle || profile.lifestyle,
+          height: prefs.height || profile.height || "",
+          verified: Boolean(u.status === "active"),
+          stats: stats,
+          rawUser: u,
+        });
+      }
+    } catch (err) {
+      console.error("Could not fetch user details:", err);
+    }
   };
 
   return (
@@ -313,6 +390,248 @@ export default function Discover() {
               <span>Discover Again</span>
             </button>
           </div>
+        ) : profileModal ? (
+          /* DETAILED FULL PROFILE VIEW (CONTAINED RIGHT IN THAT CENTER AREA) */
+          <div className="relative w-full max-w-[440px] h-[530px] sm:h-[660px] bg-white rounded-[32px] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col my-2 animate-fadeIn select-text">
+            {/* Top Bar with Back & Close */}
+            <div className="px-4 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-100 flex items-center justify-between z-20 shrink-0">
+              <button
+                type="button"
+                onClick={() => setProfileModal(null)}
+                className="flex items-center gap-1.5 text-xs font-black text-slate-700 hover:text-[#FF2D72] px-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#FF2D72]" />
+                <span>Back to Swiping</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileModal(null)}
+                aria-label="Close profile view"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {/* Cover Photo & Avatar Header */}
+              <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden shrink-0">
+                {profileModal.image ? (
+                  <img
+                    src={profileModal.image}
+                    alt={profileModal.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-3xl font-black text-white shadow-xl">
+                      {(profileModal.name || "U").charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl sm:text-2xl font-black drop-shadow-md">
+                      {profileModal.name}
+                      {profileModal.age ? `, ${profileModal.age}` : ""}
+                    </h3>
+                    {profileModal.verified && (
+                      <span className="w-5 h-5 rounded-full bg-[#0095F6] text-white flex items-center justify-center text-[10px] font-black shadow-xs shrink-0">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  {profileModal.location ? (
+                    <p className="text-xs sm:text-sm text-slate-200 flex items-center gap-1.5 mt-1 font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <span className="truncate">{profileModal.location}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Profile Details Content */}
+              <div className="p-4 sm:p-5 space-y-4 text-left">
+                {/* About Me */}
+                {profileModal.bio ? (
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                      About Me
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      {profileModal.bio}
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Work & Education */}
+                {(profileModal.profession || profileModal.education) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {profileModal.profession && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-pink-100 text-[#FF2D72] flex items-center justify-center shrink-0">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Profession
+                          </p>
+                          <p className="text-xs sm:text-sm font-extrabold text-[#17151A] truncate">
+                            {profileModal.profession}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileModal.education && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-[#7C3AED] flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Education
+                          </p>
+                          <p className="text-xs sm:text-sm font-extrabold text-[#17151A] truncate">
+                            {profileModal.education}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Gender & Height */}
+                {(profileModal.gender || profileModal.height) && (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {profileModal.gender && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-pink-100 text-[#FF2D72] flex items-center justify-center shrink-0">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Gender
+                          </p>
+                          <p className="text-xs sm:text-sm font-extrabold text-[#17151A] capitalize truncate">
+                            {profileModal.gender}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileModal.height && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-[#7C3AED] flex items-center justify-center shrink-0">
+                          <Dumbbell className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            Height
+                          </p>
+                          <p className="text-xs sm:text-sm font-extrabold text-[#17151A] truncate">
+                            {profileModal.height}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Lifestyle & Details */}
+                {profileModal.lifestyle && (
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                      Lifestyle & Habits
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {profileModal.lifestyle.diet && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                          <Utensils className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span className="font-semibold text-slate-700 text-xs truncate">
+                            {profileModal.lifestyle.diet}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.drinking && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                          <Wine className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                          <span className="font-semibold text-slate-700 text-xs truncate">
+                            {profileModal.lifestyle.drinking}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.smoking && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                          <Cigarette className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="font-semibold text-slate-700 text-xs truncate">
+                            {profileModal.lifestyle.smoking}
+                          </span>
+                        </div>
+                      )}
+                      {profileModal.lifestyle.pets && (
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                          <PawPrint className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          <span className="font-semibold text-slate-700 text-xs truncate" title={profileModal.lifestyle.pets}>
+                            {profileModal.lifestyle.pets}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Passions & Interests */}
+                {Array.isArray(profileModal.interests) &&
+                  profileModal.interests.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                        Interests & Passions
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {profileModal.interests.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1.5 rounded-full bg-pink-50 text-[#FF2D72] text-xs font-bold border border-pink-100"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </div>
+
+            {/* Sticky Action Footer */}
+            <div className="p-3 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center gap-2.5 shrink-0 shadow-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileModal(null);
+                  handleAction("left");
+                }}
+                className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+              >
+                <X className="w-4 h-4" />
+                <span>Pass</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileModal(null);
+                  handleAction("right");
+                }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md shadow-pink-500/25 hover:brightness-105 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+              >
+                <Heart className="w-4 h-4 fill-white" />
+                <span>Connect & Like</span>
+              </button>
+            </div>
+          </div>
         ) : (
           /* PROFILE SWIPING DECK */
           <div className="relative w-full max-w-[440px] h-[520px] flex items-center justify-center my-2">
@@ -354,7 +673,11 @@ export default function Discover() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/95 via-[#17151A]/40 to-transparent pointer-events-none" />
 
               {/* Profile Card Bottom Info (STRICT DB ONLY) */}
-              <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 text-[#FFFFFF] z-20 space-y-2">
+              <div
+                className="absolute bottom-0 inset-x-0 p-5 sm:p-6 text-[#FFFFFF] z-20 space-y-2 cursor-pointer"
+                onClick={() => handleViewProfile(currentProfile)}
+                title="Click to view full profile"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md">
@@ -426,270 +749,84 @@ export default function Discover() {
           </div>
         )}
 
-        {/* BOTTOM ACTION BUTTONS CONTROLS */}
-        <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 z-30">
-          {/* Rewind */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              type="button"
-              onClick={handleRewind}
-              disabled={currentIndex === 0}
-              className={`w-12 h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
-                currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              title="Rewind"
-            >
-              <RotateCcw className="w-5 h-5" />
-            </button>
-            <span className="text-[10px] font-bold text-slate-600">Rewind</span>
-          </div>
-
-          {/* Dislike */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleAction("left")}
-              className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-              title="Dislike"
-            >
-              <PlayingCardsFan className="w-7 h-7 " />
-            </button>
-            <span className="text-[10px] font-bold text-slate-600">
-              Swip
-            </span>
-          </div>
-
-          {/* Like */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleAction("right")}
-              className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] flex items-center justify-center shadow-xl shadow-pink-500/40 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-              title="Like"
-            >
-              <Heart className="w-8 h-8 fill-[#FFFFFF]" />
-            </button>
-            <span className="text-[10px] font-bold text-[#FF2D72]">Like</span>
-          </div>
-
-          {/* Super Like */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleAction("up")}
-              className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-amber-500 hover:bg-amber-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-              title="Super Like"
-            >
-              <Star className="w-7 h-7 fill-amber-400 stroke-amber-400" />
-            </button>
-            <span className="text-[10px] font-bold text-slate-600">
-              Super Like
-            </span>
-          </div>
-        </div>
-
-        {/* FULL USER PROFILE DETAIL MODAL (Connect with UserProfile) */}
-        {profileModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
-            <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto scrollbar-none border border-slate-200 shadow-2xl relative">
-              {/* Close Button */}
+        {/* BOTTOM ACTION BUTTONS CONTROLS (Only visible in swipe deck mode) */}
+        {!profileModal && !isDeckCompleted && filteredProfiles.length > 0 && (
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 z-30">
+            {/* Rewind */}
+            <div className="flex flex-col items-center gap-1">
               <button
                 type="button"
-                onClick={() => setProfileModal(null)}
-                className="absolute top-4 right-4 z-40 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-all cursor-pointer"
+                onClick={handleRewind}
+                disabled={currentIndex === 0}
+                className={`w-12 h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+                  currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                title="Rewind"
               >
-                <X className="w-5 h-5" />
+                <RotateCcw className="w-5 h-5" />
               </button>
+              <span className="text-[10px] font-bold text-slate-600">Rewind</span>
+            </div>
 
-              {/* Cover Photo & Avatar Header */}
-              <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden">
-                {profileModal.image ? (
-                  <img
-                    src={profileModal.image}
-                    alt={profileModal.name}
-                    className="w-full h-full object-cover object-top"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-3xl font-black text-white shadow-xl">
-                      {(profileModal.name || "U").charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+            {/* Dislike */}
+            <div className="flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleAction("left")}
+                className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                title="Dislike"
+              >
+                <PlayingCardsFan className="w-7 h-7 " />
+              </button>
+              <span className="text-[10px] font-bold text-slate-600">
+                Swip
+              </span>
+            </div>
 
-                <div className="absolute bottom-4 left-5 right-5 text-white">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-black">
-                      {profileModal.name}
-                      {profileModal.age ? `, ${profileModal.age}` : ""}
-                    </h3>
-                    {profileModal.verified && (
-                      <span className="w-5 h-5 rounded-full bg-[#0095F6] text-white flex items-center justify-center text-[10px] font-bold">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  {profileModal.location ? (
-                    <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-pink-400" />
-                      <span>{profileModal.location}</span>
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+            {/* Like */}
+            <div className="flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleAction("right")}
+                className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] flex items-center justify-center shadow-xl shadow-pink-500/40 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                title="Like"
+              >
+                <Heart className="w-8 h-8 fill-[#FFFFFF]" />
+              </button>
+              <span className="text-[10px] font-bold text-[#FF2D72]">Like</span>
+            </div>
 
-              {/* Profile Details Content (STRICT DB ONLY) */}
-              <div className="p-6 space-y-5 text-left">
-                {/* About Me */}
-                {profileModal.bio ? (
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
-                      About Me
-                    </h4>
-                    <p className="text-sm text-slate-700 leading-relaxed font-normal bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      {profileModal.bio}
-                    </p>
-                  </div>
-                ) : null}
-
-                {/* Work & Education */}
-                {(profileModal.profession || profileModal.education) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {profileModal.profession && (
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-pink-100 text-[#FF2D72] flex items-center justify-center shrink-0">
-                          <Briefcase className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">
-                            Profession
-                          </p>
-                          <p className="text-xs font-extrabold text-[#17151A] truncate">
-                            {profileModal.profession}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {profileModal.education && (
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-[#7C3AED] flex items-center justify-center shrink-0">
-                          <GraduationCap className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">
-                            Education
-                          </p>
-                          <p className="text-xs font-extrabold text-[#17151A] truncate">
-                            {profileModal.education}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Lifestyle & Details */}
-                {profileModal.lifestyle && (
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
-                      Lifestyle & Habits
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                      {profileModal.lifestyle.diet && (
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
-                          <Utensils className="w-3.5 h-3.5 text-emerald-500" />
-                          <span className="font-semibold text-slate-700 truncate">
-                            {profileModal.lifestyle.diet}
-                          </span>
-                        </div>
-                      )}
-                      {profileModal.lifestyle.drinking && (
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
-                          <Wine className="w-3.5 h-3.5 text-purple-500" />
-                          <span className="font-semibold text-slate-700 truncate">
-                            {profileModal.lifestyle.drinking}
-                          </span>
-                        </div>
-                      )}
-                      {profileModal.lifestyle.smoking && (
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
-                          <Cigarette className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="font-semibold text-slate-700 truncate">
-                            {profileModal.lifestyle.smoking}
-                          </span>
-                        </div>
-                      )}
-                      {profileModal.lifestyle.pets && (
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
-                          <PawPrint className="w-3.5 h-3.5 text-rose-500" />
-                          <span className="font-semibold text-slate-700 truncate">
-                            {profileModal.lifestyle.pets}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Passions & Interests */}
-                {Array.isArray(profileModal.interests) &&
-                  profileModal.interests.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
-                        Interests & Passions
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {profileModal.interests.map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1.5 rounded-full bg-pink-50 text-[#FF2D72] text-xs font-bold border border-pink-100"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Quick Action Buttons inside modal */}
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProfileModal(null);
-                      handleAction("left");
-                    }}
-                    className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-extrabold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                    <span>Pass</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProfileModal(null);
-                      handleAction("right");
-                    }}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md shadow-pink-500/20 hover:brightness-105 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Heart className="w-4 h-4 fill-white" />
-                    <span>Connect & Like</span>
-                  </button>
-                </div>
-              </div>
+            {/* View Profile */}
+            <div className="flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleViewProfile(currentProfile)}
+                disabled={!currentProfile}
+                className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-[#7C3AED] hover:bg-purple-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="View Profile"
+              >
+                <Eye className="w-7 h-7 stroke-[#7C3AED]" />
+              </button>
+              <span className="text-[10px] font-bold text-slate-600">
+                View Profile
+              </span>
             </div>
           </div>
         )}
 
         {/* MATCH POPUP MODAL */}
         {matchModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fadeIn">
-            <div className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 animate-fadeIn"
+            onClick={() => setMatchModal(null)}
+          >
+            <div
+              className="bg-[#FFFFFF] rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="text-4xl animate-bounce">💖</div>
               <div>
-                <h3 className="text-2xl font-black text-[#17151A]">
+                <h3 className="text-xl sm:text-2xl font-black text-[#17151A]">
                   It's a Match!
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
@@ -722,7 +859,7 @@ export default function Discover() {
                     setMatchModal(null);
                     navigate("/messages");
                   }}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-extrabold text-xs shadow-md cursor-pointer hover:brightness-105"
+                  className="w-full py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-extrabold text-xs sm:text-sm shadow-md cursor-pointer hover:brightness-105"
                 >
                   Send a Message Now
                 </button>
@@ -731,7 +868,7 @@ export default function Discover() {
                   onClick={() => {
                     setMatchModal(null);
                   }}
-                  className="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
+                  className="w-full py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
                 >
                   Keep Swiping
                 </button>

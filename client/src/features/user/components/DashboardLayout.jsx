@@ -24,8 +24,47 @@ import meeraImg from "../../../assets/signup_hero_woman.jpg";
 import priyaImg from "../../../assets/priya_profile.jpg";
 import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
-import { getAllUsers } from "../../../services/usersServices.js";
+import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getLikes } from "../../../services/likesServices.js";
+
+
+
+const getProfileCompletionDetails = (percentage) => {
+  if (percentage >= 100) {
+    return {
+      subtitle: "Your profile is complete!",
+      badgeBg: "bg-[#22C55E]",
+      badgeIcon: "✓",
+      message: "You're all set to discover and connect with amazing people",
+      strokeColor: "text-[#7C3AED]",
+    };
+  }
+  if (percentage >= 75) {
+    return {
+      subtitle: "Almost complete!",
+      badgeBg: "bg-[#7C3AED]",
+      badgeIcon: "★",
+      message: "Add remaining details to reach 100% & get more matches",
+      strokeColor: "text-[#7C3AED]",
+    };
+  }
+  if (percentage >= 50) {
+    return {
+      subtitle: "Profile in progress",
+      badgeBg: "bg-[#F59E0B]",
+      badgeIcon: "!",
+      message: "Complete your profile to boost visibility by 3x",
+      strokeColor: "text-[#7C3AED]",
+    };
+  }
+  return {
+    subtitle: "Complete your profile",
+    badgeBg: "bg-[#FF2D72]",
+    badgeIcon: "!",
+    message: "Add photos & details to connect with people nearby",
+    strokeColor: "text-[#FF2D72]",
+  };
+};
 
 export default function DashboardLayout({
   activeTab,
@@ -45,11 +84,56 @@ export default function DashboardLayout({
     location.pathname === "/discover" ||
     location.pathname.endsWith("/discover");
 
-  let currentUser = null;
-  try {
-    const saved = localStorage.getItem("user");
-    if (saved) currentUser = JSON.parse(saved);
-  } catch (_) {}
+  const getStoredUser = () => {
+    try {
+      const saved = localStorage.getItem("user");
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
+  const [profileUser, setProfileUser] = useState(getStoredUser);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const stored = getStoredUser();
+      setCurrentUser(stored);
+      setProfileUser(stored);
+      if (stored?.id) {
+        getUserById(stored.id)
+          .then((res) => {
+            if (res.data?.user) setProfileUser(res.data.user);
+          })
+          .catch(() => {});
+      }
+    };
+    window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("loveconnect_auth_change", handleAuthChange);
+    return () => {
+      window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      getUserById(currentUser.id)
+        .then((res) => {
+          if (res.data?.user) {
+            setProfileUser(res.data.user);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [currentUser?.id]);
+
+  const completionPercentage =
+    profileUser?.profile_completion ??
+    currentUser?.profile_completion ??
+    0;
+  const completionDetails = getProfileCompletionDetails(completionPercentage);
 
   const [internalGender, setInternalGender] = useState("all");
   const [internalVerified, setInternalVerified] = useState(false);
@@ -154,13 +238,6 @@ export default function DashboardLayout({
 
         {/* Location Selector, Notification Bell & User Profile Dropdown */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          {/* Location Picker Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-[#FFE7F0]/80 hover:bg-[#FFE7F0] rounded-full px-3.5 py-1.5 text-xs font-bold text-[#FF2D72] cursor-pointer transition-all border border-[#FFE7F0] shadow-2xs">
-            <MapPin className="w-3.5 h-3.5 text-[#FF2D72]" />
-            <span>Noida, India</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#FF2D72]" />
-          </div>
-
           {/* Notification Bell */}
           <button
             type="button"
@@ -458,7 +535,10 @@ export default function DashboardLayout({
           ) : (
             <>
               {/* CARD 0: PROFILE COMPLETION WIDGET */}
-              <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center gap-4 animate-fadeIn">
+              <Link
+                to="/profile"
+                className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center gap-4 animate-fadeIn hover:border-slate-300 hover:shadow-xs transition-all group cursor-pointer"
+              >
                 {/* Circular Progress Ring */}
                 <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
                   <svg
@@ -473,8 +553,8 @@ export default function DashboardLayout({
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
                     <path
-                      className="text-[#7C3AED]"
-                      strokeDasharray="100, 100"
+                      className={`${completionDetails.strokeColor} transition-all duration-700 ease-out`}
+                      strokeDasharray={`${completionPercentage}, 100`}
                       strokeWidth="3.5"
                       strokeLinecap="round"
                       stroke="currentColor"
@@ -483,27 +563,27 @@ export default function DashboardLayout({
                     />
                   </svg>
                   <span className="absolute text-xs font-black text-[#17151A]">
-                    100%
+                    {completionPercentage}%
                   </span>
                 </div>
 
-                <div className="space-y-1">
-                  <h4 className="text-xs font-black text-[#17151A]">
+                <div className="space-y-1 min-w-0">
+                  <h4 className="text-xs font-black text-[#17151A] group-hover:text-[#7C3AED] transition-colors">
                     Profile Completion
                   </h4>
                   <p className="text-[11px] font-semibold text-slate-500">
-                    Your profile is complete!
+                    {completionDetails.subtitle}
                   </p>
                   <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium pt-0.5">
-                    <span className="w-4 h-4 rounded-full bg-[#22C55E] text-white flex items-center justify-center font-bold text-[9px] shrink-0">
-                      ✓
+                    <span className={`w-4 h-4 rounded-full ${completionDetails.badgeBg} text-white flex items-center justify-center font-bold text-[9px] shrink-0`}>
+                      {completionDetails.badgeIcon}
                     </span>
-                    <span>
-                      You're all set to discover and connect with amazing people
+                    <span className="truncate">
+                      {completionDetails.message}
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* CARD 1: DISCOVERY FILTERS (Only visible on Discover page) */}
               {isDiscover && (
@@ -544,34 +624,9 @@ export default function DashboardLayout({
                         </button>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Verified Toggle */}
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                    <div>
-                      <p className="text-xs font-bold text-[#17151A]">
-                        Verified Profiles Only
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        Show authenticated users
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setVerifiedOnly(!verifiedOnly)}
-                      className={`w-10 h-5.5 rounded-full transition-colors p-0.5 cursor-pointer flex items-center ${
-                        verifiedOnly
-                          ? "bg-[#FF2D72] justify-end"
-                          : "bg-slate-200 justify-start"
-                      }`}
-                    >
-                      <span className="w-4 h-4 rounded-full bg-[#FFFFFF] shadow-2xs" />
-                    </button>
-                  </div>
+                  </div> 
                 </div>
               )}
-
-              {/* CARD 2: PEOPLE NEARBY (Strictly Real Database Users) */}
               <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <h4 className="text-xs font-black uppercase tracking-wider text-[#17151A] flex items-center gap-1.5">
@@ -579,8 +634,6 @@ export default function DashboardLayout({
                     <span>People Nearby</span>
                   </h4>
                 </div>
-
-                {/* Grid of Nearby Avatars from Database */}
                 {nearbyUsers.length > 0 ? (
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {nearbyUsers.map((user, idx) => (

@@ -1,8 +1,13 @@
 import api from "./api";
 
 export const uploadProfileImage = (file) => {
-  const formData = new FormData();
-  formData.append("profile", file);
+  let formData;
+  if (file instanceof FormData) {
+    formData = file;
+  } else {
+    formData = new FormData();
+    formData.append("profile", file);
+  }
 
   return api.post("/upload/profile", formData, {
     headers: {

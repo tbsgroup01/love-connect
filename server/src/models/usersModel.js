@@ -29,22 +29,6 @@ const Users = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    age: {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-    },
-    gender: {
-      type: Sequelize.ENUM("male", "female", "other"),
-      allowNull: true,
-    },
-    interest: {
-      type: Sequelize.STRING,
-      allowNull: true,
-    },
-    profile_image: {
-      type: Sequelize.STRING,
-      allowNull: true,
-    },
     password: {
       type: Sequelize.STRING,
       allowNull: false,

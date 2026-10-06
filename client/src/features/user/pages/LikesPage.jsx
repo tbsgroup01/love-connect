@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getLikes, likeUser, removeLike } from "../../../services/likesServices.js";
 import { getUserById } from "../../../services/usersServices.js";
+import { getUserConversations } from "../../../services/chatsServices.js";
 
 export default function LikesPage() {
   const navigate = useNavigate();
@@ -26,7 +27,10 @@ export default function LikesPage() {
   try {
     const saved = localStorage.getItem("user");
     if (saved) currentUser = JSON.parse(saved);
-  } catch (_) {}
+  } catch (err) {
+    currentUser = null;
+    void err;
+  }
 
   const [activeSubTab, setActiveSubTab] = useState("received"); // "received" | "sent"
   const [likesList, setLikesList] = useState([]);
@@ -34,7 +38,9 @@ export default function LikesPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [matchModal, setMatchModal] = useState(null);
-  const [hasSubscription, setHasSubscription] = useState(false);
+  const [hasPaidSubscription, setHasPaidSubscription] = useState(false);
+  const [userConversations, setUserConversations] = useState([]);
+  const [chatLimitModalOpen, setChatLimitModalOpen] = useState(false);
 
   const calculateAge = (dobString) => {
     if (!dobString) return null;
@@ -45,16 +51,23 @@ export default function LikesPage() {
     return Math.abs(ageDt.getUTCFullYear() - 1970);
   };
 
-  // Check if current user has an active premium subscription
+  // Check if current user has an active premium subscription & load conversations
   useEffect(() => {
     if (!currentUser?.id) return;
     getUserById(currentUser.id)
       .then((res) => {
         const subs = res.data?.user?.subscriptions || [];
-        const isActive = subs.some(
+        const activeSub = subs.find(
           (s) => s.status === "active" && (!s.end_date || new Date(s.end_date) > new Date())
         );
-        setHasSubscription(isActive);
+        const isPaid = Boolean(activeSub && Number(activeSub.plan?.price) > 0);
+        setHasPaidSubscription(isPaid);
+      })
+      .catch(() => {});
+
+    getUserConversations()
+      .then((res) => {
+        setUserConversations(res.data?.conversations || []);
       })
       .catch(() => {});
   }, [currentUser?.id]);
@@ -128,6 +141,30 @@ export default function LikesPage() {
     }
   };
 
+  // Handle Chat Now with 1 user conversation limit check
+  const handleChatNow = (targetUser, name) => {
+    if (!hasPaidSubscription && userConversations.length >= 1) {
+      const isExistingConv = userConversations.some(
+        (c) =>
+          Number(c.partnerId) === Number(targetUser.id) ||
+          Number(c.user_one_id) === Number(targetUser.id) ||
+          Number(c.user_two_id) === Number(targetUser.id)
+      );
+
+      if (!isExistingConv) {
+        setChatLimitModalOpen(true);
+        return;
+      }
+    }
+
+    navigate("/messages", {
+      state: {
+        recipientId: targetUser.id,
+        recipientName: name,
+      },
+    });
+  };
+
   return (
     <DashboardLayout activeTab="likes">
       <div className="w-full space-y-5 animate-fadeIn pb-12">
@@ -139,61 +176,34 @@ export default function LikesPage() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
-                <span>{activeSubTab === "received" ? "Likes You" : "You Liked"}</span>
+                <span>Likes You</span>
                 <span className="text-sm font-extrabold text-[#FF2D72] bg-[#FFE7F0] px-2.5 py-0.5 rounded-full">
-                  {activeSubTab === "received" ? counts.received : counts.sent}
+                  {counts.received}
                 </span>
               </h1>
               <p className="text-xs text-slate-500 font-medium">
-                {activeSubTab === "received"
-                  ? "People who swiped right on your profile"
-                  : "People you have sent likes to"}
+                People who swiped right on your profile
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Tab switch buttons */}
-            <div className="flex bg-slate-100 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("received")}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeSubTab === "received"
-                    ? "bg-white text-[#FF2D72] shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Likes You ({counts.received})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("sent")}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeSubTab === "sent"
-                    ? "bg-white text-[#7C3AED] shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                You Liked ({counts.sent})
-              </button>
-            </div>
-
             {/* Refresh Button */}
             <button
               type="button"
               onClick={fetchLikes}
               disabled={loading}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center gap-2 text-xs font-bold shadow-2xs"
               title="Refresh Likes"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#FF2D72]" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#FF2D72]" : ""}`} />
+              <span>Refresh</span>
             </button>
           </div>
         </div>
 
-        {/* Premium Upgrade Banner for Free Users on 'received' tab */}
-        {activeSubTab === "received" && !hasSubscription && (
+        {/* Free Starter 10 Likes Banner on 'received' tab */}
+        {activeSubTab === "received" && !hasPaidSubscription && (
           <div className="bg-gradient-to-r from-[#FFF0F5] via-white to-[#F4F0FF] p-4 sm:p-5 rounded-2xl border border-[#FFD0E0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#FF2D72] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -201,10 +211,12 @@ export default function LikesPage() {
               </div>
               <div>
                 <h3 className="text-sm font-extrabold text-[#17151A]">
-                  See who likes you instantly!
+                  Free Starter Plan: 10 Admirers Unlocked!
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  Upgrade to LoveConnect Gold to unblur all profile photos and match instantly.
+                  {likesList.length > 10
+                    ? `Showing 10 admirers. ${likesList.length - 10} more admirers are waiting! Upgrade to Premium to see everyone.`
+                    : "You can view up to 10 admirers for free on your Free Starter plan."}
                 </p>
               </div>
             </div>
@@ -214,7 +226,7 @@ export default function LikesPage() {
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-black text-xs shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shrink-0"
             >
               <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
-              <span>Unlock All Admirers</span>
+              <span>Upgrade to Premium</span>
             </Link>
           </div>
         )}
@@ -259,7 +271,7 @@ export default function LikesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {likesList.map((item) => {
+            {likesList.map((item, index) => {
               const user = item.user || {};
               const profile = user.profile || {};
               const image = profile.profile_picture || user.profile_image || null;
@@ -268,7 +280,8 @@ export default function LikesPage() {
               const location = profile.city
                 ? `${profile.city}${profile.country ? `, ${profile.country}` : ""}`
                 : profile.country || "";
-              const shouldBlur = activeSubTab === "received" && !hasSubscription;
+              // Free Starter: first 10 likes visible, 10+ blurred
+              const shouldBlur = activeSubTab === "received" && !hasPaidSubscription && index >= 10;
               const isMatched = item.isMatched;
 
               return (
@@ -337,7 +350,7 @@ export default function LikesPage() {
                     {isMatched ? (
                       <button
                         type="button"
-                        onClick={() => navigate("/messages")}
+                        onClick={() => handleChatNow(user, name)}
                         className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-105 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         <MessageCircle className="w-4 h-4 fill-white" />
@@ -420,8 +433,14 @@ export default function LikesPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const partner = matchModal;
                   setMatchModal(null);
-                  navigate("/messages");
+                  if (partner) {
+                    handleChatNow(
+                      partner,
+                      partner?.profile?.full_name || partner?.name || "Match"
+                    );
+                  }
                 }}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
@@ -434,6 +453,51 @@ export default function LikesPage() {
                 className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
               >
                 Keep Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1 User Chat Limit Modal */}
+      {chatLimitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
+            <button
+              type="button"
+              onClick={() => setChatLimitModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
+              <Crown className="w-10 h-10 fill-amber-300 text-amber-300" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-xl font-black text-[#17151A] tracking-tight">
+                1 User Chat Limit Reached 🔒
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple users se chat karne ke liye Premium plan upgrade karein!
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <Link
+                to="/#pricing"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
+                <span>View Premium Plans</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setChatLimitModalOpen(false)}
+                className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Cancel
               </button>
             </div>
           </div>

@@ -71,7 +71,7 @@ const formatPlanFromDb = (plan) => {
       duration: 0,
       name: plan.name || "Free Starter",
       badge: "Free Forever",
-      subtitle: "10 likes aur 1 chat conversation se shuru karein",
+      subtitle: "10 likes and 1 chat conversation",
       priceDisplay: "₹0",
       priceNum: 0,
       period: "forever",
@@ -451,7 +451,7 @@ export default function Pricing() {
     // 1. FREE PLAN (₹0)
     if (!plan.priceNum || plan.priceNum === 0) {
       if (activeSubscription) {
-        alert("You already have an active Premium membership!");
+        alert("You are already active on the Free Starter plan!");
         return;
       }
       const token = localStorage.getItem("token");
@@ -463,13 +463,18 @@ export default function Pricing() {
       return;
     }
 
-    // 2. If user already has an active subscription, open the Upgrade / Extension confirmation modal
-    if (activeSubscription) {
+    // 2. If user already has an active PAID subscription, open the Upgrade / Extension confirmation modal
+    const isPaidCurrentSub =
+      activeSubscription &&
+      Number(activeSubscription.plan?.price) > 0 &&
+      Number(activeSubscription.plan?.duration) > 0;
+
+    if (isPaidCurrentSub) {
       setUpgradeConfirmPlan(plan);
       return;
     }
 
-    // 3. New Plan purchase (no prior active subscription)
+    // 3. New Plan purchase (user was on Free Starter or has no prior paid plan)
     await executePayment(plan);
   };
 
@@ -519,11 +524,13 @@ export default function Pricing() {
                   <span className="text-xs font-bold text-emerald-700">Currently Active</span>
                 </div>
                 <h3 className="text-base sm:text-lg font-black text-[#17151A] mt-0.5">
-                  {activeSubscription.plan?.name || "Premium Plan"}
+                  {activeSubscription.plan?.name || "Free Starter"}
                   <span className="text-xs font-normal text-slate-500 ml-2">
-                    (Valid till:{" "}
+                    (
                     <span className="font-bold text-[#17151A]">
-                      {formatDate(activeSubscription.end_date)}
+                      {Number(activeSubscription.plan?.price) === 0
+                        ? "Lifetime Free"
+                        : `Valid till: ${formatDate(activeSubscription.end_date)}`}
                     </span>
                     )
                   </span>
@@ -559,7 +566,7 @@ export default function Pricing() {
               // Dynamic button labels based on subscription status
               let dynamicButtonText = plan.buttonText;
               if (plan.priceNum === 0) {
-                dynamicButtonText = hasActive ? "Included in Plan" : "Get Started Free";
+                dynamicButtonText = current ? "Current Plan" : hasActive ? "Included in Plan" : "Get Started Free";
               } else if (current) {
                 dynamicButtonText = `Extend Plan (+${plan.duration} Days)`;
               } else if (hasActive) {

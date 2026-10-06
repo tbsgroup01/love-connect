@@ -1,4 +1,4 @@
-import { Activities, Users, Admin } from "../models/index.js";
+import { Activities, Users, Admin, Profiles } from "../models/index.js";
 
 export const createActivity = async (req, res) => {
   try {
@@ -85,8 +85,16 @@ export const getActivities = async (req, res) => {
         {
           model: Users,
           as: "user",
-          attributes: ["id", "name", "email", "profile_image", "role"],
+          attributes: ["id", "user_id", "name", "email", "role"],
           required: false,
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "profile_picture"],
+              required: false,
+            },
+          ],
         },
         {
           model: Admin,

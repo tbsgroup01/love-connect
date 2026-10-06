@@ -14,16 +14,24 @@ export const uploadProfile = async (req, res) => {
 
     if (userId) {
       try {
-        const user = await Users.findByPk(userId);
-        if (user) {
-          user.profile_image = fileUrl;
-          await user.save();
-        }
-
-        const profile = await Profiles.findOne({ where: { user_id: userId } });
+        let profile = await Profiles.findOne({ where: { user_id: userId } });
         if (profile) {
           profile.profile_picture = fileUrl;
           await profile.save();
+        } else {
+          const user = await Users.findByPk(userId);
+          if (user) {
+            await Profiles.create({
+              user_id: userId,
+              full_name: user.name,
+              gender: "Other",
+              date_of_birth: new Date(),
+              country: "India",
+              state: "Delhi",
+              city: "Noida",
+              profile_picture: fileUrl,
+            });
+          }
         }
       } catch (dbErr) {
         console.error("DB update error in uploadProfile:", dbErr);
@@ -92,4 +100,4 @@ export const uploadLogo = async (req, res) => {
       error: error.message,
     });
   }
-};
+};

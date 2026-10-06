@@ -9,7 +9,7 @@ import {
 const router = express.Router();
 
 const handleUpload = (field) => (req, res, next) => {
-  upload.single(field)(req, res, (err) => {
+  upload.any()(req, res, (err) => {
     if (err) {
       console.error(`Upload error for [${field}]:`, err.message);
       if (err.code === "LIMIT_FILE_SIZE") {
@@ -22,6 +22,9 @@ const handleUpload = (field) => (req, res, next) => {
         success: false,
         message: err.message || "Failed to process uploaded file.",
       });
+    }
+    if (req.files && req.files.length > 0) {
+      req.file = req.files.find((f) => f.fieldname === field) || req.files[0];
     }
     next();
   });

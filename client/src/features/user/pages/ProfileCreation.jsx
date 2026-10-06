@@ -479,8 +479,32 @@ export default function ProfileCreation() {
           ...currentUser,
           name: basicInfo.name || currentUser.name,
           profile_image: validProfileImage || currentUser.profile_image,
+          about_me: aboutMe,
+          gender: profilePayload.gender,
+          date_of_birth: basicInfo.dob,
+          city: cityName,
+          state: stateName,
+          country: countryName,
+          profession: profilePayload.profession,
+          education: profilePayload.education,
+          interest: selectedInterests,
+          interests: selectedInterests,
+          lifestyle: profilePayload.lifestyle,
+          relationship_preference: relationshipPreference,
+          profile: {
+            full_name: basicInfo.name,
+            gender: profilePayload.gender,
+            date_of_birth: basicInfo.dob,
+            city: cityName,
+            state: stateName,
+            country: countryName,
+            about_me: aboutMe,
+            profile_picture: validProfileImage,
+            partner_preferences: profilePayload.partner_preferences,
+          },
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("loveconnect_auth_change"));
       }
 
       navigate("/discover");
@@ -723,8 +747,7 @@ export default function ProfileCreation() {
                             setBasicInfo({ ...basicInfo, dob: e.target.value })
                           }
                           className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
-                        />
-                        <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        />                       
                       </div>
                     </div>
 
@@ -745,7 +768,6 @@ export default function ProfileCreation() {
                         >
                           <option value="Woman">Woman</option>
                           <option value="Man">Man</option>
-                          <option value="Non-Binary">Non-Binary</option>
                           <option value="Other">Other</option>
                         </select>
                         <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

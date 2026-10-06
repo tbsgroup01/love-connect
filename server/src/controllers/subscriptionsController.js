@@ -1,4 +1,4 @@
-import { Subscriptions, Users, Plans } from "../models/index.js";
+import { Subscriptions, Users, Plans, Profiles } from "../models/index.js";
 import { Op } from "sequelize";
 
 export const getSubscriptions = async (req, res) => {
@@ -56,7 +56,15 @@ export const getSubscriptions = async (req, res) => {
         {
           model: Users,
           as: "user",
-          attributes: ["id", "name", "email", "phone", "profile_image"],
+          attributes: ["id", "user_id", "name", "email", "phone"],
+          include: [
+            {
+              model: Profiles,
+              as: "profile",
+              attributes: ["id", "profile_picture"],
+              required: false,
+            },
+          ],
         },
         {
           model: Plans,
@@ -86,6 +94,79 @@ export const getSubscriptions = async (req, res) => {
   }
 };
 
+// Helper to ensure every user has an active plan (defaulting to 'Free Starter')
+export const ensureFreeStarterSubscription = async (userId) => {
+  if (!userId) return null;
+
+  // 1. Check if user already has an active subscription
+  let subscription = await Subscriptions.findOne({
+    where: {
+      user_id: userId,
+      status: "active",
+    },
+    include: [
+      {
+        model: Plans,
+        as: "plan",
+        attributes: ["id", "plan_id", "name", "price", "duration", "description"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+  });
+
+  if (subscription) {
+    if (new Date(subscription.end_date) > new Date()) {
+      return subscription;
+    }
+    // Expired -> mark inactive
+    await subscription.update({ status: "inactive" });
+  }
+
+  // 2. Find or create Free Starter plan (price 0)
+  let freePlan = await Plans.findOne({
+    where: {
+      [Op.or]: [
+        { price: 0 },
+        { name: "Free Starter" },
+        { plan_id: 100001 },
+      ],
+    },
+  });
+
+  if (!freePlan) {
+    freePlan = await Plans.create({
+      plan_id: 100001,
+      name: "Free Starter",
+      price: 0,
+      duration: 0,
+      description: "10 Daily Likes and 1 Chat conversation",
+      status: "active",
+    });
+  }
+
+  // 3. Create active lifetime subscription for this user
+  const foreverDate = new Date();
+  foreverDate.setFullYear(foreverDate.getFullYear() + 100);
+
+  const newSub = await Subscriptions.create({
+    user_id: userId,
+    plan_id: freePlan.id,
+    status: "active",
+    start_date: new Date(),
+    end_date: foreverDate,
+  });
+
+  return await Subscriptions.findByPk(newSub.id, {
+    include: [
+      {
+        model: Plans,
+        as: "plan",
+        attributes: ["id", "plan_id", "name", "price", "duration", "description"],
+      },
+    ],
+  });
+};
+
 export const checkActiveSubscription = async (req, res) => {
   try {
     const user_id = req.body?.user_id || req.query?.user_id || req.user?.id;
@@ -96,43 +177,11 @@ export const checkActiveSubscription = async (req, res) => {
       });
     }
 
-    const subscription = await Subscriptions.findOne({
-      where: {
-        user_id,
-        status: "active",
-      },
-      include: [
-        {
-          model: Plans,
-          as: "plan",
-          attributes: ["id", "plan_id", "name", "price", "duration", "description"],
-        },
-      ],
-    });
-
-    if (!subscription) {
-      return res.status(200).json({
-        hasActivePlan: false,
-        message: "You can purchase a plan.",
-      });
-    }
-
-    if (new Date(subscription.end_date) <= new Date()) {
-      await subscription.update({
-        status: "inactive",
-      });
-
-      return res.status(200).json({
-        hasActivePlan: false,
-        message:
-          "Your previous plan has expired. You can purchase a new plan.",
-      });
-    }
+    const subscription = await ensureFreeStarterSubscription(user_id);
 
     return res.status(200).json({
       hasActivePlan: true,
-      message:
-        "You already have an active plan. You can upgrade by completing the payment.",
+      message: "Active plan retrieved successfully.",
       subscription,
     });
   } catch (error) {
