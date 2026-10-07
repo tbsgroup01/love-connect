@@ -202,11 +202,11 @@ export default function AdminSidebar({
         collapsed ? "w-20" : "w-64"
       } ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
     >
-      {/* COLLAPSE / EXPAND FLOATING TOGGLE BUTTON */}
+      {/* COLLAPSE / EXPAND FLOATING TOGGLE BUTTON (Desktop only) */}
       <button
         onClick={toggleCollapse}
         title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        className="absolute -right-3.5 top-5 z-30 w-7 h-7 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-md hover:bg-pink-50 text-gray-600 transition-all hover:scale-110 cursor-pointer"
+        className="hidden lg:flex absolute -right-3.5 top-5 z-30 w-7 h-7 bg-white border border-gray-200 rounded-full items-center justify-center shadow-md hover:bg-pink-50 text-gray-600 transition-all hover:scale-110 cursor-pointer"
         style={{ color: COLORS.pink }}
       >
         {collapsed ? (

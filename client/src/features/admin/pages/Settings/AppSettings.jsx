@@ -42,9 +42,11 @@ import {
   getImageUrl,
   updateBrowserFavicon,
 } from "../../../../services/uploadServices.js";
+import { useAuth } from "../../../../context/AuthContext.jsx";
 
 export default function AppSettings() {
   const location = useLocation();
+  const { updateUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("App Settings");
 
@@ -160,16 +162,12 @@ const handleFaviconFile = async (file) => {
 
   try {
     const res = await uploadFavicon(file);
-
     const imagePath = res.data.path;
-
     setGeneral((prev) => ({
       ...prev,
       favicon: imagePath,
     }));
-
     updateBrowserFavicon(imagePath);
-
     window.dispatchEvent(
       new CustomEvent("app_settings_updated", {
         detail: {
@@ -223,7 +221,7 @@ const handleFaviconFile = async (file) => {
   const [smtpSettings, setSmtpSettings] = useState({
     host: "smtp.gmail.com",
     port: "465",
-    encryption: "SSL (465)", // "SSL (465)", "TLS (587)", "None"
+    encryption: "SSL (465)", 
     username: "deytaloffice@gmail.com",
     password: "•••••••••••••••••",
     fromName: "",
@@ -267,14 +265,11 @@ const handleFaviconFile = async (file) => {
     currencyCode: "INR",
   });
 
-  // Load Admin Profile and App Settings from Database
   useEffect(() => {
-    // Clear legacy localStorage keys
     try {
       localStorage.removeItem("loveconnect_admin_profile");
       localStorage.removeItem("loveconnect_smtp_settings");
     } catch (_) {}
-
     const loadDataFromDb = async () => {
       try {
         const [profileRes, settingsRes] = await Promise.allSettled([
@@ -291,7 +286,6 @@ const handleFaviconFile = async (file) => {
             avatar: a.profile_image || "",
           });
         }
-
         if (settingsRes.status === "fulfilled" && settingsRes.value.data?.settings) {
           const s = settingsRes.value.data.settings;
           setGeneral((prev) => ({
@@ -350,9 +344,7 @@ const handleAdminPicFile = async (file) => {
 
   try {
     const res = await uploadProfileImage(file);
-
     const imagePath = res.data.path;
-
     setAdminProfile((prev) => ({
       ...prev,
       avatar: imagePath,
@@ -378,7 +370,6 @@ const handleAdminPicFile = async (file) => {
       alert("Password must be at least 6 characters long!");
       return;
     }
-
     try {
       const res = await updateAdminProfile({
         name: adminProfile.name,
@@ -387,7 +378,6 @@ const handleAdminPicFile = async (file) => {
         profile_image: adminProfile.avatar || null,
         password: passwordData.newPassword || undefined,
       });
-
       if (res.data?.success) {
         const updated = res.data.admin;
         setAdminProfile({
@@ -396,26 +386,14 @@ const handleAdminPicFile = async (file) => {
           phone: updated.phone || "",
           avatar: updated.profile_image || "",
         });
-
-        const stored = localStorage.getItem("user");
-        if (stored) {
-          try {
-            const u = JSON.parse(stored);
-            localStorage.setItem(
-              "user",
-              JSON.stringify({
-                ...u,
-                name: updated.name,
-                email: updated.email,
-                phone: updated.phone,
-                profile_image: updated.profile_image,
-              })
-            );
-          } catch (_) {}
-        }
-
+        updateUser((prev) => ({
+          ...prev,
+          name: updated.name,
+          email: updated.email,
+          phone: updated.phone,
+          profile_image: updated.profile_image,
+        }));
         window.dispatchEvent(new Event("admin_profile_updated"));
-        window.dispatchEvent(new Event("loveconnect_auth_change"));
         setPasswordData({ newPassword: "", confirmPassword: "" });
         setProfileSuccess(true);
         setTimeout(() => setProfileSuccess(false), 3000);

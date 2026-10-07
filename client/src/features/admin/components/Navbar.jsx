@@ -9,64 +9,58 @@ import {
   Sparkles
 } from "lucide-react";
 import logo from "../../../assets/loveconnect.png";
-import { createActivity } from "../../../services/activitiesServices.js";
 import { getAdminProfile } from "../../../services/authServices.js";
 import { getImageUrl, updateBrowserFavicon } from "../../../services/uploadServices.js";
 import { getSettings } from "../../../services/settingsServices.js";
-
-
-
+import { useAuth } from "../../../context/AuthContext.jsx";
 const COLORS = {
   pink: "#FF2D72",
   purple: "#7C3AED",
   dark: "#17151A",
 };
 
-const getAdminData = () => {
-  try {
-    const token =
-      localStorage.getItem("token") ||
-      localStorage.getItem("loveconnect_admin_token");
-    const savedUser = localStorage.getItem("user");
-    const user = savedUser ? JSON.parse(savedUser) : null;
-
-    if (!token || !user || user.role !== "admin") {
-      return null;
-    }
-
-    const name = user.name || "Admin";
-    const email = user.email || "";
-    const role = user.role === "admin" ? "Super Admin" : "Admin";
-    const adminId =
-      user.admin_id ||
-      (user.id ? `ADM-${user.id}` : "ADM-001");
-    const avatar =
-      user.profile_image ||
-      user.avatar ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        name
-      )}&background=FF2D72&color=fff&bold=true`;
-
-    return {
-      id: user.id,
-      name,
-      email,
-      role,
-      adminId,
-      avatar,
-    };
-  } catch (_) {
+const getAdminData = (user) => {
+  if (!user || user.role !== "admin") {
     return null;
   }
+
+  const name = user.name || "Admin";
+  const email = user.email || "";
+  const role = user.role === "admin" ? "Super Admin" : "Admin";
+  const adminId =
+    user.admin_id ||
+    (user.id ? `ADM-${user.id}` : "ADM-001");
+  const avatar =
+    user.profile_image ||
+    user.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      name
+    )}&background=FF2D72&color=fff&bold=true`;
+
+  return {
+    id: user.id,
+    name,
+    email,
+    role,
+    adminId,
+    avatar,
+  };
 };
 
 export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const dropdownRef = useRef(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
-  const [adminUser, setAdminUser] = useState(() => getAdminData());
+  const [adminUser, setAdminUser] = useState(() => getAdminData(authUser));
+
+  useEffect(() => {
+    if (authUser) {
+      setAdminUser(getAdminData(authUser));
+    }
+  }, [authUser]);
   const [brandLogo, setBrandLogo] = useState(null);
   const [brandName, setBrandName] = useState("LoveConnect");
   const fetchBrandSettings = async () => {
@@ -180,25 +174,7 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
   };
 
   const handleLogout = async () => {
-    try {
-      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-      if (storedUser?.id) {
-        await createActivity({
-          admin_id: storedUser.role === "admin" ? storedUser.id : null,
-          user_id: storedUser.role === "user" ? storedUser.id : null,
-          role: storedUser.role || "admin",
-          action: "LOGOUT",
-        }).catch(() => {});
-      }
-    } catch (_) {}
-
-    try {
-      localStorage.removeItem("loveconnect_admin_token");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      sessionStorage.removeItem("loveconnect_admin_session");
-    } catch (_) {}
-    window.dispatchEvent(new Event("loveconnect_auth_change"));
+    await logout();
     setShowLogoutModal(false);
     showToast("Logged out successfully. Redirecting...");
     setTimeout(() => {

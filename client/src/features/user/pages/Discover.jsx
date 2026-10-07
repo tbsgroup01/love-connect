@@ -29,16 +29,11 @@ import { likeUser } from "../../../services/likesServices.js";
 
 import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Discover() {
   const navigate = useNavigate();
-  let currentUser = null;
-  try {
-    const saved = localStorage.getItem("user");
-    if (saved) currentUser = JSON.parse(saved);
-  } catch {
-    currentUser = null;
-  }
+  const { user: currentUser } = useAuth();
   const [filterGender, setFilterGender] = useState("all");
   const [filterVerified, setFilterVerified] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -324,11 +319,11 @@ export default function Discover() {
     >
       <div className="w-full flex flex-col items-center animate-fadeIn select-none">
         {/* HEADER SECTION */}
-        <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
               <span>Discover</span>
-              <Sparkles className="w-5 h-5 text-[#FF2D72] animate-pulse" />
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF2D72] animate-pulse" />
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
               Find amazing genuine people around you
@@ -363,7 +358,7 @@ export default function Discover() {
 
         {/* LOADING STATE */}
         {loading ? (
-          <div className="w-full max-w-[440px] h-[520px] rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center space-y-3 my-2">
+          <div className="w-full max-w-[440px] h-[370px] sm:h-[450px] md:h-[520px] rounded-2xl sm:rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center space-y-3 my-1 sm:my-2">
             <Loader2 className="w-10 h-10 text-[#FF2D72] animate-spin" />
             <p className="text-xs font-bold text-slate-500">
               Loading profiles from database...
@@ -371,15 +366,14 @@ export default function Discover() {
           </div>
         ) : filteredProfiles.length === 0 || isDeckCompleted ? (
           /* ALL PROFILES SWIPED / EMPTY STATE */
-          <div className="w-full max-w-[440px] h-[520px] rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center p-6 text-center space-y-4 my-2">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#FF2D72]/15 to-[#7C3AED]/15 flex items-center justify-center text-4xl shadow-inner">
+          <div className="w-full max-w-[440px] h-[370px] sm:h-[450px] md:h-[520px] rounded-2xl sm:rounded-[32px] bg-white border border-slate-200/80 shadow-md flex flex-col items-center justify-center p-6 text-center space-y-4 my-1 sm:my-2">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#FF2D72]/15 to-[#7C3AED]/15 flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
               ✨
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#17151A]">
+              <h3 className="text-base sm:text-lg font-black text-[#17151A]">
                 No More Profiles Found
               </h3>
-            
             </div>
             <button
               type="button"
@@ -392,7 +386,7 @@ export default function Discover() {
           </div>
         ) : profileModal ? (
           /* DETAILED FULL PROFILE VIEW (CONTAINED RIGHT IN THAT CENTER AREA) */
-          <div className="relative w-full max-w-[440px] h-[530px] sm:h-[660px] bg-white rounded-[32px] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col my-2 animate-fadeIn select-text">
+          <div className="relative w-full max-w-[440px] h-[440px] sm:h-[540px] md:h-[660px] bg-white rounded-2xl sm:rounded-[32px] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col my-1 sm:my-2 animate-fadeIn select-text">
             {/* Top Bar with Back & Close */}
             <div className="px-4 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-100 flex items-center justify-between z-20 shrink-0">
               <button
@@ -634,14 +628,14 @@ export default function Discover() {
           </div>
         ) : (
           /* PROFILE SWIPING DECK */
-          <div className="relative w-full max-w-[440px] h-[520px] flex items-center justify-center my-2">
+          <div className="relative w-full max-w-[440px] h-[360px] sm:h-[440px] md:h-[520px] flex items-center justify-center my-1 sm:my-2">
             {/* Background Layer Stacks */}
-            <div className="absolute w-[92%] h-[480px] bg-slate-200/70 rounded-[32px] transform -rotate-6 scale-95 opacity-50 shadow-md blur-[1px] pointer-events-none" />
-            <div className="absolute w-[95%] h-[500px] bg-slate-300/60 rounded-[32px] transform rotate-3 scale-98 opacity-75 shadow-lg pointer-events-none" />
+            <div className="absolute w-[92%] h-[330px] sm:h-[410px] md:h-[480px] bg-slate-200/70 rounded-2xl sm:rounded-[32px] transform -rotate-6 scale-95 opacity-50 shadow-md blur-[1px] pointer-events-none" />
+            <div className="absolute w-[95%] h-[345px] sm:h-[425px] md:h-[500px] bg-slate-300/60 rounded-2xl sm:rounded-[32px] transform rotate-3 scale-98 opacity-75 shadow-lg pointer-events-none" />
 
             {/* Top Active Profile Card */}
             <div
-              className={`relative w-full h-[520px] rounded-[32px] overflow-hidden bg-[#17151A] shadow-2xl shadow-purple-950/20 border-2 border-[#FFFFFF]/90 transition-all duration-300 ${
+              className={`relative w-full h-[360px] sm:h-[440px] md:h-[520px] rounded-2xl sm:rounded-[32px] overflow-hidden bg-[#17151A] shadow-2xl shadow-purple-950/20 border-2 border-[#FFFFFF]/90 transition-all duration-300 ${
                 swipeDirection === "right"
                   ? "translate-x-full rotate-12 opacity-0"
                   : swipeDirection === "left"
@@ -660,10 +654,10 @@ export default function Discover() {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-4xl font-black text-white shadow-xl shadow-pink-500/20">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] flex items-center justify-center text-3xl sm:text-4xl font-black text-white shadow-xl shadow-pink-500/20">
                     {(currentProfile.name || "U").charAt(0).toUpperCase()}
                   </div>
-                  <span className="mt-3 text-base font-bold text-slate-200">
+                  <span className="mt-2 sm:mt-3 text-sm sm:text-base font-bold text-slate-200">
                     {currentProfile.name}
                   </span>
                 </div>
@@ -674,35 +668,35 @@ export default function Discover() {
 
               {/* Profile Card Bottom Info (STRICT DB ONLY) */}
               <div
-                className="absolute bottom-0 inset-x-0 p-5 sm:p-6 text-[#FFFFFF] z-20 space-y-2 cursor-pointer"
+                className="absolute bottom-0 inset-x-0 p-3 sm:p-5 md:p-6 text-[#FFFFFF] z-20 space-y-1 sm:space-y-2 cursor-pointer"
                 onClick={() => handleViewProfile(currentProfile)}
                 title="Click to view full profile"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight drop-shadow-md">
                       {currentProfile.name}
                       {currentProfile.age ? `, ${currentProfile.age}` : ""}
                     </h2>
                     {currentProfile.verified && (
-                      <span className="w-5 h-5 rounded-full bg-[#0095F6] text-[#FFFFFF] flex items-center justify-center text-[10px] font-black shadow-xs">
+                      <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#0095F6] text-[#FFFFFF] flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-xs">
                         ✓
                       </span>
                     )}
                   </div>
                   {currentProfile.location ? (
-                    <span className="px-3 py-1 rounded-full bg-[#FFFFFF]/20 backdrop-blur-md text-[#FFFFFF] text-xs font-bold border border-[#FFFFFF]/20 flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FFFFFF]/20 backdrop-blur-md text-[#FFFFFF] text-[11px] sm:text-xs font-bold border border-[#FFFFFF]/20 flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-pink-300" />
-                      <span>{currentProfile.location}</span>
+                      <span className="truncate max-w-[120px] sm:max-w-none">{currentProfile.location}</span>
                     </span>
                   ) : null}
                 </div>
 
                 {/* Profession & Education (Only show if present in DB) */}
-                <div className="space-y-0.5 text-xs text-slate-200 font-medium">
+                <div className="space-y-0.5 text-[11px] sm:text-xs text-slate-200 font-medium">
                   {currentProfile.profession ? (
                     <div className="flex items-center gap-1.5">
-                      <Briefcase className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <Briefcase className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400 shrink-0" />
                       <span className="truncate">
                         {currentProfile.profession}
                       </span>
@@ -710,7 +704,7 @@ export default function Discover() {
                   ) : null}
                   {currentProfile.education ? (
                     <div className="flex items-center gap-1.5">
-                      <GraduationCap className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400 shrink-0" />
                       <span className="truncate">
                         {currentProfile.education}
                       </span>
@@ -721,18 +715,18 @@ export default function Discover() {
                 {/* Interest Chips (Only show if present in DB) */}
                 {Array.isArray(currentProfile.interests) &&
                   currentProfile.interests.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {currentProfile.interests.slice(0, 4).map((tag, idx) => (
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
+                      {currentProfile.interests.slice(0, 3).map((tag, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-1 rounded-lg bg-[#FFFFFF]/15 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FFFFFF]/15"
+                          className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[#FFFFFF]/15 backdrop-blur-md text-[#FFFFFF] text-[9px] sm:text-[10px] font-bold border border-[#FFFFFF]/15"
                         >
                           {tag}
                         </span>
                       ))}
-                      {currentProfile.interests.length > 4 && (
-                        <span className="px-2.5 py-1 rounded-lg bg-[#FF2D72]/40 backdrop-blur-md text-[#FFFFFF] text-[10px] font-bold border border-[#FF2D72]/40">
-                          +{currentProfile.interests.length - 4}
+                      {currentProfile.interests.length > 3 && (
+                        <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[#FF2D72]/40 backdrop-blur-md text-[#FFFFFF] text-[9px] sm:text-[10px] font-bold border border-[#FF2D72]/40">
+                          +{currentProfile.interests.length - 3}
                         </span>
                       )}
                     </div>
@@ -740,7 +734,7 @@ export default function Discover() {
 
                 {/* Bio (Only show if present in DB) */}
                 {currentProfile.bio ? (
-                  <p className="text-xs text-slate-300 leading-snug line-clamp-2 pt-1 font-normal">
+                  <p className="text-[11px] sm:text-xs text-slate-300 leading-snug line-clamp-1 sm:line-clamp-2 pt-0.5 sm:pt-1 font-normal">
                     {currentProfile.bio}
                   </p>
                 ) : null}
@@ -751,63 +745,63 @@ export default function Discover() {
 
         {/* BOTTOM ACTION BUTTONS CONTROLS (Only visible in swipe deck mode) */}
         {!profileModal && !isDeckCompleted && filteredProfiles.length > 0 && (
-          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 z-30">
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mt-2 sm:mt-3 z-30">
             {/* Rewind */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 onClick={handleRewind}
                 disabled={currentIndex === 0}
-                className={`w-12 h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#FFFFFF] border border-slate-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
                   currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 title="Rewind"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <span className="text-[10px] font-bold text-slate-600">Rewind</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-600">Rewind</span>
             </div>
 
-            {/* Dislike */}
-            <div className="flex flex-col items-center gap-1">
+            {/* swip */}
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 onClick={() => handleAction("left")}
-                className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-                title="Dislike"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                title="swip"
               >
-                <PlayingCardsFan className="w-7 h-7 " />
+                <PlayingCardsFan className="w-6 h-6 sm:w-7 sm:h-7" />
               </button>
-              <span className="text-[10px] font-bold text-slate-600">
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-600">
                 Swip
               </span>
             </div>
 
             {/* Like */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 onClick={() => handleAction("right")}
-                className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] flex items-center justify-center shadow-xl shadow-pink-500/40 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] flex items-center justify-center shadow-xl shadow-pink-500/40 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
                 title="Like"
               >
-                <Heart className="w-8 h-8 fill-[#FFFFFF]" />
+                <Heart className="w-7 h-7 sm:w-8 sm:h-8 fill-[#FFFFFF]" />
               </button>
-              <span className="text-[10px] font-bold text-[#FF2D72]">Like</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-[#FF2D72]">Like</span>
             </div>
 
             {/* View Profile */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 onClick={() => handleViewProfile(currentProfile)}
                 disabled={!currentProfile}
-                className="w-14 h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-[#7C3AED] hover:bg-purple-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#FFFFFF] border-2 border-slate-200 text-[#7C3AED] hover:bg-purple-50 flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title="View Profile"
               >
-                <Eye className="w-7 h-7 stroke-[#7C3AED]" />
+                <Eye className="w-6 h-6 sm:w-7 sm:h-7 stroke-[#7C3AED]" />
               </button>
-              <span className="text-[10px] font-bold text-slate-600">
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-600">
                 View Profile
               </span>
             </div>

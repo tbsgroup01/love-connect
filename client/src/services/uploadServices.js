@@ -48,8 +48,8 @@ export const getImageUrl = (url) => {
   ) {
     return url;
   }
-  const apiUrl = import.meta.env.VITE_API_URL;
-  const baseUrl = apiUrl.replace(/\/api\/?$/, "");
+  const apiUrl = import.meta.env.VITE_API_URL || "";
+  const baseUrl = apiUrl.startsWith("http") ? apiUrl.replace(/\/api\/?$/, "") : "";
   const cleanPath = url.startsWith("/") ? url : `/${url}`;
   return `${baseUrl}${cleanPath}`;
 };

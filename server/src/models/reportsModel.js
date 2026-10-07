@@ -22,6 +22,19 @@ const Reports = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.ENUM("pending", "in_review", "resolved", "dismissed", "action_taken"),
+      defaultValue: "pending",
+      allowNull: false,
+    },
+    action_taken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     tableName: "reports",

@@ -13,37 +13,10 @@ import {
 } from "lucide-react";
 import heroBannerImg from "../../../assets/bannerr.jpeg";
 import priyaProfileImg from "../../../assets/priya_profile.jpg";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Hero() {
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-    try {
-      const token =
-        localStorage.getItem("token") ||
-        localStorage.getItem("loveconnect_admin_token");
-      return Boolean(token);
-    } catch (_) {
-      return false;
-    }
-  });
-
-  React.useEffect(() => {
-    const handleAuthChange = () => {
-      try {
-        const token =
-          localStorage.getItem("token") ||
-          localStorage.getItem("loveconnect_admin_token");
-        setIsLoggedIn(Boolean(token));
-      } catch (_) {
-        setIsLoggedIn(false);
-      }
-    };
-    window.addEventListener("storage", handleAuthChange);
-    window.addEventListener("loveconnect_auth_change", handleAuthChange);
-    return () => {
-      window.removeEventListener("storage", handleAuthChange);
-      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
-    };
-  }, []);
+  const { isAuthenticated: isLoggedIn } = useAuth();
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3] font-poppins">

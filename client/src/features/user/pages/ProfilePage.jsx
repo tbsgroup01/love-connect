@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import {
   Camera,
   Pencil,
@@ -109,22 +110,19 @@ export default function ProfilePage() {
     return {};
   };
 
+  const { user: authUser, updateUser } = useAuth();
+
   // Fetch logged-in user profile from MySQL DB
   const fetchUserProfile = async () => {
     try {
-      const saved = localStorage.getItem("user");
-      if (!saved) {
-        navigate("/login");
-        return;
-      }
-      const parsed = JSON.parse(saved);
-      if (!parsed?.id) {
+      const userId = authUser?.id;
+      if (!userId) {
         navigate("/login");
         return;
       }
 
       setLoading(true);
-      const res = await getUserById(parsed.id);
+      const res = await getUserById(userId);
 
       if (res.data?.user) {
         const u = res.data.user;
@@ -199,17 +197,9 @@ export default function ProfilePage() {
     fetchUserProfile();
   }, []);
 
-  // Sync auth & localStorage with newly saved user
+  // Sync auth with newly saved user
   const syncLocalAuth = (updatedFields) => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("user") || "{}");
-      const updated = {
-        ...saved,
-        ...updatedFields,
-      };
-      localStorage.setItem("user", JSON.stringify(updated));
-      window.dispatchEvent(new Event("loveconnect_auth_change"));
-    } catch (_) {}
+    updateUser(updatedFields);
   };
 
   // Handle Avatar Image Upload & direct DB save
@@ -804,7 +794,7 @@ export default function ProfilePage() {
                       key={`custom-${idx}`}
                       className="px-3.5 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 border bg-[#FFE7F0] text-[#FF2D72] border-[#FF2D72] shadow-xs"
                     >
-                      <span className="text-base">✨</span>
+                  
                       <span>{name}</span>
                       <button
                         type="button"
@@ -1378,15 +1368,6 @@ export default function ProfilePage() {
                     </span>
                     <span className="font-extrabold text-[#17151A]">
                       {lifestyleData.pets || "None"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400 flex items-center gap-2">
-                      <span>🏋️</span>
-                      <span>Workout</span>
-                    </span>
-                    <span className="font-extrabold text-[#17151A]">
-                      {lifestyleData.workout || "Not specified"}
                     </span>
                   </div>
                 </div>

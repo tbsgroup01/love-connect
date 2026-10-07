@@ -11,51 +11,15 @@ import {
   MessageSquare,
 } from "lucide-react";
 import Logo from "../../../assets/loveconnect.png";
-import { createActivity } from "../../../services/activitiesServices.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user: currentUser, logout } = useAuth();
   const [activeSection, setActiveSection] = useState("home");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
-  // Read current user & token authentication state
-  const getStoredAuth = () => {
-    try {
-      const token =
-        localStorage.getItem("token") ||
-        localStorage.getItem("loveconnect_admin_token");
-      if (!token) return null;
-
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
-      return user || { role: "user", name: "User" };
-    } catch (_) {
-      return null;
-    }
-  };
-
-  const [currentUser, setCurrentUser] = useState(getStoredAuth);
-
-  // Sync auth state on route changes
-  useEffect(() => {
-    setCurrentUser(getStoredAuth());
-  }, [location.pathname]);
-
-  // Sync auth state on local storage or custom auth changes
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setCurrentUser(getStoredAuth());
-    };
-
-    window.addEventListener("storage", handleAuthChange);
-    window.addEventListener("loveconnect_auth_change", handleAuthChange);
-    return () => {
-      window.removeEventListener("storage", handleAuthChange);
-      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
-    };
-  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -135,27 +99,8 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    try {
-      if (currentUser?.id) {
-        await createActivity({
-          admin_id: currentUser.role === "admin" ? currentUser.id : null,
-          user_id: currentUser.role === "user" ? currentUser.id : null,
-          role: currentUser.role || "user",
-          action: "LOGOUT",
-        }).catch(() => {});
-      }
-    } catch (_) {}
-
-    try {
-      localStorage.removeItem("loveconnect_admin_token");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      sessionStorage.removeItem("loveconnect_admin_session");
-    } catch (_) {}
-
-    setCurrentUser(null);
+    await logout();
     setIsDropdownOpen(false);
-    window.dispatchEvent(new Event("loveconnect_auth_change"));
     navigate("/");
   };
 

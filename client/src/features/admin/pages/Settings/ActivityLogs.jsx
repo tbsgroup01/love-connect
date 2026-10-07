@@ -51,6 +51,7 @@ export default function ActivityLogs() {
         const actorRole = isUser ? "User" : actor?.role || "Admin";
         const actorAvatar =
           actor?.profile_image ||
+          actor?.profile?.profile_picture ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(actorName)}&background=FFE7F0&color=FF2D72&bold=true`;
 
         const timestamp = item.loginAt || item.logoutAt || item.createdAt;

@@ -529,26 +529,7 @@ export default function BannersAds() {
                       />
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1">
-                        CTA Target URL / Route
-                      </label>
-                      <div className="relative">
-                        <LinkIcon className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={webBanner.ctaLink}
-                          onChange={(e) =>
-                            setWebBanner({
-                              ...webBanner,
-                              ctaLink: e.target.value,
-                            })
-                          }
-                          placeholder="/register or https://..."
-                          className="w-full text-xs font-medium pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#FF2D72] focus:outline-none transition-colors"
-                        />
-                      </div>
-                    </div>
+                   
                   </div>
                 </div>
 
@@ -875,26 +856,6 @@ export default function BannersAds() {
                       />
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1">
-                        CTA Target URL / Route
-                      </label>
-                      <div className="relative">
-                        <LinkIcon className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={mobileBanner.ctaLink}
-                          onChange={(e) =>
-                            setMobileBanner({
-                              ...mobileBanner,
-                              ctaLink: e.target.value,
-                            })
-                          }
-                          placeholder="/register or /onboarding"
-                          className="w-full text-xs font-medium pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#7C3AED] focus:outline-none transition-colors"
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
 

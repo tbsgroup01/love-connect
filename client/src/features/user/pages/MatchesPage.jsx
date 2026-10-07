@@ -23,15 +23,11 @@ import { getUserMatches } from "../../../services/matchesServices.js";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getUserConversations } from "../../../services/chatsServices.js";
 import snehaImg from "../../../assets/hero_woman.jpg";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function MatchesPage() {
   const navigate = useNavigate();
-
-  let currentUser = null;
-  try {
-    const saved = localStorage.getItem("user");
-    if (saved) currentUser = JSON.parse(saved);
-  } catch (_) {}
+  const { user: currentUser } = useAuth();
 
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -13,25 +13,29 @@ export const createActivity = async (req, res) => {
       userAgent,
     } = req.body;
 
+    const normalizedRole = role ? String(role).trim().toLowerCase() : "";
+    const normalizedAction = action ? String(action).trim().toUpperCase() : "";
+
+    const parsedUserId = user_id ? Number(user_id) : null;
+    const parsedAdminId = admin_id ? Number(admin_id) : null;
+
     if (
-      !role ||
-      !action ||
-      (role === "user" && !user_id) ||
-      (role === "admin" && !admin_id)
+      !normalizedRole ||
+      !normalizedAction ||
+      (normalizedRole === "user" && !parsedUserId) ||
+      (normalizedRole === "admin" && !parsedAdminId)
     ) {
       return res.status(400).json({
         message: "Required fields are missing",
       });
     }
 
-    const normalizedRole = role.toLowerCase();
     if (!["admin", "user"].includes(normalizedRole)) {
       return res.status(400).json({
         message: "Invalid role. Must be 'admin' or 'user'",
       });
     }
 
-    const normalizedAction = action.toUpperCase();
     if (!["LOGIN", "LOGOUT"].includes(normalizedAction)) {
       return res.status(400).json({
         message: "Invalid action. Must be 'LOGIN' or 'LOGOUT'",
@@ -48,18 +52,18 @@ export const createActivity = async (req, res) => {
     const clientUserAgent = userAgent || req.get("User-Agent") || "Unknown Device";
 
     const activity = await Activities.create({
-      user_id: normalizedRole === "user" ? user_id : null,
-      admin_id: normalizedRole === "admin" ? admin_id : null,
+      user_id: normalizedRole === "user" ? parsedUserId : null,
+      admin_id: normalizedRole === "admin" ? parsedAdminId : null,
       role: normalizedRole,
       action: normalizedAction,
       loginAt:
         normalizedAction === "LOGIN"
           ? loginAt || new Date()
-          : loginAt || null,
+          : null,
       logoutAt:
         normalizedAction === "LOGOUT"
           ? logoutAt || new Date()
-          : logoutAt || null,
+          : null,
       ipAddress: clientIp,
       userAgent: clientUserAgent,
     });

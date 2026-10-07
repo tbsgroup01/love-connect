@@ -12,8 +12,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { createSupportMessage } from "../../../services/supportServices.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function HelpSupport() {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -27,21 +29,15 @@ export default function HelpSupport() {
 
   // Pre-fill user details if logged in
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const u = JSON.parse(stored);
-        setFormData((prev) => ({
-          ...prev,
-          name: u.name || prev.name,
-          email: u.email || prev.email,
-          phone: u.phone_number || u.phone || prev.phone,
-        }));
-      }
-    } catch (_) {
-      // ignore
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone_number || user.phone || prev.phone,
+      }));
     }
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -85,7 +85,7 @@ export default function Profiles() {
       age: 24,
       gender: 'Female',
       location: 'Delhi, India',
-      bio: 'Coffee lover, hopeless romantic & architect in Delhi. Looking for meaningful connections and fun conversation ✨',
+      bio: 'Coffee lover, hopeless romantic & architect in Delhi. Looking for meaningful connections and fun conversation ',
       interests: ['Architecture', 'Coffee', 'Travel', 'Photography', 'Music'],
       completionScore: 95,
       isVerified: true,

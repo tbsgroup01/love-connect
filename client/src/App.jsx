@@ -36,20 +36,11 @@ import AdminSupportManagement from "./features/admin/pages/ContentManagement/Sup
 import AdminAppSettings from "./features/admin/pages/Settings/AppSettings";
 import AdminFeatureManagement from "./features/admin/pages/Settings/FeatureManagement";
 import AdminActivityLogs from "./features/admin/pages/Settings/ActivityLogs";
+import { useAuth } from "./context/AuthContext.jsx";
 
 function AdminProtectedRoute() {
   const location = useLocation();
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("loveconnect_admin_token");
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
-  } catch (_) {
-    user = null;
-  }
-
-  const isAdmin = Boolean(token && user?.role === "admin");
+  const { isAdmin } = useAuth();
 
   if (!isAdmin) {
     return (
@@ -70,13 +61,7 @@ function AdminProtectedRoute() {
 
 function UserProtectedRoute() {
   const location = useLocation();
-  const token = localStorage.getItem("token");
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
-  } catch (_) {
-    user = null;
-  }
+  const { user, token } = useAuth();
 
   if (!token || !user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
@@ -123,6 +108,7 @@ function ScrollToTop() {
 
 function App() {
   const location = useLocation();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     const initBranding = async () => {
@@ -147,20 +133,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    let user = null;
-    try {
-      user = JSON.parse(localStorage.getItem("user") || "null");
-    } catch (_) {}
-
     if (!token || !user || user.role === "admin") return;
 
     const verifyStatus = async () => {
       try {
         await api.get("/auth/check-status");
-      } catch (_) {
-       
-      }
+      } catch (_) {}
     };
 
     verifyStatus();
@@ -171,7 +149,7 @@ function App() {
       clearInterval(interval);
       window.removeEventListener("focus", verifyStatus);
     };
-  }, [location.pathname]);
+  }, [location.pathname, token, user]);
 
   return (
     <>

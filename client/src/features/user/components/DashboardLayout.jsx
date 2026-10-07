@@ -26,7 +26,7 @@ import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getLikes } from "../../../services/likesServices.js";
-
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 
 const getProfileCompletionDetails = (percentage) => {
@@ -84,38 +84,19 @@ export default function DashboardLayout({
     location.pathname === "/discover" ||
     location.pathname.endsWith("/discover");
 
-  const getStoredUser = () => {
-    try {
-      const saved = localStorage.getItem("user");
-      return saved ? JSON.parse(saved) : null;
-    } catch (_) {
-      return null;
-    }
-  };
-
-  const [currentUser, setCurrentUser] = useState(getStoredUser);
-  const [profileUser, setProfileUser] = useState(getStoredUser);
+  const { user: currentUser, logout } = useAuth();
+  const [profileUser, setProfileUser] = useState(currentUser);
 
   useEffect(() => {
-    const handleAuthChange = () => {
-      const stored = getStoredUser();
-      setCurrentUser(stored);
-      setProfileUser(stored);
-      if (stored?.id) {
-        getUserById(stored.id)
-          .then((res) => {
-            if (res.data?.user) setProfileUser(res.data.user);
-          })
-          .catch(() => {});
-      }
-    };
-    window.addEventListener("storage", handleAuthChange);
-    window.addEventListener("loveconnect_auth_change", handleAuthChange);
-    return () => {
-      window.removeEventListener("storage", handleAuthChange);
-      window.removeEventListener("loveconnect_auth_change", handleAuthChange);
-    };
-  }, []);
+    setProfileUser(currentUser);
+    if (currentUser?.id) {
+      getUserById(currentUser.id)
+        .then((res) => {
+          if (res.data?.user) setProfileUser(res.data.user);
+        })
+        .catch(() => {});
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -204,14 +185,8 @@ export default function DashboardLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem("loveconnect_admin_token");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      sessionStorage.removeItem("loveconnect_admin_session");
-    } catch (_) {}
-    window.dispatchEvent(new Event("loveconnect_auth_change"));
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
@@ -319,9 +294,9 @@ export default function DashboardLayout({
                 {/* 2. Log Out Button */}
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     setUserDropdownOpen(false);
-                    handleLogout();
+                    await handleLogout();
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer group"
                 >
@@ -338,7 +313,7 @@ export default function DashboardLayout({
 
       {/* MAIN CONTAINER: Dynamic 2 or 3-Column SaaS Workspace Dashboard */}
       <div
-        className={`flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 ${hideRightSidebar ? "lg:grid-cols-[280px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)_320px]"} gap-5 px-3 sm:px-5 lg:px-6 py-4 h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10`}
+        className={`flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 ${hideRightSidebar ? "lg:grid-cols-[280px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)_320px]"} gap-5 px-3 sm:px-5 lg:px-6 pt-3 pb-[72px] sm:pt-4 sm:pb-[76px] lg:py-4 h-[calc(100dvh-65px)] lg:h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10`}
       >
         {/* ------------------------------------------------------- */}
         {/* COLUMN 1: LEFT NAVIGATION SIDEBAR (FIXED VIEWPORT)      */}
@@ -480,15 +455,9 @@ export default function DashboardLayout({
             {/* Nav: Logout */}
             <button
               type="button"
-              onClick={() => {
-                try {
-                  localStorage.removeItem("loveconnect_admin_token");
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  sessionStorage.removeItem("loveconnect_admin_session");
-                } catch (_) {}
-                window.dispatchEvent(new Event("loveconnect_auth_change"));
-                navigate("/");
+              onClick={async () => {
+                await logout();
+                navigate("/login");
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
             >
@@ -522,7 +491,7 @@ export default function DashboardLayout({
         {/* ------------------------------------------------------- */}
         {/* COLUMN 2: CENTER WORKSPACE CANVAS (SCROLLABLE AREA)     */}
         {/* ------------------------------------------------------- */}
-        <main className="lg:col-start-2 flex flex-col w-full h-full overflow-y-auto scrollbar-none pr-1">
+        <main className="lg:col-start-2 flex flex-col w-full h-full min-h-0 overflow-y-auto scrollbar-none pr-0 lg:pr-1">
           {children}
         </main>
 

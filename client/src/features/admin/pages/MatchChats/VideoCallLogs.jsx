@@ -4,27 +4,21 @@ import {
   Clock,
   Users,
   Star,
-  Download,
   Search,
-  Filter,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Play,
-  Calendar,
   X,
-  PhoneMissed,
-  PhoneOff,
-  PhoneCall,
-  CheckCircle2,
-  AlertTriangle,
-  Volume2,
-  Maximize2,
   Eye,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
+import {
+  getAllCalls,
+  deleteCall as apiDeleteCall,
+  deleteBulkCalls as apiDeleteBulkCalls,
+} from "../../../../services/callsServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -39,389 +33,200 @@ const COLORS = {
   blue: "#3B82F6",
 };
 
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80";
+
 export default function VideoCallLogs() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Video Call Logs");
   const [selectedTabFilter, setSelectedTabFilter] = useState("All");
   const [selectedCall, setSelectedCall] = useState(null);
+  const [callLogsData, setCallLogsData] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedLogIds, setSelectedLogIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Top 4 KPI Cards matching reference image
+  // Load real calls from backend API
+  const loadCalls = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllCalls({ limit: 100 });
+      if (res && res.success && Array.isArray(res.calls)) {
+        const mapped = res.calls.map((c) => {
+          const callerP = c.caller?.profile || {};
+          const receiverP = c.receiver?.profile || {};
+          const rawSt = (c.status || "").toLowerCase();
+          const isCompleted = rawSt === "completed";
+          const isMissed = rawSt === "missed";
+          const isRejected = rawSt === "rejected" || rawSt === "declined";
+
+          const callerAge = callerP.date_of_birth
+            ? Math.floor(
+                (new Date() - new Date(callerP.date_of_birth)) /
+                  (365.25 * 24 * 60 * 60 * 1000)
+              )
+            : null;
+          const receiverAge = receiverP.date_of_birth
+            ? Math.floor(
+                (new Date() - new Date(receiverP.date_of_birth)) /
+                  (365.25 * 24 * 60 * 60 * 1000)
+              )
+            : null;
+
+          const mins = Math.floor((c.duration || 0) / 60);
+          const secs = (c.duration || 0) % 60;
+          const durationStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+          return {
+            id: c.id,
+            callId: `CALL${String(c.id).padStart(7, "0")}`,
+            caller: {
+              name: callerP.full_name || c.caller?.name || "Caller",
+              age: callerAge ? `${callerAge}` : "",
+              location: callerP.city || "Unknown",
+              avatar: callerP.profile_picture || DEFAULT_AVATAR,
+            },
+            receiver: {
+              name: receiverP.full_name || c.receiver?.name || "Receiver",
+              age: receiverAge ? `${receiverAge}` : "",
+              location: receiverP.city || "Unknown",
+              avatar: receiverP.profile_picture || DEFAULT_AVATAR,
+            },
+            callType: c.call_type === "voice" ? "Voice Call" : "Video Call",
+            duration: durationStr,
+            rawDuration: `${c.duration || 0}s (${c.status || "completed"})`,
+            date: c.createdAt
+              ? new Date(c.createdAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "N/A",
+            time: c.createdAt
+              ? new Date(c.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "",
+            status: c.status
+              ? c.status.charAt(0).toUpperCase() + c.status.slice(1)
+              : "Unknown",
+            rawStatus: rawSt,
+            statusBg: isCompleted
+              ? "#DCFCE7"
+              : isMissed
+              ? "#FEE2E2"
+              : isRejected
+              ? "#FEF3C7"
+              : "#E0F2FE",
+            statusColor: isCompleted
+              ? "#16A34A"
+              : isMissed
+              ? "#EF4444"
+              : isRejected
+              ? "#D97706"
+              : "#0284C7",
+            previewImage: receiverP.profile_picture || DEFAULT_AVATAR,
+            pipImage: callerP.profile_picture || DEFAULT_AVATAR,
+          };
+        });
+
+        setCallLogsData(mapped);
+        if (res.stats) {
+          setStats(res.stats);
+        }
+      } else {
+        setCallLogsData([]);
+      }
+    } catch (err) {
+      console.warn("Could not fetch call logs:", err);
+      setCallLogsData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCalls();
+  }, []);
+
+  // Compute dynamic KPI metrics from real API stats / callLogsData
+  const totalCallsCount = stats?.totalCalls ?? callLogsData.length;
+  const totalDurationSec =
+    stats?.totalDurationSeconds ??
+    callLogsData.reduce((acc, c) => {
+      const parts = (c.duration || "0:0").split(":").map(Number);
+      return acc + (parts[0] * 60 + (parts[1] || 0));
+    }, 0);
+
+  const totalDurationDisplay =
+    totalDurationSec >= 3600
+      ? `${(totalDurationSec / 3600).toFixed(1)} hrs`
+      : `${Math.round(totalDurationSec / 60)} mins`;
+
+  const uniqueUsersCount =
+    stats?.uniqueUsers ??
+    new Set([
+      ...callLogsData.map((c) => c.caller?.name),
+      ...callLogsData.map((c) => c.receiver?.name),
+    ].filter(Boolean)).size;
+
+  const avgCallDurationDisplay =
+    stats?.avgDurationSeconds != null
+      ? `${(stats.avgDurationSeconds / 60).toFixed(1)} mins`
+      : totalCallsCount > 0
+      ? `${(totalDurationSec / totalCallsCount / 60).toFixed(1)} mins`
+      : "0 mins";
+
   const kpiCards = [
     {
-      title: "Total Video Calls",
-      value: "8,432",
+      title: "Total Calls",
+      value: totalCallsCount.toLocaleString(),
       bgColor: "#FF2D72",
       icon: Video,
     },
     {
       title: "Total Call Duration",
-      value: "1,248 hrs",
+      value: totalDurationDisplay,
       bgColor: "#3B82F6",
       icon: Clock,
     },
     {
       title: "Unique Users",
-      value: "4,213",
+      value: uniqueUsersCount.toLocaleString(),
       bgColor: "#7C3AED",
       icon: Users,
     },
     {
       title: "Avg. Call Duration",
-      value: "8.6 mins",
+      value: avgCallDurationDisplay,
       bgColor: "#F59E0B",
       icon: Star,
     },
   ];
 
-  // Mock Video Call Logs Data matching reference image table exactly
-  const initialCallLogsData = [
-    {
-      id: 1,
-      callId: "CALL0823456",
-      caller: {
-        name: "Rohan Mehta",
-        age: 28,
-        location: "Mumbai",
-        fullLocation: "Mumbai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Aaradhya Sharma",
-        age: 25,
-        location: "Delhi",
-        fullLocation: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "12:34",
-      rawDuration: "12:34 (Completed)",
-      date: "15 Sep 2026",
-      time: "10:24 AM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "Android (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 2,
-      callId: "CALL0823457",
-      caller: {
-        name: "Priya Singh",
-        age: 28,
-        location: "Mumbai",
-        fullLocation: "Mumbai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Karan Verma",
-        age: 30,
-        location: "Bangalore",
-        fullLocation: "Bangalore, India",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "08:21",
-      rawDuration: "08:21 (Completed)",
-      date: "15 Sep 2026",
-      time: "09:18 AM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "iOS (Mobile)",
-      network: "5G Mobile",
-      previewImage:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 3,
-      callId: "CALL0823458",
-      caller: {
-        name: "Neha Patel",
-        age: 26,
-        location: "Delhi",
-        fullLocation: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Rahul Mehta",
-        age: 32,
-        location: "Gurgaon",
-        fullLocation: "Gurgaon, India",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "00:00",
-      rawDuration: "00:00 (Missed)",
-      date: "15 Sep 2026",
-      time: "08:55 AM",
-      status: "Missed",
-      statusBg: "#FEE2E2",
-      statusColor: "#EF4444",
-      deviceInfo: "Android (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 4,
-      callId: "CALL0823459",
-      caller: {
-        name: "Sneha Reddy",
-        age: 27,
-        location: "Hyderabad",
-        fullLocation: "Hyderabad, India",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Amit Kumar",
-        age: 29,
-        location: "Pune",
-        fullLocation: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "15:42",
-      rawDuration: "15:42 (Completed)",
-      date: "14 Sep 2026",
-      time: "07:42 PM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "iOS (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 5,
-      callId: "CALL0823460",
-      caller: {
-        name: "Vikram Singh",
-        age: 31,
-        location: "Pune",
-        fullLocation: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Pooja Verma",
-        age: 27,
-        location: "Chennai",
-        fullLocation: "Chennai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "02:15",
-      rawDuration: "02:15 (Declined)",
-      date: "14 Sep 2026",
-      time: "05:21 PM",
-      status: "Declined",
-      statusBg: "#FEF3C7",
-      statusColor: "#D97706",
-      deviceInfo: "Android (Mobile)",
-      network: "4G Mobile",
-      previewImage:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 6,
-      callId: "CALL0823461",
-      caller: {
-        name: "Alisha Verma",
-        age: 25,
-        location: "Delhi",
-        fullLocation: "Delhi, India",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Riya Malhotra",
-        age: 26,
-        location: "Noida",
-        fullLocation: "Noida, India",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "09:33",
-      rawDuration: "09:33 (Completed)",
-      date: "14 Sep 2026",
-      time: "03:12 PM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "iOS (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 7,
-      callId: "CALL0823462",
-      caller: {
-        name: "Karan Sharma",
-        age: 30,
-        location: "Bangalore",
-        fullLocation: "Bangalore, India",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Simran Kaur",
-        age: 28,
-        location: "Chandigarh",
-        fullLocation: "Chandigarh, India",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "00:00",
-      rawDuration: "00:00 (Missed)",
-      date: "13 Sep 2026",
-      time: "11:24 AM",
-      status: "Missed",
-      statusBg: "#FEE2E2",
-      statusColor: "#EF4444",
-      deviceInfo: "Android (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 8,
-      callId: "CALL0823463",
-      caller: {
-        name: "Tanya Gupta",
-        age: 24,
-        location: "Lucknow",
-        fullLocation: "Lucknow, India",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Vikram Singh",
-        age: 31,
-        location: "Pune",
-        fullLocation: "Pune, India",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "21:08",
-      rawDuration: "21:08 (Completed)",
-      date: "13 Sep 2026",
-      time: "10:18 AM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "iOS (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 9,
-      callId: "CALL0823464",
-      caller: {
-        name: "Dev Malhotra",
-        age: 32,
-        location: "Noida",
-        fullLocation: "Noida, India",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Neha Kapoor",
-        age: 26,
-        location: "Chennai",
-        fullLocation: "Chennai, India",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "04:27",
-      rawDuration: "04:27 (Reported)",
-      date: "12 Sep 2026",
-      time: "08:36 PM",
-      status: "Reported",
-      statusBg: "#FEE2E2",
-      statusColor: "#EF4444",
-      deviceInfo: "Android (Mobile)",
-      network: "4G Mobile",
-      previewImage:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 10,
-      callId: "CALL0823465",
-      caller: {
-        name: "Rahul Das",
-        age: 29,
-        location: "Kolkata",
-        fullLocation: "Kolkata, India",
-        avatar:
-          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
-      },
-      receiver: {
-        name: "Sneha Reddy",
-        age: 27,
-        location: "Hyderabad",
-        fullLocation: "Hyderabad, India",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
-      },
-      callType: "Video Call",
-      duration: "11:19",
-      rawDuration: "11:19 (Completed)",
-      date: "12 Sep 2026",
-      time: "06:14 PM",
-      status: "Completed",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      deviceInfo: "Android (Mobile)",
-      network: "WiFi",
-      previewImage:
-        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80",
-      pipImage:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
-    },
-  ];
+  // Tab counts dynamically calculated
+  const completedCount =
+    stats?.completedCalls ??
+    callLogsData.filter((c) => c.rawStatus === "completed").length;
+  const missedCount =
+    stats?.missedCalls ??
+    callLogsData.filter((c) => c.rawStatus === "missed").length;
+  const rejectedCount =
+    stats?.rejectedCalls ??
+    callLogsData.filter(
+      (c) => c.rawStatus === "rejected" || c.rawStatus === "declined"
+    ).length;
 
-  const [callLogsData, setCallLogsData] = useState(initialCallLogsData);
-  const [selectedLogIds, setSelectedLogIds] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const tabFilters = [
+    { label: "All Calls", count: callLogsData.length, key: "All" },
+    { label: "Completed", count: completedCount, key: "Completed" },
+    { label: "Missed", count: missedCount, key: "Missed" },
+    { label: "Rejected", count: rejectedCount, key: "Rejected" },
+  ];
 
   const currentSelected =
     selectedCall && callLogsData.some((c) => c.id === selectedCall.id)
@@ -429,16 +234,23 @@ export default function VideoCallLogs() {
       : null;
 
   const filteredLogs = callLogsData.filter((log) => {
-    const matchesTab =
-      selectedTabFilter === "All" ||
-      log.status.toLowerCase().includes(selectedTabFilter.toLowerCase());
-    const term = searchTerm.toLowerCase();
+    let matchesTab = true;
+    if (selectedTabFilter === "Completed") {
+      matchesTab = log.rawStatus === "completed";
+    } else if (selectedTabFilter === "Missed") {
+      matchesTab = log.rawStatus === "missed";
+    } else if (selectedTabFilter === "Rejected") {
+      matchesTab = log.rawStatus === "rejected" || log.rawStatus === "declined";
+    }
+
+    const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      !searchTerm ||
+      !term ||
       log.caller.name.toLowerCase().includes(term) ||
       log.receiver.name.toLowerCase().includes(term) ||
       log.callId.toLowerCase().includes(term) ||
       log.callType.toLowerCase().includes(term);
+
     return matchesTab && matchesSearch;
   });
 
@@ -466,21 +278,37 @@ export default function VideoCallLogs() {
 
   const handleToggleSelect = (id) => {
     setSelectedLogIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedLogIds.length === 0) return;
+    try {
+      await apiDeleteBulkCalls(selectedLogIds);
+    } catch (err) {
+      console.warn("Delete bulk calls error:", err);
+    }
     setCallLogsData((prev) =>
-      prev.filter((item) => !selectedLogIds.includes(item.id)),
+      prev.filter((item) => !selectedLogIds.includes(item.id))
     );
+    if (selectedCall && selectedLogIds.includes(selectedCall.id)) {
+      setSelectedCall(null);
+    }
     setSelectedLogIds([]);
   };
 
-  const handleDeleteCall = (id) => {
+  const handleDeleteCall = async (id) => {
+    try {
+      await apiDeleteCall(id);
+    } catch (err) {
+      console.warn("Delete call error:", err);
+    }
     setCallLogsData((prev) => prev.filter((item) => item.id !== id));
     setSelectedLogIds((prev) => prev.filter((item) => item !== id));
+    if (selectedCall && selectedCall.id === id) {
+      setSelectedCall(null);
+    }
   };
 
   return (
@@ -512,10 +340,21 @@ export default function VideoCallLogs() {
                 Video Call Logs
               </h1>
               <p className="text-sm text-gray-400 mt-1">
-                Monitor and manage video calls between users
+                Monitor and manage calls between users
               </p>
             </div>
+            <button
+              onClick={loadCalls}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#FF2D72]" : ""}`}
+              />
+              <span>Refresh</span>
+            </button>
           </div>
+
           {/* TOP 4 KPI CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpiCards.map((kpi, idx) => {
@@ -544,19 +383,18 @@ export default function VideoCallLogs() {
               );
             })}
           </div>
+
           {/* TABLE AND RIGHT CALL PREVIEW PANEL SPLIT */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
             {/* VIDEO CALL LOGS TABLE */}
-            <div className={`${currentSelected ? 'xl:col-span-2' : 'xl:col-span-3'} bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}>
+            <div
+              className={`${
+                currentSelected ? "xl:col-span-2" : "xl:col-span-3"
+              } bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}
+            >
               {/* Status Filter Tabs */}
               <div className="flex items-center gap-2 border-b border-gray-100 pb-3 overflow-x-auto">
-                {[
-                  { label: "All Calls", count: "8,432", key: "All" },
-                  { label: "Completed", count: "6,231", key: "Completed" },
-                  { label: "Missed", count: "892", key: "Missed" },
-                  { label: "Declined", count: "765", key: "Declined" },
-                  { label: "Reported", count: "122", key: "Reported" },
-                ].map((tab) => (
+                {tabFilters.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setSelectedTabFilter(tab.key)}
@@ -581,7 +419,7 @@ export default function VideoCallLogs() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-gray-800 text-sm">
-                    All Video Calls ({filteredLogs.length})
+                    All Calls ({filteredLogs.length})
                   </h3>
                   {selectedLogIds.length > 0 && (
                     <button
@@ -631,13 +469,25 @@ export default function VideoCallLogs() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredLogs.length === 0 ? (
+                    {loading ? (
                       <tr>
                         <td
                           colSpan={8}
-                          className="py-8 text-center text-gray-400 text-xs"
+                          className="py-12 text-center text-gray-400 text-xs"
                         >
-                          No video call logs found
+                          <div className="flex items-center justify-center gap-2">
+                            <RefreshCw className="w-4 h-4 animate-spin text-[#FF2D72]" />
+                            <span>Loading call logs...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredLogs.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="py-12 text-center text-gray-400 text-xs"
+                        >
+                          No call logs found
                         </td>
                       </tr>
                     ) : (
@@ -685,7 +535,8 @@ export default function VideoCallLogs() {
                                     {item.caller.name}
                                   </div>
                                   <div className="text-gray-400 text-[10px]">
-                                    {item.caller.age}, {item.caller.location}
+                                    {item.caller.age ? `${item.caller.age}, ` : ""}
+                                    {item.caller.location}
                                   </div>
                                 </div>
                               </div>
@@ -702,7 +553,7 @@ export default function VideoCallLogs() {
                                     {item.receiver.name}
                                   </div>
                                   <div className="text-gray-400 text-[10px]">
-                                    {item.receiver.age},{" "}
+                                    {item.receiver.age ? `${item.receiver.age}, ` : ""}
                                     {item.receiver.location}
                                   </div>
                                 </div>
@@ -771,36 +622,37 @@ export default function VideoCallLogs() {
                 </table>
               </div>
 
-                {/* Pagination */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
-                  <span>
-                    Showing {filteredLogs.length > 0 ? startIndex + 1 : 0} to{" "}
-                    {endIndex} of {filteredLogs.length} call logs
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={itemsPerPage}
-                      onChange={(e) => {
-                        setItemsPerPage(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+              {/* Pagination */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100 text-xs text-gray-400 mt-2">
+                <span>
+                  Showing {filteredLogs.length > 0 ? startIndex + 1 : 0} to{" "}
+                  {endIndex} of {filteredLogs.length} call logs
+                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
+                  </select>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={validCurrentPage <= 1}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Previous Page"
                     >
-                      <option value={10}>10 per page</option>
-                      <option value={25}>25 per page</option>
-                      <option value={50}>50 per page</option>
-                    </select>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={validCurrentPage <= 1}
-                        className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                        title="Previous Page"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (pageNum) => (
                         <button
                           key={pageNum}
                           type="button"
@@ -810,156 +662,168 @@ export default function VideoCallLogs() {
                               ? "text-white shadow-xs"
                               : "text-gray-600 hover:bg-gray-100"
                           }`}
-                          style={validCurrentPage === pageNum ? { backgroundColor: COLORS.pink } : {}}
+                          style={
+                            validCurrentPage === pageNum
+                              ? { backgroundColor: COLORS.pink }
+                              : {}
+                          }
                         >
                           {pageNum}
                         </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={validCurrentPage >= totalPages}
-                        className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                        title="Next Page"
+                      )
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={validCurrentPage >= totalPages}
+                      className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Next Page"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT CALL PREVIEW & DETAILS PANEL */}
+            {currentSelected && (
+              <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2
+                      className="text-base font-bold"
+                      style={{ color: COLORS.dark }}
+                    >
+                      Call Preview
+                    </h2>
+                    <button
+                      onClick={() => setSelectedCall(null)}
+                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Video Call Player Mockup with PiP Video overlay */}
+                  <div className="relative bg-slate-950 rounded-2xl overflow-hidden h-60 mb-4 group shadow-md flex items-center justify-center border border-gray-100">
+                    {/* Ambient blurred background to fill 16:9 widescreen naturally */}
+                    <img
+                      src={currentSelected.previewImage}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-125 pointer-events-none"
+                      aria-hidden="true"
+                    />
+                    <div className="absolute inset-0 bg-black/25" />
+
+                    {/* Main Video Feed: Full face, hair, head and shoulders visible without any cropping */}
+                    <img
+                      src={currentSelected.previewImage}
+                      alt="Receiver Preview"
+                      className="relative z-10 h-full w-auto max-w-full object-contain rounded-lg shadow-lg"
+                    />
+
+                    {/* Picture-in-Picture Floating Window */}
+                    <div className="absolute top-3 right-3 z-20 w-16 h-20 rounded-xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
+                      <img
+                        src={currentSelected.pipImage}
+                        alt="Caller PiP"
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </div>
+
+                    {/* Call Overlay User Badge */}
+                    <div className="absolute bottom-2.5 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-medium border border-white/10">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>{currentSelected.receiver.name}</span>
+                    </div>
+                  </div>
+
+                  {/* Call Details Breakdown */}
+                  <div className="space-y-2.5 text-xs">
+                    <h4 className="font-bold text-gray-900 text-xs mb-1">
+                      Call Details
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Caller</span>
+                      <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                        <img
+                          src={currentSelected.caller.avatar}
+                          alt="Caller"
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span>{currentSelected.caller.name}</span>
+                        {currentSelected.caller.location && (
+                          <span className="text-gray-400 font-normal text-[10px]">
+                            {currentSelected.caller.age ? `${currentSelected.caller.age}, ` : ""}
+                            {currentSelected.caller.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Receiver</span>
+                      <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                        <img
+                          src={currentSelected.receiver.avatar}
+                          alt="Receiver"
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span>{currentSelected.receiver.name}</span>
+                        {currentSelected.receiver.location && (
+                          <span className="text-gray-400 font-normal text-[10px]">
+                            {currentSelected.receiver.age ? `${currentSelected.receiver.age}, ` : ""}
+                            {currentSelected.receiver.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Call Type</span>
+                      <div className="flex items-center gap-1 font-semibold text-gray-800">
+                        <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
+                        <span>{currentSelected.callType}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Date & Time</span>
+                      <span className="font-semibold text-gray-800">
+                        {currentSelected.date}{currentSelected.time ? `, ${currentSelected.time}` : ""}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Duration</span>
+                      <span className="font-semibold text-gray-800">
+                        {currentSelected.rawDuration}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Status</span>
+                      <span
+                        className="px-2.5 py-0.5 rounded-md font-bold text-[10px]"
+                        style={{
+                          backgroundColor: currentSelected.statusBg,
+                          color: currentSelected.statusColor,
+                        }}
                       >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                        {currentSelected.status}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* RIGHT CALL PREVIEW & DETAILS PANEL */}
-              {currentSelected && (
-                <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h2
-                        className="text-base font-bold"
-                        style={{ color: COLORS.dark }}
-                      >
-                        Call Preview
-                      </h2>
-                      <button
-                        onClick={() => setSelectedCall(null)}
-                        className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Video Call Player Mockup with PiP Video overlay */}
-                    <div className="relative bg-slate-950 rounded-2xl overflow-hidden h-60 mb-4 group shadow-md flex items-center justify-center border border-gray-100">
-                      {/* Ambient blurred background to fill 16:9 widescreen naturally */}
-                      <img
-                        src={currentSelected.previewImage}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-125 pointer-events-none"
-                        aria-hidden="true"
-                      />
-                      <div className="absolute inset-0 bg-black/25" />
-
-                      {/* Main Video Feed: Full face, hair, head and shoulders visible without any cropping */}
-                      <img
-                        src={currentSelected.previewImage}
-                        alt="Receiver Preview"
-                        className="relative z-10 h-full w-auto max-w-full object-contain rounded-lg shadow-lg"
-                      />
-
-                      {/* Picture-in-Picture Floating Window */}
-                      <div className="absolute top-3 right-3 z-20 w-16 h-20 rounded-xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
-                        <img
-                          src={currentSelected.pipImage}
-                          alt="Caller PiP"
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </div>
-
-                      {/* Call Overlay User Badge */}
-                      <div className="absolute bottom-2.5 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-medium border border-white/10">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>{currentSelected.receiver.name}</span>
-                      </div>
-                    </div>
-
-                    {/* Call Details Breakdown */}
-                    <div className="space-y-2.5 text-xs">
-                      <h4 className="font-bold text-gray-900 text-xs mb-1">
-                        Call Details
-                      </h4>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Caller</span>
-                        <div className="flex items-center gap-1.5 font-semibold text-gray-800">
-                          <img
-                            src={currentSelected.caller.avatar}
-                            alt="Caller"
-                            className="w-5 h-5 rounded-full object-cover"
-                          />
-                          <span>{currentSelected.caller.name}</span>
-                          <span className="text-gray-400 font-normal text-[10px]">
-                            {currentSelected.caller.age},{" "}
-                            {currentSelected.caller.location}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Receiver</span>
-                        <div className="flex items-center gap-1.5 font-semibold text-gray-800">
-                          <img
-                            src={currentSelected.receiver.avatar}
-                            alt="Receiver"
-                            className="w-5 h-5 rounded-full object-cover"
-                          />
-                          <span>{currentSelected.receiver.name}</span>
-                          <span className="text-gray-400 font-normal text-[10px]">
-                            {currentSelected.receiver.age},{" "}
-                            {currentSelected.receiver.location}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Call Type</span>
-                        <div className="flex items-center gap-1 font-semibold text-gray-800">
-                          <Video className="w-3.5 h-3.5 text-[#FF2D72]" />
-                          <span>{currentSelected.callType}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Date & Time</span>
-                        <span className="font-semibold text-gray-800">
-                          {currentSelected.date}, {currentSelected.time}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Duration</span>
-                        <span className="font-semibold text-gray-800">
-                          {currentSelected.rawDuration}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Status</span>
-                        <span
-                          className="px-2.5 py-0.5 rounded-md font-bold text-[10px]"
-                          style={{
-                            backgroundColor: currentSelected.statusBg,
-                            color: currentSelected.statusColor,
-                          }}
-                        >
-                          {currentSelected.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </main>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
 }
+

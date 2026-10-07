@@ -17,11 +17,13 @@ import {
 } from "lucide-react";
 import loginCoupleImg from "../../../assets/login_couple.jpg";
 import loveConnectLogo from "../../../assets/loveconnect.png";
-import { login, register } from "../../../services/authServices.js";
+import { login as loginApi, register as registerApi } from "../../../services/authServices.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Login({ initialMode = "login" }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login: setAuthLogin } = useAuth();
 
   // Synchronize mode directly with the current route path
   const isSignupRoute =
@@ -91,19 +93,14 @@ export default function Login({ initialMode = "login" }) {
 
     try {
       if (mode === "login") {
-        const res = await login({
+        const res = await loginApi({
           email: formData.email,
           password: formData.password,
         });
 
         if (res.data?.token) {
-          localStorage.setItem("token", res.data.token);
-          if (res.data.user) {
-            localStorage.setItem("user", JSON.stringify(res.data.user));
-          }
-          window.dispatchEvent(new Event("loveconnect_auth_change"));
+          setAuthLogin(res.data.token, res.data.user);
           if (res.data.user?.role === "admin") {
-            localStorage.setItem("loveconnect_admin_token", res.data.token);
             const targetPath = location.state?.from || "/admin/dashboard";
             navigate(targetPath, { replace: true });
           } else {
@@ -111,7 +108,7 @@ export default function Login({ initialMode = "login" }) {
           }
         }
       } else {
-        const res = await register({
+        const res = await registerApi({
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -119,12 +116,8 @@ export default function Login({ initialMode = "login" }) {
         });
 
         if (res.data?.token) {
-          localStorage.setItem("token", res.data.token);
+          setAuthLogin(res.data.token, res.data.user);
         }
-        if (res.data?.user) {
-          localStorage.setItem("user", JSON.stringify(res.data.user));
-        }
-        window.dispatchEvent(new Event("loveconnect_auth_change"));
         navigate("/onboarding");
       }
     } catch (err) {

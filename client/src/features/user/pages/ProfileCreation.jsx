@@ -36,9 +36,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { updateUserProfile, getUserById, uploadProfileImage } from "../../../services/usersServices.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function ProfileCreation() {
   const navigate = useNavigate();
+  const { user: currentUser, updateUser } = useAuth();
   const fileInputRef = useRef(null);
 
   // 8 Steps multi-step state
@@ -99,20 +101,18 @@ export default function ProfileCreation() {
   const [relationshipPreference, setRelationshipPreference] =
     useState("Relationship");
 
-  // Load existing user info from localStorage if available
+  // Load existing user info from AuthContext/DB if available
   useEffect(() => {
-    try {
-      const savedUserStr = localStorage.getItem("user");
-      if (savedUserStr) {
-        const userObj = JSON.parse(savedUserStr);
-        if (userObj.name) {
-          setBasicInfo((prev) => ({ ...prev, name: userObj.name }));
+    if (currentUser) {
+      try {
+        if (currentUser.name) {
+          setBasicInfo((prev) => ({ ...prev, name: currentUser.name }));
         }
-        if (userObj.profile_image) {
-          setPhoto(userObj.profile_image);
+        if (currentUser.profile_image) {
+          setPhoto(currentUser.profile_image);
         }
-        if (userObj.id) {
-          getUserById(userObj.id)
+        if (currentUser.id) {
+          getUserById(currentUser.id)
             .then((res) => {
               const u = res.data?.user || res.data;
               if (u) {
@@ -169,11 +169,11 @@ export default function ProfileCreation() {
             })
             .catch(() => {});
         }
+      } catch (e) {
+        console.warn("Could not prefill user profile", e);
       }
-    } catch (e) {
-      console.warn("Could not prefill user profile", e);
     }
-  }, []);
+  }, [currentUser]);
 
   // Step 6: 12 Requested Interest Options
   const interestOptions = [
@@ -193,10 +193,10 @@ export default function ProfileCreation() {
 
   // Quick About Me Prompts
   const aboutMePrompts = [
-    "☕ Coffee or Chai? Always coffee with lots of good conversation.",
-    "✈️ Wanderlust soul always planning the next spontaneous road trip.",
-    "🎬 Film buff who can talk about cinema and good stories for hours.",
-    "🍕 Foodie at heart: cooking experiments and exploring street food gems.",
+    " Coffee or Chai? Always coffee with lots of good conversation.",
+    " Wanderlust soul always planning the next spontaneous road trip.",
+    " Film buff who can talk about cinema and good stories for hours.",
+    " Foodie at heart: cooking experiments and exploring street food gems.",
   ];
 
   // Industry options for profession
@@ -267,13 +267,6 @@ export default function ProfileCreation() {
     setUploadingPhoto(true);
 
     try {
-      const savedUserStr = localStorage.getItem("user");
-      let currentUser = null;
-      if (savedUserStr) {
-        try {
-          currentUser = JSON.parse(savedUserStr);
-        } catch (err) {}
-      }
       const userId = currentUser?.id || 3;
 
       const fd = new FormData();
@@ -294,10 +287,9 @@ export default function ProfileCreation() {
           });
         }
 
-        // 3. Update localStorage so all app components immediately have the image
+        // 3. Update auth state so all app components immediately have the image
         if (currentUser) {
-          currentUser.profile_image = uploadedUrl;
-          localStorage.setItem("user", JSON.stringify(currentUser));
+          updateUser({ profile_image: uploadedUrl });
         }
 
         // 4. Update local state
@@ -324,22 +316,8 @@ export default function ProfileCreation() {
     try {
       setPhoto(null);
       setUploadSuccess(false);
-      const savedUserStr = localStorage.getItem("user");
-      let currentUser = null;
-      if (savedUserStr) {
-        try {
-          currentUser = JSON.parse(savedUserStr);
-        } catch (err) {}
-      }
-      const userId = currentUser?.id || 3;
-      if (userId) {
-        await updateUserProfile(userId, { profile_image: "" }).catch((err) =>
-          console.warn("DB update sync warning:", err)
-        );
-      }
       if (currentUser) {
-        currentUser.profile_image = "";
-        localStorage.setItem("user", JSON.stringify(currentUser));
+        updateUser({ profile_image: "" });
       }
     } catch (err) {
       console.warn("Could not remove photo from database", err);
@@ -389,16 +367,6 @@ export default function ProfileCreation() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      const savedUserStr = localStorage.getItem("user");
-      let currentUser = null;
-      if (savedUserStr) {
-        try {
-          currentUser = JSON.parse(savedUserStr);
-        } catch (e) {
-          console.error("Failed to parse user", e);
-        }
-      }
-
       const userId = currentUser?.id || 3;
 
       let cityName = basicInfo.location || "Mumbai";
@@ -503,8 +471,7 @@ export default function ProfileCreation() {
             partner_preferences: profilePayload.partner_preferences,
           },
         };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        window.dispatchEvent(new Event("loveconnect_auth_change"));
+        updateUser(updatedUser);
       }
 
       navigate("/discover");

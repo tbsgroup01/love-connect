@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import {
   Send,
   Sparkles,
@@ -227,6 +228,7 @@ const INITIAL_DB_PLANS = [
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const { user: currentUser, token, updateUser } = useAuth();
   const [dbPlans, setDbPlans] = useState(INITIAL_DB_PLANS);
   const [loading, setLoading] = useState(false);
   const [processingPlanId, setProcessingPlanId] = useState(null);
@@ -241,13 +243,10 @@ export default function Pricing() {
   // Fetch active subscription for the logged-in user
   const fetchActiveSubscription = async () => {
     try {
-      const saved = localStorage.getItem("user");
-      if (!saved) return;
-      const user = JSON.parse(saved);
-      if (!user?.id) return;
+      if (!currentUser?.id) return;
 
       setLoadingSub(true);
-      const res = await checkActiveSubscription(user.id);
+      const res = await checkActiveSubscription(currentUser.id);
       if (res.data?.hasActivePlan && res.data?.subscription) {
         setActiveSubscription(res.data.subscription);
       } else {
@@ -321,13 +320,6 @@ export default function Pricing() {
 
   // Primary Payment Execution via Razorpay
   const executePayment = async (plan) => {
-    const token = localStorage.getItem("token");
-    let currentUser = null;
-    try {
-      const saved = localStorage.getItem("user");
-      if (saved) currentUser = JSON.parse(saved);
-    } catch (_) {}
-
     if (!token || !currentUser) {
       navigate("/login", {
         state: {
@@ -391,10 +383,9 @@ export default function Pricing() {
               payment_method: "Razorpay",
             });
 
-            // Update user in local storage
+            // Update user in auth context
             if (currentUser) {
-              currentUser.subscription = plan.name;
-              localStorage.setItem("user", JSON.stringify(currentUser));
+              updateUser({ subscription: plan.name });
             }
 
             // Refresh active subscription state immediately from server!
@@ -454,7 +445,6 @@ export default function Pricing() {
         alert("You are already active on the Free Starter plan!");
         return;
       }
-      const token = localStorage.getItem("token");
       if (!token) {
         navigate("/register", { state: { selectedPlan: plan } });
       } else {

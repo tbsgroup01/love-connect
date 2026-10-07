@@ -4,21 +4,25 @@ import {
   Clock,
   CheckCircle2,
   Ban,
-  Users,
-  Download,
   Search,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
   Eye,
   Check,
   X,
   UserX,
-  AlertTriangle,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
+import {
+  getReports,
+  updateReport,
+  deleteReport as apiDeleteReport,
+  deleteBulkReports as apiDeleteBulkReports,
+} from "../../../../services/reportsServices.js";
+import { updateUserStatus } from "../../../../services/usersServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -33,369 +37,173 @@ const COLORS = {
   blue: "#3B82F6",
 };
 
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80";
+
 export default function ReportsModeration() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Reports & Moderation");
   const [selectedReport, setSelectedReport] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [reportsData, setReportsData] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedReportIds, setSelectedReportIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // Top 5 KPI Metric Cards matching reference UI exactly
+  // Load reports from backend API
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const res = await getReports({ limit: 100 });
+      if (res && res.success && Array.isArray(res.reports)) {
+        const mapped = res.reports.map((r) => {
+          const reporterP = r.reporter?.profile || {};
+          const reportedP = r.reportedUser?.profile || {};
+
+          const reportedAge = reportedP.date_of_birth
+            ? Math.floor(
+                (new Date() - new Date(reportedP.date_of_birth)) /
+                  (365.25 * 24 * 60 * 60 * 1000)
+              )
+            : null;
+
+          const rawStatus = (r.status || "pending").toLowerCase();
+          const isPending = rawStatus === "pending";
+          const isInReview = rawStatus === "in_review";
+          const isResolved = rawStatus === "resolved";
+          const isActionTaken = rawStatus === "action_taken" || rawStatus === "dismissed";
+
+          let statusDisplay = "Pending";
+          let statusBg = "#FEF3C7";
+          let statusColor = "#D97706";
+
+          if (isResolved) {
+            statusDisplay = "Resolved";
+            statusBg = "#DCFCE7";
+            statusColor = "#16A34A";
+          } else if (isInReview) {
+            statusDisplay = "In Review";
+            statusBg = "#F3E8FF";
+            statusColor = "#7C3AED";
+          } else if (rawStatus === "action_taken") {
+            statusDisplay = "Action Taken";
+            statusBg = "#FEE2E2";
+            statusColor = "#EF4444";
+          } else if (rawStatus === "dismissed") {
+            statusDisplay = "Dismissed";
+            statusBg = "#F1F5F9";
+            statusColor = "#64748B";
+          }
+
+          return {
+            id: r.id,
+            reportId: `REP${String(r.id).padStart(6, "0")}`,
+            reportedUser: {
+              rawId: r.reported_user_id,
+              userId: `USR${String(r.reported_user_id).padStart(5, "0")}`,
+              name: reportedP.full_name || r.reportedUser?.name || "Reported User",
+              age: reportedAge || 26,
+              location: reportedP.city || "Unknown",
+              fullLocation: reportedP.city ? `${reportedP.city}, India` : "India",
+              avatar: reportedP.profile_picture || DEFAULT_AVATAR,
+              status: r.reportedUser?.status || "active",
+            },
+            reportedBy: {
+              rawId: r.reporter_id,
+              name: reporterP.full_name || r.reporter?.name || "Anonymous",
+              avatar: reporterP.profile_picture || null,
+            },
+            reason: r.reason || "General",
+            reasonBg: "#FFE7F0",
+            reasonColor: "#FF2D72",
+            date: r.createdAt
+              ? new Date(r.createdAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "N/A",
+            time: r.createdAt
+              ? new Date(r.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "",
+            status: statusDisplay,
+            rawStatus,
+            statusBg,
+            statusColor,
+            description:
+              r.description ||
+              "User reported for violating community guidelines and safety rules.",
+            actionTaken: r.action_taken || null,
+          };
+        });
+
+        setReportsData(mapped);
+        if (res.stats) {
+          setStats(res.stats);
+        }
+      } else {
+        setReportsData([]);
+      }
+    } catch (err) {
+      console.warn("Could not fetch reports:", err);
+      setReportsData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  // Compute live KPI card metrics
+  const totalReportsCount = stats?.totalReports ?? reportsData.length;
+  const pendingCount =
+    stats?.pending ?? reportsData.filter((r) => r.rawStatus === "pending").length;
+  const resolvedCount =
+    stats?.resolved ?? reportsData.filter((r) => r.rawStatus === "resolved").length;
+  const actionTakenCount =
+    stats?.actionTaken ??
+    reportsData.filter(
+      (r) => r.rawStatus === "action_taken" || r.rawStatus === "dismissed"
+    ).length;
+
   const kpiCards = [
     {
       title: "Total Reports",
-      value: "148",
+      value: totalReportsCount.toLocaleString(),
       bgColor: "#FF2D72",
       icon: Flag,
     },
     {
       title: "Pending Review",
-      value: "36",
+      value: pendingCount.toLocaleString(),
       bgColor: "#F59E0B",
       icon: Clock,
     },
     {
       title: "Resolved",
-      value: "98",
+      value: resolvedCount.toLocaleString(),
       bgColor: "#22C55E",
       icon: CheckCircle2,
     },
     {
       title: "Action Taken",
-      value: "52",
+      value: actionTakenCount.toLocaleString(),
       bgColor: "#EF4444",
       icon: Ban,
     },
   ];
 
-  // Mock Reports Data matching reference image table rows
-  const initialReportsData = [
-    {
-      id: 1,
-      reportId: "REP001234",
-      reportedUser: {
-        name: "Rohan Mehta",
-        age: 28,
-        location: "Mumbai",
-        fullLocation: "Mumbai, India",
-        userId: "USR12345",
-        avatar:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Priya Singh",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Fake Profile",
-      reasonBg: "#FFE7F0",
-      reasonColor: "#FF2D72",
-      date: "15 Sep 2026",
-      time: "10:24 AM",
-      status: "Pending",
-      statusBg: "#FEF3C7",
-      statusColor: "#D97706",
-      description:
-        "This profile seems fake. Using someone else's photos and giving wrong information.",
-      evidenceCount: 4,
-      evidence: [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 2,
-      reportId: "REP001235",
-      reportedUser: {
-        name: "Alisha Verma",
-        age: 25,
-        location: "Delhi",
-        fullLocation: "Delhi, India",
-        userId: "USR12346",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Neha Patel",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Inappropriate Content",
-      reasonBg: "#FFE7F0",
-      reasonColor: "#FF2D72",
-      date: "15 Sep 2026",
-      time: "09:18 AM",
-      status: "In Review",
-      statusBg: "#F3E8FF",
-      statusColor: "#7C3AED",
-      description:
-        "Uploaded inappropriate photos that violate community safety rules.",
-      evidenceCount: 2,
-      evidence: [
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 3,
-      reportId: "REP001236",
-      reportedUser: {
-        name: "Karan Sharma",
-        age: 30,
-        location: "Bangalore",
-        fullLocation: "Bangalore, India",
-        userId: "USR12347",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Anonymous",
-        avatar: null,
-      },
-      reason: "Harassment",
-      reasonBg: "#FEF3C7",
-      reasonColor: "#D97706",
-      date: "14 Sep 2026",
-      time: "05:42 PM",
-      status: "Resolved",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      description:
-        "Sending offensive messages repeatedly after being asked to stop.",
-      evidenceCount: 3,
-      evidence: [
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 4,
-      reportId: "REP001237",
-      reportedUser: {
-        name: "Sneha Reddy",
-        age: 27,
-        location: "Hyderabad",
-        fullLocation: "Hyderabad, India",
-        userId: "USR12348",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Amit Kumar",
-        avatar:
-          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Spam",
-      reasonBg: "#FEF3C7",
-      reasonColor: "#D97706",
-      date: "14 Sep 2026",
-      time: "03:21 PM",
-      status: "Pending",
-      statusBg: "#FEF3C7",
-      statusColor: "#D97706",
-      description: "Promoting external links and spamming chat messages.",
-      evidenceCount: 1,
-      evidence: [
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 5,
-      reportId: "REP001238",
-      reportedUser: {
-        name: "Vikram Singh",
-        age: 31,
-        location: "Pune",
-        fullLocation: "Pune, India",
-        userId: "USR12349",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Pooja Verma",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Scam",
-      reasonBg: "#FEE2E2",
-      reasonColor: "#EF4444",
-      date: "14 Sep 2026",
-      time: "11:12 AM",
-      status: "Action Taken",
-      statusBg: "#FEE2E2",
-      statusColor: "#EF4444",
-      description: "Asking for money transfer under fake emergency pretenses.",
-      evidenceCount: 2,
-      evidence: [
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 6,
-      reportId: "REP001239",
-      reportedUser: {
-        name: "Neha Kapoor",
-        age: 26,
-        location: "Chennai",
-        fullLocation: "Chennai, India",
-        userId: "USR12350",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Riya Malhotra",
-        avatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Fake Profile",
-      reasonBg: "#FFE7F0",
-      reasonColor: "#FF2D72",
-      date: "13 Sep 2026",
-      time: "09:36 PM",
-      status: "Resolved",
-      statusBg: "#DCFCE7",
-      statusColor: "#16A34A",
-      description: "Reported as celebrity impersonation account.",
-      evidenceCount: 1,
-      evidence: [
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 7,
-      reportId: "REP001240",
-      reportedUser: {
-        name: "Rahul Das",
-        age: 29,
-        location: "Kolkata",
-        fullLocation: "Kolkata, India",
-        userId: "USR12351",
-        avatar:
-          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Simran Kaur",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Inappropriate Content",
-      reasonBg: "#FFE7F0",
-      reasonColor: "#FF2D72",
-      date: "13 Sep 2026",
-      time: "12:24 PM",
-      status: "Pending",
-      statusBg: "#FEF3C7",
-      statusColor: "#D97706",
-      description: "Explicit language and suggestive messages in bio.",
-      evidenceCount: 2,
-      evidence: [
-        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 8,
-      reportId: "REP001241",
-      reportedUser: {
-        name: "Aarav Joshi",
-        age: 27,
-        location: "Jaipur",
-        fullLocation: "Jaipur, India",
-        userId: "USR12352",
-        avatar:
-          "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Karan Verma",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Harassment",
-      reasonBg: "#FEF3C7",
-      reasonColor: "#D97706",
-      date: "12 Sep 2026",
-      time: "06:18 PM",
-      status: "Dismissed",
-      statusBg: "#F3F4F6",
-      statusColor: "#6B7280",
-      description:
-        "Accusation of unmatching without consent; no rule violation found.",
-      evidenceCount: 1,
-      evidence: [
-        "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 9,
-      reportId: "REP001242",
-      reportedUser: {
-        name: "Tanya Gupta",
-        age: 24,
-        location: "Lucknow",
-        fullLocation: "Lucknow, India",
-        userId: "USR12353",
-        avatar:
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Anonymous",
-        avatar: null,
-      },
-      reason: "Underage",
-      reasonBg: "#FEF3C7",
-      reasonColor: "#D97706",
-      date: "12 Sep 2026",
-      time: "04:50 PM",
-      status: "In Review",
-      statusBg: "#F3E8FF",
-      statusColor: "#7C3AED",
-      description: "Suspected underage account based on photos provided.",
-      evidenceCount: 2,
-      evidence: [
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-    {
-      id: 10,
-      reportId: "REP001243",
-      reportedUser: {
-        name: "Dev Malhotra",
-        age: 32,
-        location: "Noida",
-        fullLocation: "Noida, India",
-        userId: "USR12354",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80",
-      },
-      reportedBy: {
-        name: "Sneha Reddy",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
-      },
-      reason: "Other",
-      reasonBg: "#F3E8FF",
-      reasonColor: "#7C3AED",
-      date: "11 Sep 2026",
-      time: "02:14 PM",
-      status: "Action Taken",
-      statusBg: "#FEE2E2",
-      statusColor: "#EF4444",
-      description:
-        "Reported for multiple bot-like automated messaging patterns.",
-      evidenceCount: 1,
-      evidence: [
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&auto=format&fit=crop&q=80",
-      ],
-    },
-  ];
-
-  const [reportsData, setReportsData] = useState(initialReportsData);
-  const [selectedReportIds, setSelectedReportIds] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const filteredData = reportsData.filter((item) => {
     if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
+    const term = searchTerm.toLowerCase().trim();
     return (
       item.reportedUser.name.toLowerCase().includes(term) ||
       item.reportedBy.name.toLowerCase().includes(term) ||
@@ -417,7 +225,7 @@ export default function ReportsModeration() {
 
   const currentSelected =
     selectedReport && reportsData.some((r) => r.id === selectedReport.id)
-      ? selectedReport
+      ? reportsData.find((r) => r.id === selectedReport.id)
       : null;
 
   const isAllSelected =
@@ -434,21 +242,127 @@ export default function ReportsModeration() {
 
   const handleToggleSelect = (id) => {
     setSelectedReportIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedReportIds.length === 0) return;
+    try {
+      await apiDeleteBulkReports(selectedReportIds);
+    } catch (e) {
+      console.warn("Delete bulk reports error:", e);
+    }
     setReportsData((prev) =>
-      prev.filter((item) => !selectedReportIds.includes(item.id)),
+      prev.filter((item) => !selectedReportIds.includes(item.id))
     );
+    if (selectedReport && selectedReportIds.includes(selectedReport.id)) {
+      setSelectedReport(null);
+    }
     setSelectedReportIds([]);
   };
 
-  const handleDeleteReport = (id) => {
+  const handleDeleteReport = async (id) => {
+    try {
+      await apiDeleteReport(id);
+    } catch (e) {
+      console.warn("Delete report error:", e);
+    }
     setReportsData((prev) => prev.filter((item) => item.id !== id));
     setSelectedReportIds((prev) => prev.filter((item) => item !== id));
+    if (selectedReport && selectedReport.id === id) {
+      setSelectedReport(null);
+    }
+  };
+
+  // Moderation Action: Resolve Report
+  const handleResolveReport = async () => {
+    if (!currentSelected) return;
+    setActionLoading(true);
+    try {
+      await updateReport(currentSelected.id, {
+        status: "resolved",
+        action_taken: "Marked resolved by Admin",
+      });
+      setReportsData((prev) =>
+        prev.map((r) =>
+          r.id === currentSelected.id
+            ? {
+                ...r,
+                status: "Resolved",
+                rawStatus: "resolved",
+                statusBg: "#DCFCE7",
+                statusColor: "#16A34A",
+              }
+            : r
+        )
+      );
+    } catch (err) {
+      console.warn("Resolve report error:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Moderation Action: Suspend User
+  const handleSuspendUser = async () => {
+    if (!currentSelected) return;
+    setActionLoading(true);
+    try {
+      if (currentSelected.reportedUser?.rawId) {
+        await updateUserStatus(currentSelected.reportedUser.rawId, "suspended");
+      }
+      await updateReport(currentSelected.id, {
+        status: "action_taken",
+        action_taken: "Reported user account suspended",
+      });
+      setReportsData((prev) =>
+        prev.map((r) =>
+          r.id === currentSelected.id
+            ? {
+                ...r,
+                status: "Action Taken",
+                rawStatus: "action_taken",
+                statusBg: "#FEE2E2",
+                statusColor: "#EF4444",
+              }
+            : r
+        )
+      );
+    } catch (err) {
+      console.warn("Suspend user error:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Moderation Action: Dismiss Report
+  const handleDismissReport = async () => {
+    if (!currentSelected) return;
+    setActionLoading(true);
+    try {
+      await updateReport(currentSelected.id, {
+        status: "dismissed",
+        action_taken: "Dismissed by Admin",
+      });
+      setReportsData((prev) =>
+        prev.map((r) =>
+          r.id === currentSelected.id
+            ? {
+                ...r,
+                status: "Dismissed",
+                rawStatus: "dismissed",
+                statusBg: "#F1F5F9",
+                statusColor: "#64748B",
+              }
+            : r
+        )
+      );
+    } catch (err) {
+      console.warn("Dismiss report error:", err);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -480,13 +394,22 @@ export default function ReportsModeration() {
                 Reports & Moderation
               </h1>
               <p className="text-sm text-gray-400 mt-1">
-                Review and manage user reports, flagged content and safety
-                issues
+                Review and manage user reports, flagged content and safety issues
               </p>
             </div>
+            <button
+              onClick={loadReports}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#FF2D72]" : ""}`}
+              />
+              <span>Refresh</span>
+            </button>
           </div>
 
-          {/* TOP 5 KPI CARDS */}
+          {/* TOP 4 KPI CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpiCards.map((kpi, idx) => {
               const Icon = kpi.icon;
@@ -515,17 +438,19 @@ export default function ReportsModeration() {
             })}
           </div>
 
-          {/* TABLE AND RIGHT REPORT DETAILS PANEL SPLIT */}
+          {/* TABLE AND RIGHT DETAIL PANEL SPLIT */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
             {/* REPORTS TABLE */}
             <div
-              className={`${currentSelected ? "xl:col-span-2" : "xl:col-span-3"} bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}
+              className={`${
+                currentSelected ? "xl:col-span-2" : "xl:col-span-3"
+              } bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4`}
             >
               {/* Table Header & Search Bar */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gray-700">
-                    All Reports
+                    All Reports ({filteredData.length})
                   </span>
                   {selectedReportIds.length > 0 && (
                     <button
@@ -540,8 +465,7 @@ export default function ReportsModeration() {
                 <div className="flex items-center gap-2">
                   {selectedReportIds.length > 0 && (
                     <span className="text-xs font-semibold text-gray-500">
-                      {selectedReportIds.length} of {filteredData.length}{" "}
-                      selected
+                      {selectedReportIds.length} of {filteredData.length} selected
                     </span>
                   )}
                   <div className="relative w-full sm:w-64">
@@ -575,18 +499,22 @@ export default function ReportsModeration() {
                       <th className="pb-3 font-semibold">Reason</th>
                       <th className="pb-3 font-semibold">Date & Time</th>
                       <th className="pb-3 font-semibold">Status</th>
-                      <th className="pb-3 font-semibold text-center">
-                        Actions
-                      </th>
+                      <th className="pb-3 font-semibold text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filteredData.length === 0 ? (
+                    {loading ? (
                       <tr>
-                        <td
-                          colSpan="7"
-                          className="py-8 text-center text-gray-400"
-                        >
+                        <td colSpan="7" className="py-12 text-center text-gray-400">
+                          <div className="flex items-center justify-center gap-2">
+                            <RefreshCw className="w-4 h-4 animate-spin text-[#FF2D72]" />
+                            <span>Loading reports...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="py-12 text-center text-gray-400">
                           No reports found
                         </td>
                       </tr>
@@ -603,8 +531,8 @@ export default function ReportsModeration() {
                               isChecked
                                 ? "bg-pink-50/40"
                                 : isSelected
-                                  ? "bg-pink-50/20"
-                                  : "hover:bg-gray-50/50"
+                                ? "bg-pink-50/20"
+                                : "hover:bg-gray-50/50"
                             }`}
                           >
                             <td className="py-3.5">
@@ -633,6 +561,9 @@ export default function ReportsModeration() {
                                 <div>
                                   <div className="font-bold text-gray-900">
                                     {item.reportedUser.name}
+                                  </div>
+                                  <div className="text-gray-400 text-[10px]">
+                                    {item.reportedUser.location}
                                   </div>
                                 </div>
                               </div>
@@ -746,24 +677,32 @@ export default function ReportsModeration() {
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
-                          validCurrentPage === pageNum
-                            ? "text-white shadow-xs"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                        style={validCurrentPage === pageNum ? { backgroundColor: COLORS.pink } : {}}
-                      >
-                        {pageNum}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (pageNum) => (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center cursor-pointer transition-colors ${
+                            validCurrentPage === pageNum
+                              ? "text-white shadow-xs"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          style={
+                            validCurrentPage === pageNum
+                              ? { backgroundColor: COLORS.pink }
+                              : {}
+                          }
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    )}
                     <button
                       type="button"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={validCurrentPage >= totalPages}
                       className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       title="Next Page"
@@ -775,11 +714,11 @@ export default function ReportsModeration() {
               </div>
             </div>
 
-            {/* RIGHT REPORT DETAILS PREVIEW PANEL */}
+            {/* RIGHT REPORT DETAILS & ACTION PANEL */}
             {currentSelected && (
-              <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5 xl:sticky xl:top-6 h-fit">
+              <div className="xl:col-span-1 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4 xl:sticky xl:top-6 h-fit">
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <h2
                       className="text-base font-bold"
                       style={{ color: COLORS.dark }}
@@ -788,15 +727,14 @@ export default function ReportsModeration() {
                     </h2>
                     <button
                       onClick={() => setSelectedReport(null)}
-                      title="Close drawer"
-                      className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {/* Profile Header */}
-                  <div className="flex flex-col items-center text-center p-4 bg-gray-50/60 rounded-2xl border border-gray-100 mb-4">
+                  {/* Reported User Profile Card */}
+                  <div className="flex flex-col items-center p-4 bg-gray-50/70 rounded-2xl text-center mb-5 border border-gray-100">
                     <img
                       src={currentSelected.reportedUser.avatar}
                       alt={currentSelected.reportedUser.name}
@@ -815,16 +753,6 @@ export default function ReportsModeration() {
                     <p className="text-[11px] font-semibold text-gray-400 mt-0.5">
                       ID: {currentSelected.reportedUser.userId}
                     </p>
-
-                    <button
-                      className="mt-3 px-4 py-1.5 rounded-xl font-bold text-xs shadow-2xs transition-all cursor-pointer"
-                      style={{
-                        backgroundColor: COLORS.lightPink,
-                        color: COLORS.pink,
-                      }}
-                    >
-                      View Profile
-                    </button>
                   </div>
 
                   {/* Report Information Breakdown */}
@@ -856,18 +784,13 @@ export default function ReportsModeration() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">Reason</span>
-                      <span
-                        className="font-bold"
-                        style={{ color: COLORS.pink }}
-                      >
+                      <span className="font-bold" style={{ color: COLORS.pink }}>
                         {currentSelected.reason}
                       </span>
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
-                      <span className="text-gray-400 shrink-0">
-                        Description
-                      </span>
+                      <span className="text-gray-400 shrink-0">Description</span>
                       <span className="font-medium text-gray-700 text-right leading-relaxed">
                         {currentSelected.description}
                       </span>
@@ -876,7 +799,8 @@ export default function ReportsModeration() {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">Reported On</span>
                       <span className="font-semibold text-gray-800">
-                        {currentSelected.date}, {currentSelected.time}
+                        {currentSelected.date}
+                        {currentSelected.time ? `, ${currentSelected.time}` : ""}
                       </span>
                     </div>
 
@@ -892,60 +816,43 @@ export default function ReportsModeration() {
                         {currentSelected.status}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Evidence Media Grid */}
-                  <div className="space-y-2 mb-5">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">
-                        Evidence
-                      </h4>
-                      <button
-                        className="text-xs font-bold"
-                        style={{ color: COLORS.pink }}
-                      >
-                        View All ({currentSelected.evidenceCount})
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {currentSelected.evidence.map((imgUrl, eIdx) => (
-                        <div
-                          key={eIdx}
-                          className="relative rounded-xl overflow-hidden h-16 border border-gray-100"
-                        >
-                          <img
-                            src={imgUrl}
-                            alt="Evidence media"
-                            className="w-full h-full object-cover"
-                          />
-                          {eIdx === 3 && currentSelected.evidenceCount > 4 && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-extrabold text-xs">
-                              +{currentSelected.evidenceCount - 3}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    {currentSelected.actionTaken && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Action Taken</span>
+                        <span className="font-semibold text-emerald-600">
+                          {currentSelected.actionTaken}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Action Buttons: Resolve, Suspend User, Dismiss */}
                 <div className="flex items-center gap-2 pt-2">
                   <button
-                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                    disabled={actionLoading}
+                    onClick={handleResolveReport}
+                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 disabled:opacity-50 cursor-pointer"
                     style={{ backgroundColor: COLORS.success }}
                   >
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
                     <span>Resolve</span>
                   </button>
                   <button
-                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                    disabled={actionLoading}
+                    onClick={handleSuspendUser}
+                    className="flex-1 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-xs transition-all hover:opacity-90 disabled:opacity-50 cursor-pointer"
                     style={{ backgroundColor: COLORS.danger }}
                   >
                     <UserX className="w-3.5 h-3.5" />
                     <span>Suspend User</span>
                   </button>
-                  <button className="px-3 py-2.5 rounded-xl font-bold text-xs bg-gray-100 text-gray-600 flex items-center justify-center gap-1 transition-all hover:bg-gray-200 cursor-pointer">
+                  <button
+                    disabled={actionLoading}
+                    onClick={handleDismissReport}
+                    className="px-3 py-2.5 rounded-xl font-bold text-xs bg-gray-100 text-gray-600 flex items-center justify-center gap-1 transition-all hover:bg-gray-200 disabled:opacity-50 cursor-pointer"
+                  >
                     <X className="w-3.5 h-3.5" />
                     <span>Dismiss</span>
                   </button>

@@ -33,8 +33,8 @@ export default function Onboarding() {
       titleHighlight: "True Connection",
       subtitle:
         "Meet genuine, amazing people who share your values, lifestyle, and passions in an authentic environment.",
-      badge: "✨ 98% Chemistry Rate",
-      quote: "Rahul & Pooja matched 2 days ago in Mumbai 💕",
+      badge: " 98% Chemistry Rate",
+      quote: "Rahul & Pooja matched 2 days ago in Mumbai ",
       perks: [
         {
           icon: Heart,
@@ -63,8 +63,8 @@ export default function Onboarding() {
       titleHighlight: "Right Near You",
       subtitle:
         "Explore verified singles in your neighborhood and start natural, spontaneous conversations with ease.",
-      badge: "📍 1,420+ Active Nearby",
-      quote: "Find singles within walking distance right now 🔥",
+      badge: " 1,420+ Active Nearby",
+      quote: "Find singles within walking distance right now ",
       perks: [
         {
           icon: MapPin,
@@ -93,8 +93,8 @@ export default function Onboarding() {
       titleHighlight: "Truly Meaningful",
       subtitle:
         "It's not just another casual match — it's the beautiful beginning of your unforgettable love story.",
-      badge: "💍 45k+ Happy Couples",
-      quote: "Over 500+ couples engaged this year on LoveConnect 🥂",
+      badge: " 45k+ Happy Couples",
+      quote: "Over 500+ couples engaged this year on LoveConnect ",
       perks: [
         {
           icon: Sparkles,

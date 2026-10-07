@@ -20,6 +20,7 @@ import uploadRoutes from "./src/routes/uploadRoutes.js";
 import likesRoutes from "./src/routes/likesRoutes.js";
 import matchesRoutes from "./src/routes/matchesRoutes.js";
 import chatsRoutes from "./src/routes/chatsRoutes.js";
+import callsRoutes from "./src/routes/callsRoutes.js";
 import { initializeSocket } from "./src/config/socket.js";
 
 const app = express();
@@ -78,6 +79,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/likes", likesRoutes);
 app.use("/api/matches", matchesRoutes);
 app.use("/api/chats", chatsRoutes);
+app.use("/api/calls", callsRoutes);
 
 const server = http.createServer(app);
 initializeSocket(server);

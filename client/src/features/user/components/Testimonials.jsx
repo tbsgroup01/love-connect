@@ -15,7 +15,7 @@ export default function Testimonials() {
       id: 1,
       name: "Priya & Arjun",
       location: "Mumbai, India",
-      tag: "Married 💍",
+      tag: "Married ",
       quote:
         "We matched 2 years ago and tied the knot last month in Udaipur! LoveConnect's interest-based matching connected us over indie music and weekend trekking.",
       avatar:
@@ -37,7 +37,7 @@ export default function Testimonials() {
       id: 3,
       name: "Ananya & Kabir",
       location: "Bangalore, India",
-      tag: "Together 2 Yrs ✨",
+      tag: "Together 2 Yrs ",
       quote:
         "Both being introverted techies in Bengaluru, loud social scenes weren't for us. LoveConnect paired us through shared passions, and we instantly connected.",
       avatar:
@@ -48,7 +48,7 @@ export default function Testimonials() {
       id: 4,
       name: "Vikram & Pooja",
       location: "Pune, India",
-      tag: "Soulmates 🌟",
+      tag: "Soulmates ",
       quote:
         "I was skeptical of dating apps until I tried LoveConnect. The AI algorithm is remarkably accurate—we share the exact same core values and life ambitions.",
       avatar:
@@ -70,7 +70,7 @@ export default function Testimonials() {
       id: 6,
       name: "Tanvi & Siddharth",
       location: "Jaipur, India",
-      tag: "Engaged 💍",
+      tag: "Engaged ",
       quote:
         "From endless late-night chats to planning our wedding together! LoveConnect made finding someone who truly understands and cherishes you effortless.",
       avatar:

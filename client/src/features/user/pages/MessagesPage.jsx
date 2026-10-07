@@ -16,10 +16,16 @@ import {
   ArrowLeft,
   X,
   Crown,
+  PhoneOff,
 } from "lucide-react";
 import { io } from "socket.io-client";
-
+import { useAuth } from "../../../context/AuthContext.jsx";
 import snehaImg from "../../../assets/hero_woman.jpg";
+import {
+  createCall,
+  acceptCall,
+  rejectCall,
+} from "../../../services/callsServices.js";
 
 import {
   getUserConversations,
@@ -36,15 +42,8 @@ export default function MessagesPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Current logged in user
-  let currentUser = null;
-  try {
-    const saved = localStorage.getItem("user");
-    if (saved) currentUser = JSON.parse(saved);
-  } catch (err) {
-    currentUser = null;
-    void err;
-  }
+  // Current logged in user from AuthContext
+  const { user: currentUser, token } = useAuth();
 
   // State
   const [conversations, setConversations] = useState([]);
@@ -56,6 +55,7 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [callingState, setCallingState] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
 
@@ -87,7 +87,9 @@ export default function MessagesPage() {
       .then((res) => {
         const subs = res.data?.user?.subscriptions || [];
         const activeSub = subs.find(
-          (s) => s.status === "active" && (!s.end_date || new Date(s.end_date) > new Date())
+          (s) =>
+            s.status === "active" &&
+            (!s.end_date || new Date(s.end_date) > new Date()),
         );
         setHasPaidPlan(Boolean(activeSub && Number(activeSub.plan?.price) > 0));
       })
@@ -117,7 +119,10 @@ export default function MessagesPage() {
       date.getFullYear() === now.getFullYear();
 
     if (isToday) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
 
     const yesterday = new Date(now);
@@ -146,10 +151,11 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    const token = localStorage.getItem("token");
     const apiUrl = import.meta.env.VITE_API_URL;
-    if (!apiUrl) return;
-    const socketUrl = apiUrl.replace(/\/api\/?$/, "");
+    const socketUrl =
+      apiUrl && apiUrl.startsWith("http")
+        ? apiUrl.replace(/\/api\/?$/, "")
+        : window.location.origin;
 
     try {
       const socket = io(socketUrl, {
@@ -181,7 +187,7 @@ export default function MessagesPage() {
               (m) =>
                 m.pending &&
                 Number(m.sender_id) === Number(msg.sender_id) &&
-                m.content === msg.content
+                m.content === msg.content,
             );
             if (pendingIndex !== -1) {
               const updated = [...prev];
@@ -219,13 +225,23 @@ export default function MessagesPage() {
         });
       });
 
+      // Handle incoming call notification
+      socket.on("incoming-call", (callData) => {
+        setIncomingCall(callData);
+      });
+
+      // Handle call cancelled before answer
+      socket.on("call-cancelled", () => {
+        setIncomingCall(null);
+      });
+
       return () => {
         socket.disconnect();
       };
     } catch (err) {
       console.warn("Socket initialization error:", err);
     }
-  }, [currentUser?.id]);
+  }, [currentUser?.id, token]);
 
   // Load user conversations and support navigation from MatchesPage
   const loadConversations = useCallback(async () => {
@@ -250,7 +266,7 @@ export default function MessagesPage() {
         const latestMsg = conv.messages?.[0];
         const lastMsgText = latestMsg?.content || "Say hello!";
         const lastTimeStr = formatTime(
-          latestMsg?.createdAt || conv.lastMessageAt || conv.updatedAt
+          latestMsg?.createdAt || conv.lastMessageAt || conv.updatedAt,
         );
         const isUnread =
           latestMsg &&
@@ -268,7 +284,8 @@ export default function MessagesPage() {
           unread: isUnread ? 1 : 0,
           img: partnerImg,
           partner,
-          lastMessageAt: latestMsg?.createdAt || conv.lastMessageAt || conv.updatedAt,
+          lastMessageAt:
+            latestMsg?.createdAt || conv.lastMessageAt || conv.updatedAt,
         };
       });
 
@@ -280,13 +297,15 @@ export default function MessagesPage() {
       let targetConvId = null;
 
       if (stateConvId) {
-        const found = formatted.find((c) => Number(c.id) === Number(stateConvId));
+        const found = formatted.find(
+          (c) => Number(c.id) === Number(stateConvId),
+        );
         if (found) targetConvId = found.id;
       }
 
       if (!targetConvId && stateRecipientId) {
         const found = formatted.find(
-          (c) => Number(c.partnerId) === Number(stateRecipientId)
+          (c) => Number(c.partnerId) === Number(stateRecipientId),
         );
         if (found) {
           targetConvId = found.id;
@@ -299,7 +318,7 @@ export default function MessagesPage() {
               (m) =>
                 Number(m.user_one_id) === Number(stateRecipientId) ||
                 Number(m.user_two_id) === Number(stateRecipientId) ||
-                (stateMatchId && Number(m.id) === Number(stateMatchId))
+                (stateMatchId && Number(m.id) === Number(stateMatchId)),
             );
 
             if (targetMatch) {
@@ -338,7 +357,10 @@ export default function MessagesPage() {
             }
           } catch (err) {
             console.error("Error creating conversation with match:", err);
-            if (err.response?.status === 403 || err.response?.data?.upgradeRequired) {
+            if (
+              err.response?.status === 403 ||
+              err.response?.data?.upgradeRequired
+            ) {
               setLimitModalOpen(true);
             }
           }
@@ -351,7 +373,7 @@ export default function MessagesPage() {
         setActiveChat(targetConvId);
       } else if (formatted.length > 0) {
         setActiveChat((prev) =>
-          prev && formatted.some((c) => c.id === prev) ? prev : formatted[0].id
+          prev && formatted.some((c) => c.id === prev) ? prev : formatted[0].id,
         );
       } else {
         setActiveChat(null);
@@ -392,8 +414,8 @@ export default function MessagesPage() {
           // Reset unread count for active conversation in local state
           setConversations((prev) =>
             prev.map((c) =>
-              Number(c.id) === Number(activeChat) ? { ...c, unread: 0 } : c
-            )
+              Number(c.id) === Number(activeChat) ? { ...c, unread: 0 } : c,
+            ),
           );
         }
       } catch (err) {
@@ -449,8 +471,8 @@ export default function MessagesPage() {
               time: "Just now",
               lastMessageAt: new Date().toISOString(),
             }
-          : c
-      )
+          : c,
+      ),
     );
 
     try {
@@ -458,7 +480,7 @@ export default function MessagesPage() {
       const sentMsg = res.data?.data;
       if (sentMsg) {
         setChatMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? sentMsg : m))
+          prev.map((m) => (m.id === tempId ? sentMsg : m)),
         );
       }
     } catch (err) {
@@ -468,10 +490,100 @@ export default function MessagesPage() {
       if (err.response?.status === 403 || err.response?.data?.upgradeRequired) {
         setLimitModalOpen(true);
       } else {
-        alert(err.response?.data?.message || "Failed to send message. Please check your connection and try again.");
+        alert(
+          err.response?.data?.message ||
+            "Failed to send message. Please check your connection and try again.",
+        );
       }
     } finally {
       setSending(false);
+    }
+  };
+
+  // Start outgoing call
+  const handleStartCall = async (type = "video") => {
+    if (!currentChatPartner || !currentChatPartner.partnerId) {
+      alert("Please select a match to call");
+      return;
+    }
+    try {
+      setCallingState({ type, name: currentChatPartner.name });
+      const res = await createCall({
+        receiver_id: currentChatPartner.partnerId,
+        call_type: type,
+        conversation_id: activeChat,
+      });
+
+      const callRecord = res.call || res;
+      setCallingState(null);
+
+      const roomName = `LoveConnect_Call_${callRecord.id}`;
+
+      navigate("/call", {
+        state: {
+          callId: callRecord.id,
+          otherUserId: currentChatPartner.partnerId,
+          otherUserName: currentChatPartner.name,
+          otherUserAvatar: currentChatPartner.img,
+          roomName,
+          callType: type,
+          isCaller: true,
+        },
+      });
+    } catch (err) {
+      console.error("Start call error:", err);
+      setCallingState(null);
+      alert(
+        err.response?.data?.message ||
+          "Could not start call. Please check your connection and try again.",
+      );
+    }
+  };
+
+  // Accept incoming call
+  const handleAcceptIncomingCall = async () => {
+    if (!incomingCall) return;
+    try {
+      await acceptCall({ call_id: incomingCall.call_id });
+      const targetCall = { ...incomingCall };
+      setIncomingCall(null);
+
+      const roomName =
+        targetCall.room_name || `LoveConnect_Call_${targetCall.call_id}`;
+
+      navigate("/call", {
+        state: {
+          callId: targetCall.call_id,
+          otherUserId: targetCall.caller_id,
+          otherUserName: targetCall.caller_name || "Match",
+          otherUserAvatar: targetCall.caller_avatar || null,
+          roomName,
+          callType: targetCall.call_type || "video",
+          isCaller: false,
+        },
+      });
+    } catch (err) {
+      console.error("Accept call error:", err);
+      setIncomingCall(null);
+    }
+  };
+
+  // Reject incoming call
+  const handleRejectIncomingCall = async () => {
+    if (!incomingCall) return;
+    try {
+      await rejectCall({ call_id: incomingCall.call_id });
+      if (socketRef.current) {
+        socketRef.current.emit("reject-call", {
+          call_id: incomingCall.call_id,
+          caller_id: incomingCall.caller_id,
+          receiver_id: currentUser?.id,
+        });
+      }
+    } catch (err) {
+      console.error("Reject call error:", err);
+    } finally {
+      setIncomingCall(null);
     }
   };
 
@@ -484,14 +596,13 @@ export default function MessagesPage() {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      c.name?.toLowerCase().includes(q) ||
-      c.lastMsg?.toLowerCase().includes(q)
+      c.name?.toLowerCase().includes(q) || c.lastMsg?.toLowerCase().includes(q)
     );
   });
 
   return (
     <DashboardLayout activeTab="messages">
-      <div className="w-full bg-[#FFFFFF] rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-[700px] animate-fadeIn">
+      <div className="w-full bg-[#FFFFFF] rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-full min-h-0 md:h-[700px] animate-fadeIn">
         {/* LEFT CONVERSATION LIST SIDEBAR */}
         <div
           className={`w-full md:w-80 border-r border-slate-200/80 flex flex-col shrink-0 bg-white ${
@@ -510,7 +621,8 @@ export default function MessagesPage() {
                 )}
               </div>
               <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                {conversations.length} {conversations.length === 1 ? "Chat" : "Chats"}
+                {conversations.length}{" "}
+                {conversations.length === 1 ? "Chat" : "Chats"}
               </span>
             </div>
             <div className="flex items-center gap-2 bg-slate-100/80 px-3.5 py-2 rounded-full border border-slate-200/60 focus-within:border-[#FF2D72]/50 transition-all">
@@ -539,7 +651,9 @@ export default function MessagesPage() {
             {loadingConversations ? (
               <div className="flex flex-col items-center justify-center p-8 space-y-2">
                 <Loader2 className="w-6 h-6 text-[#FF2D72] animate-spin" />
-                <span className="text-xs text-slate-400 font-medium">Loading conversations...</span>
+                <span className="text-xs text-slate-400 font-medium">
+                  Loading conversations...
+                </span>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center space-y-3 flex flex-col items-center justify-center h-full">
@@ -548,7 +662,9 @@ export default function MessagesPage() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-slate-700">
-                    {searchQuery ? "No matching conversations" : "No conversations yet"}
+                    {searchQuery
+                      ? "No matching conversations"
+                      : "No conversations yet"}
                   </p>
                   <p className="text-[11px] text-slate-400 mt-1">
                     {searchQuery
@@ -677,12 +793,7 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      setCallingState({
-                        type: "voice",
-                        name: currentChatPartner.name,
-                      })
-                    }
+                    onClick={() => handleStartCall("voice")}
                     className="p-2 rounded-xl bg-slate-100 hover:bg-[#FFE7F0] hover:text-[#FF2D72] text-slate-600 transition-colors cursor-pointer"
                     title="Voice Call"
                   >
@@ -690,12 +801,7 @@ export default function MessagesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      setCallingState({
-                        type: "video",
-                        name: currentChatPartner.name,
-                      })
-                    }
+                    onClick={() => handleStartCall("video")}
                     className="p-2 rounded-xl bg-slate-100 hover:bg-[#FFE7F0] hover:text-[#FF2D72] text-slate-600 transition-colors cursor-pointer"
                     title="Video Call"
                   >
@@ -708,19 +814,24 @@ export default function MessagesPage() {
               {loadingMessages ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-2">
                   <Loader2 className="w-6 h-6 text-[#FF2D72] animate-spin" />
-                  <span className="text-xs text-slate-400 font-medium">Loading chat history...</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Loading chat history...
+                  </span>
                 </div>
               ) : (
-                <div className="flex-1 p-5 overflow-y-auto space-y-4">
+                <div className="flex-1 min-h-0 p-3 sm:p-5 overflow-y-auto space-y-4">
                   {chatMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
                       <div className="w-12 h-12 rounded-full bg-pink-100/70 text-[#FF2D72] flex items-center justify-center shadow-inner">
                         <Smile className="w-6 h-6" />
                       </div>
                       <div className="max-w-xs">
-                        <p className="text-xs font-black text-slate-700">No messages yet</p>
+                        <p className="text-xs font-black text-slate-700">
+                          No messages yet
+                        </p>
                         <p className="text-[11px] text-slate-400 mt-0.5">
-                          Break the ice! Send a romantic hello or pick a quick reaction below.
+                          Break the ice! Send a romantic hello or pick a quick
+                          reaction below.
                         </p>
                       </div>
                     </div>
@@ -730,7 +841,8 @@ export default function MessagesPage() {
                         msg.sender === "me" ||
                         Number(msg.sender_id) === Number(currentUser?.id);
                       const text = msg.content || msg.text;
-                      const timeStr = msg.time || formatMessageTime(msg.createdAt);
+                      const timeStr =
+                        msg.time || formatMessageTime(msg.createdAt);
 
                       return (
                         <div
@@ -751,7 +863,9 @@ export default function MessagesPage() {
                             {isMe && (
                               <CheckCheck
                                 className={`w-3 h-3 ${
-                                  msg.readAt ? "text-emerald-500" : "text-[#FF2D72]"
+                                  msg.readAt
+                                    ? "text-emerald-500"
+                                    : "text-[#FF2D72]"
                                 }`}
                               />
                             )}
@@ -767,16 +881,9 @@ export default function MessagesPage() {
               {/* Chat Input Form */}
               <form
                 onSubmit={handleSendMessage}
-                className="p-3 bg-white border-t border-slate-200/80 flex items-center gap-2 shrink-0"
+                className="p-2 sm:p-3 bg-white border-t border-slate-200/80 flex items-center gap-1.5 sm:gap-2 shrink-0"
               >
-                <button
-                  type="button"
-                  onClick={() => alert("Photo and media attachments available soon!")}
-                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </button>
+          
 
                 <input
                   type="text"
@@ -787,15 +894,7 @@ export default function MessagesPage() {
                   className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-[#17151A] bg-slate-50 focus:bg-[#FFFFFF] focus:border-[#FF2D72] outline-none transition-all font-medium disabled:opacity-60"
                 />
 
-                <button
-                  type="button"
-                  onClick={() => setInputMessage((prev) => prev + " ❤️")}
-                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-[#FFE7F0] text-slate-500 hover:text-[#FF2D72] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                  title="Add Heart"
-                >
-                  <Smile className="w-4 h-4" />
-                </button>
-
+         
                 <button
                   type="submit"
                   disabled={!inputMessage.trim() || sending}
@@ -821,7 +920,8 @@ export default function MessagesPage() {
                   Your Romantic Messages
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Select a match from the conversation list on the left to start chatting, or explore new connections!
+                  Select a match from the conversation list on the left to start
+                  chatting, or explore new connections!
                 </p>
               </div>
               <button
@@ -837,7 +937,70 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* CALLING MODAL POPUP */}
+      {/* INCOMING CALL MODAL POPUP */}
+      {incomingCall && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-6 shadow-2xl border border-pink-100">
+            <div className="relative mx-auto w-24 h-24">
+              <div className="absolute -inset-2 rounded-full bg-pink-500/30 animate-ping" />
+              <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#FF2D72] shadow-xl bg-slate-100 flex items-center justify-center">
+                {incomingCall.caller_avatar ? (
+                  <img
+                    src={incomingCall.caller_avatar}
+                    alt={incomingCall.caller_name || "Caller"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white font-black text-2xl">
+                    {incomingCall.caller_name?.[0]?.toUpperCase() || "M"}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-[#17151A]">
+                {incomingCall.caller_name || "Match"}
+              </h3>
+              <p className="text-xs text-slate-500 font-semibold flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>
+                  Incoming{" "}
+                  {incomingCall.call_type === "video" ? "Video" : "Voice"}{" "}
+                  Call...
+                </span>
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-6 pt-2">
+              <button
+                type="button"
+                onClick={handleRejectIncomingCall}
+                className="w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                title="Decline"
+              >
+                <PhoneOff className="w-6 h-6 stroke-[2.5]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleAcceptIncomingCall}
+                className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer animate-bounce"
+                style={{ animationDuration: "1.2s" }}
+                title="Accept"
+              >
+                {incomingCall.call_type === "video" ? (
+                  <Video className="w-6 h-6 stroke-[2.5]" />
+                ) : (
+                  <Phone className="w-6 h-6 stroke-[2.5]" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CALLING OUTGOING MODAL POPUP */}
       {callingState && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 shadow-2xl border border-pink-100">
@@ -856,18 +1019,12 @@ export default function MessagesPage() {
                 {callingState.type === "video" ? "Video Call" : "Voice Call"}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Connecting with <span className="font-bold text-[#17151A]">{callingState.name}</span>...
+                Connecting with{" "}
+                <span className="font-bold text-[#17151A]">
+                  {callingState.name}
+                </span>
+                ...
               </p>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setCallingState(null)}
-                className="px-6 py-2.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-black text-xs transition-colors shadow-xs cursor-pointer"
-              >
-                End Call
-              </button>
             </div>
           </div>
         </div>
@@ -894,7 +1051,9 @@ export default function MessagesPage() {
                 1 User Chat Limit Reached 🔒
               </h2>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple users se unlimited chats karne ke liye Premium plan upgrade karein!
+                With the Free Starter plan, you can chat with only{" "}
+                <strong>1 user</strong>. Upgrade to the Premium plan to enjoy
+                unlimited chats with multiple users!
               </p>
             </div>
 

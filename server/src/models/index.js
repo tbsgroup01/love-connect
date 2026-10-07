@@ -14,6 +14,7 @@ import Banners from "./bannersModel.js";
 import Faqs from "./faqsModel.js";
 import Settings from "./settingsModel.js";
 import Support from "./supportModel.js";
+import Calls from "./callsModel.js";
 
 
 Users.hasOne(Profiles, {
@@ -206,6 +207,43 @@ Activities.belongsTo(Admin, {
   as: "admin",
 });
 
+// 12. Users <-> Call (caller & receiver)
+Users.hasMany(Calls, {
+  foreignKey: "caller_id",
+  as: "outgoingCalls",
+  onDelete: "CASCADE",
+});
+
+Calls.belongsTo(Users, {
+  foreignKey: "caller_id",
+  as: "caller",
+});
+
+Users.hasMany(Calls, {
+  foreignKey: "receiver_id",
+  as: "incomingCalls",
+  onDelete: "CASCADE",
+});
+
+Calls.belongsTo(Users, {
+  foreignKey: "receiver_id",
+  as: "receiver",
+});
+
+// 13. Conversation <-> Calls
+Conversation.hasMany(Calls, {
+  foreignKey: "conversation_id",
+  as: "calls",
+  onDelete: "SET NULL",
+});
+
+Calls.belongsTo(Conversation, {
+  foreignKey: "conversation_id",
+  as: "conversation",
+});
+
+
+
 export {
   Users,
   Admin,
@@ -223,6 +261,7 @@ export {
   Faqs,
   Settings,
   Support,
+  Calls,
 };
 
 export default {
@@ -242,4 +281,5 @@ export default {
   Faqs,
   Settings,
   Support,
+  Calls,
 };

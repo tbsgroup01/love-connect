@@ -19,18 +19,11 @@ import {
 import { getLikes, likeUser, removeLike } from "../../../services/likesServices.js";
 import { getUserById } from "../../../services/usersServices.js";
 import { getUserConversations } from "../../../services/chatsServices.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function LikesPage() {
   const navigate = useNavigate();
-
-  let currentUser = null;
-  try {
-    const saved = localStorage.getItem("user");
-    if (saved) currentUser = JSON.parse(saved);
-  } catch (err) {
-    currentUser = null;
-    void err;
-  }
+  const { user: currentUser } = useAuth();
 
   const [activeSubTab, setActiveSubTab] = useState("received"); // "received" | "sent"
   const [likesList, setLikesList] = useState([]);
@@ -375,7 +368,7 @@ export default function LikesPage() {
                     ) : (
                       <div className="w-full flex items-center gap-2">
                         <span className="flex-1 py-2 text-center text-xs font-bold text-slate-500 bg-slate-50 rounded-xl">
-                          Sent ❤️
+                          Sent 
                         </span>
                         <button
                           type="button"
