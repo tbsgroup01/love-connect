@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -22,7 +23,9 @@ import {
   Loader2,
   Check,
   PlayingCardsFan,
+  ShieldAlert,
 } from "lucide-react";
+import ReportUserModal from "../components/ReportUserModal.jsx";
 
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { likeUser } from "../../../services/likesServices.js";
@@ -44,6 +47,12 @@ export default function Discover() {
   const [matchModal, setMatchModal] = useState(null);
   const [profileModal, setProfileModal] = useState(null); 
   const [actionLoading, setActionLoading] = useState(false);
+  const [reportingUser, setReportingUser] = useState(null);
+
+  const handleReportSuccess = (reported) => {
+    if (profileModal) setProfileModal(null);
+    setDbProfiles((prev) => prev.filter((p) => p.id !== reported.id));
+  };
 
   const calculateAge = (dobString) => {
     if (!dobString) return null;
@@ -335,7 +344,7 @@ export default function Discover() {
             {[
               { id: "all", label: "All" },
               { id: "nearby", label: "Nearby" },
-              { id: "verified", label: "Verified" },
+          
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -397,14 +406,24 @@ export default function Discover() {
                 <ArrowLeft className="w-4 h-4 text-[#FF2D72]" />
                 <span>Back to Swiping</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setProfileModal(null)}
-                aria-label="Close profile view"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setReportingUser(profileModal)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                  title="Report Profile"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProfileModal(null)}
+                  aria-label="Close profile view"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Content Body */}
@@ -666,6 +685,19 @@ export default function Discover() {
               {/* Ambient Bottom Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#17151A]/95 via-[#17151A]/40 to-transparent pointer-events-none" />
 
+              {/* Quick Report Profile Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setReportingUser(currentProfile);
+                }}
+                className="absolute top-3.5 right-3.5 z-30 p-2 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white/80 hover:text-rose-400 transition-all border border-white/20 shadow-md cursor-pointer"
+                title="Report Profile"
+              >
+                <ShieldAlert className="w-4 h-4" />
+              </button>
+
               {/* Profile Card Bottom Info (STRICT DB ONLY) */}
               <div
                 className="absolute bottom-0 inset-x-0 p-3 sm:p-5 md:p-6 text-[#FFFFFF] z-20 space-y-1 sm:space-y-2 cursor-pointer"
@@ -808,68 +840,75 @@ export default function Discover() {
           </div>
         )}
 
-        {/* MATCH POPUP MODAL */}
-        {matchModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 animate-fadeIn"
-            onClick={() => setMatchModal(null)}
-          >
+        {matchModal &&
+          createPortal(
             <div
-              className="bg-[#FFFFFF] rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl relative"
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 animate-fadeIn"
+              onClick={() => setMatchModal(null)}
             >
-              <div className="text-4xl animate-bounce">💖</div>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#17151A]">
-                  It's a Match!
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  You and {matchModal.name} liked each other.
-                </p>
-              </div>
+              <div
+                className="bg-[#FFFFFF] rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-black text-[#17151A]">
+                    It's a Match!
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    You and {matchModal.name} liked each other.
+                  </p>
+                </div>
 
-              <div className="flex items-center justify-center gap-3 py-2">
-                <img
-                  src={currentUser?.profile_image || rheaImg}
-                  alt="You"
-                  className="w-16 h-16 rounded-full object-cover border-4 border-[#FF2D72] shadow-md"
-                />
+                <div className="flex items-center justify-center gap-3 py-2">
+                  <img
+                    src={currentUser?.profile_image || rheaImg}
+                    alt="You"
+                    className="w-16 h-16 rounded-full object-cover border-4 border-[#FF2D72] shadow-md"
+                  />
 
-                <img
-                  src={matchModal.image}
-                  alt={matchModal.name}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = ananyaImg;
-                  }}
-                  className="w-16 h-16 rounded-full object-cover border-4 border-[#7C3AED] shadow-md"
-                />
-              </div>
+                  <img
+                    src={matchModal.image}
+                    alt={matchModal.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = ananyaImg;
+                    }}
+                    className="w-16 h-16 rounded-full object-cover border-4 border-[#7C3AED] shadow-md"
+                  />
+                </div>
 
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMatchModal(null);
-                    navigate("/messages");
-                  }}
-                  className="w-full py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-extrabold text-xs sm:text-sm shadow-md cursor-pointer hover:brightness-105"
-                >
-                  Send a Message Now
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMatchModal(null);
-                  }}
-                  className="w-full py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
-                >
-                  Keep Swiping
-                </button>
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMatchModal(null);
+                      navigate("/messages");
+                    }}
+                    className="w-full py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-extrabold text-xs sm:text-sm shadow-md cursor-pointer hover:brightness-105"
+                  >
+                    Send a Message Now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMatchModal(null);
+                    }}
+                    className="w-full py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
+                  >
+                    Keep Swiping
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </div>,
+            document.body
+          )}
+        <ReportUserModal
+          isOpen={Boolean(reportingUser)}
+          onClose={() => setReportingUser(null)}
+          reportedUser={reportingUser}
+          onSuccess={handleReportSuccess}
+        />
       </div>
     </DashboardLayout>
   );

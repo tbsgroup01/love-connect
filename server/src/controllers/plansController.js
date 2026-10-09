@@ -4,7 +4,7 @@ import { Op } from "sequelize";
 
 const createPlans = async (req, res) => {
   try {
-    const { plan_id, name, price, duration, description, status } = req.body;
+    const { plan_id, name, price, duration, description, features, status } = req.body;
     if (
       !name ||
       price === undefined ||
@@ -23,6 +23,7 @@ const createPlans = async (req, res) => {
       price,
       duration,
       description,
+      features: features || null,
       status: status || "active",
     });
     const { ...planData } = plan.toJSON();
@@ -147,6 +148,7 @@ const seedPlans = async (req, res) => {
           price: item.price,
           duration: item.duration,
           description: item.description,
+          features: item.features,
           status: item.status,
         });
         existingCount++;

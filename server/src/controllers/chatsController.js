@@ -7,8 +7,10 @@ import {
   Profiles,
   Subscriptions,
   Plans,
+  Notifications,
 } from "../models/index.js";
 import { getIO } from "../config/socket.js";
+import { notifyMessage } from "../services/notificationsServices.js";
 
 export const getUserConversations = async (req, res) => {
   try {
@@ -78,7 +80,6 @@ export const getUserConversations = async (req, res) => {
   }
 };
 
-// Reusable helper: Validate if user has permission to chat (enforces 1-chat limit for Free Starter plan)
 export const validateUserChatPermission = async (userId, targetConversationId = null) => {
   const activeSub = await Subscriptions.findOne({
     where: {
@@ -95,12 +96,9 @@ export const validateUserChatPermission = async (userId, targetConversationId = 
     new Date(activeSub.end_date) > new Date()
   );
 
-  // Paid users have unlimited chat access
   if (isPaidUser) {
     return { allowed: true };
   }
-
-  // Free Starter user: limit to 1 conversation only
   const userConversations = await Conversation.findAll({
     where: {
       [Op.or]: [{ user_one_id: userId }, { user_two_id: userId }],
@@ -186,7 +184,7 @@ export const getOrCreateConversation = async (req, res) => {
       ],
     });
 
-    // Enforce 1 user chat limit for Free Starter plan
+
     const permission = await validateUserChatPermission(userId, conversation?.id);
     if (!permission.allowed) {
       return res.status(403).json({
@@ -344,7 +342,6 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // Enforce 1 user chat limit for Free Starter plan
     const permission = await validateUserChatPermission(userId, conversation_id);
     if (!permission.allowed) {
       return res.status(403).json({
@@ -392,6 +389,21 @@ export const sendMessage = async (req, res) => {
       }
     } catch (socketErr) {
       console.warn("Socket broadcast error:", socketErr);
+    }
+
+    const receiverId =
+      Number(conversation.user_one_id) === Number(userId)
+        ? conversation.user_two_id
+        : conversation.user_one_id;
+
+    try {
+      await notifyMessage({
+        senderId: userId,
+        receiverId: Number(receiverId),
+        conversationId: conversation.id,
+      });
+    } catch (notifErr) {
+      console.error("Message notification trigger error:", notifErr);
     }
 
     return res.status(201).json({
@@ -446,6 +458,19 @@ export const markMessagesAsRead = async (req, res) => {
         },
       }
     );
+
+    try {
+      await Notifications.destroy({
+        where: {
+          recipient_type: "user",
+          user_id: userId,
+          type: "message",
+          reference_id: conversation_id,
+        },
+      });
+    } catch (notifErr) {
+      console.warn("Clean up chat notifications error:", notifErr.message);
+    }
 
     return res.status(200).json({
       message: "Messages marked as read",

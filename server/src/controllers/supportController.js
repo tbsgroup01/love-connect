@@ -52,7 +52,7 @@ export const getSupports = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    const total = await Support.count();
+    const total = await Support.count({ where: whereClause });
 
     return res.status(200).json({
       message: "Support messages fetched successfully.",

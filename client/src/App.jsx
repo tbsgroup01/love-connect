@@ -5,7 +5,7 @@ import { updateBrowserFavicon } from "./services/uploadServices.js";
 import api from "./services/api.js";
 import Home from "./features/user/pages/Home";
 
-import SplashScreen from "./features/user/pages/SplashScreen";
+// import SplashScreen from "./features/user/pages/SplashScreen";
 import PrivacyPolicy from "./features/user/pages/PrivacyPolicy";
 import TermsConditions from "./features/user/pages/TermsConditions";
 import Login from "./features/user/pages/Login";
@@ -156,7 +156,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/splash" element={<SplashScreen />} />
+        {/* <Route path="/splash" element={<SplashScreen />} /> */}
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/login" element={<Login initialMode="login" />} />

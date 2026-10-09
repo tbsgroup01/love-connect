@@ -64,6 +64,24 @@ const formatPlanFromDb = (plan) => {
   const duration = Number(plan.duration) || 0;
   const priceNum = Number(plan.price) || 0;
 
+  // Extract features dynamically from DB if present
+  let dbFeatureList = null;
+  if (plan.features) {
+    let parsed = plan.features;
+    if (typeof parsed === 'string') {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch (_) {
+        parsed = null;
+      }
+    }
+    if (Array.isArray(parsed)) {
+      dbFeatureList = parsed
+        .filter((f) => f && f.included)
+        .map((f) => f.name);
+    }
+  }
+
   // 1. FREE PLAN (₹0)
   if (duration === 0) {
     return {
@@ -81,7 +99,7 @@ const formatPlanFromDb = (plan) => {
       isVip: false,
       icon: Send,
       iconColor: "text-blue-500 bg-blue-50 border-blue-100",
-      features: [
+      features: (dbFeatureList && dbFeatureList.length > 0) ? dbFeatureList : [
         "Create verified profile",
         "Browse local members",
         "10 likes per day (limited)",
@@ -112,7 +130,7 @@ const formatPlanFromDb = (plan) => {
       icon: Sparkles,
       iconColor:
         "text-white bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] shadow-md shadow-[#FF2D72]/25",
-      features: [
+      features: (dbFeatureList && dbFeatureList.length > 0) ? dbFeatureList : [
         "Full access while plan is active",
         "Unlimited likes & accidental rewinds",
         "See who liked you before matching",
@@ -126,36 +144,36 @@ const formatPlanFromDb = (plan) => {
     };
   }
 
-  // 3. 3 MONTHS PLAN (₹1,199 / 90 Days)
-  if (duration <= 90) {
-    return {
-      id: plan.id || "plan-3m",
-      plan_id: plan.plan_id || plan.id,
-      duration: duration,
-      name: plan.name || "3 Months Premium",
-      badge: "Save 20%",
-      subtitle: "Full unlimited access for 90 days with quarterly savings",
-      priceDisplay: `₹${priceNum}`,
-      priceNum: priceNum,
-      period: "/ 3 months",
-      billedNote: `Total ₹${priceNum} billed every 3 months`,
-      popular: false,
-      isVip: false,
-      icon: Heart,
-      iconColor: "text-purple-600 bg-purple-50 border-purple-100",
-      features: [
-        "Full access while plan is active",
-        "Unlimited in-app video calling",
-        "1 Free Profile Boost / month",
-        "5 SuperLikes weekly to stand out",
-        "Priority message delivery",
-        "Read receipts (blue ticks)",
-      ],
-      buttonText: "Get 3 Months Access",
-      buttonStyle:
-        "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25 hover:brightness-105",
-    };
-  }
+  // 3. 3 MONTHS PLAN (₹1,199 / 90 Days) - COMMENTED OUT
+  // if (duration <= 90) {
+  //   return {
+  //     id: plan.id || "plan-3m",
+  //     plan_id: plan.plan_id || plan.id,
+  //     duration: duration,
+  //     name: plan.name || "3 Months Premium",
+  //     badge: "Save 20%",
+  //     subtitle: "Full unlimited access for 90 days with quarterly savings",
+  //     priceDisplay: `₹${priceNum}`,
+  //     priceNum: priceNum,
+  //     period: "/ 3 months",
+  //     billedNote: `Total ₹${priceNum} billed every 3 months`,
+  //     popular: false,
+  //     isVip: false,
+  //     icon: Heart,
+  //     iconColor: "text-purple-600 bg-purple-50 border-purple-100",
+  //     features: (dbFeatureList && dbFeatureList.length > 0) ? dbFeatureList : [
+  //       "Full access while plan is active",
+  //       "Unlimited in-app video calling",
+  //       "1 Free Profile Boost / month",
+  //       "5 SuperLikes weekly to stand out",
+  //       "Priority message delivery",
+  //       "Read receipts (blue ticks)",
+  //     ],
+  //     buttonText: "Get 3 Months Access",
+  //     buttonStyle:
+  //       "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25 hover:brightness-105",
+  //   };
+  // }
 
   // 4. 1 YEAR VIP ELITE (₹3,899 / 365 Days)
   return {
@@ -173,7 +191,7 @@ const formatPlanFromDb = (plan) => {
     isVip: true,
     icon: Crown,
     iconColor: "text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/30",
-    features: [
+    features: (dbFeatureList && dbFeatureList.length > 0) ? dbFeatureList : [
       "Full VIP access for 365 days",
       "5 Free Profile Boosts per month",
       "Worldwide Passport Mode (match anywhere)",
@@ -206,15 +224,15 @@ const INITIAL_DB_PLANS = [
       "Full Unlimited Access (30 Din): Unlimited Likes, Unlimited Chat, Video Calling, See Who Likes You, Rewind Swipes & Super Likes.",
     status: "active",
   },
-  {
-    plan_id: 100003,
-    name: "3 Months Premium",
-    price: "1199.00",
-    duration: 90,
-    description:
-      "Full Unlimited Access (90 Din) with 20% savings: Sabhi features unlocked - Unlimited Likes & Chat, Video Calling, Profile Boosts & Advanced Filters.",
-    status: "active",
-  },
+  // {
+  //   plan_id: 100003,
+  //   name: "3 Months Premium",
+  //   price: "1199.00",
+  //   duration: 90,
+  //   description:
+  //     "Full Unlimited Access (90 Din) with 20% savings: Sabhi features unlocked - Unlimited Likes & Chat, Video Calling, Profile Boosts & Advanced Filters.",
+  //   status: "active",
+  // },
   {
     plan_id: 100004,
     name: "1 Year VIP Elite",
@@ -265,7 +283,11 @@ export default function Pricing() {
       .then((res) => {
         const raw = res.data?.plans || [];
         if (raw.length > 0) {
-          setDbPlans(raw);
+          // Filter out 3 Months Plan (Commented Out)
+          const filtered = raw.filter(
+            (p) => Number(p.duration) !== 90 && p.name !== "3 Months Premium"
+          );
+          setDbPlans(filtered);
         }
       })
       .catch((err) => {
@@ -545,8 +567,8 @@ export default function Pricing() {
             </p>
           </div>
         ) : (
-          /* 4 Database Pricing Cards Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-stretch pt-1">
+          /* 3 Database Pricing Cards Grid (3 Months Plan Commented Out) */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 items-stretch pt-1">
             {plans.map((plan) => {
               const IconComp = plan.icon;
               const isProcessing = processingPlanId === plan.id;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -15,7 +16,11 @@ import {
   ArrowRight,
   RefreshCw,
   Check,
+  ShieldAlert,
+  Eye,
 } from "lucide-react";
+import ReportUserModal from "../components/ReportUserModal.jsx";
+import UserProfileDrawer from "../components/UserProfileDrawer.jsx";
 import { getLikes, likeUser, removeLike } from "../../../services/likesServices.js";
 import { getUserById } from "../../../services/usersServices.js";
 import { getUserConversations } from "../../../services/chatsServices.js";
@@ -25,7 +30,7 @@ export default function LikesPage() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
-  const [activeSubTab, setActiveSubTab] = useState("received"); // "received" | "sent"
+  const [activeSubTab, setActiveSubTab] = useState("received");
   const [likesList, setLikesList] = useState([]);
   const [counts, setCounts] = useState({ received: 0, sent: 0 });
   const [loading, setLoading] = useState(true);
@@ -34,6 +39,8 @@ export default function LikesPage() {
   const [hasPaidSubscription, setHasPaidSubscription] = useState(false);
   const [userConversations, setUserConversations] = useState([]);
   const [chatLimitModalOpen, setChatLimitModalOpen] = useState(false);
+  const [reportingUser, setReportingUser] = useState(null);
+  const [selectedProfileDrawer, setSelectedProfileDrawer] = useState(null);
 
   const calculateAge = (dobString) => {
     if (!dobString) return null;
@@ -44,7 +51,6 @@ export default function LikesPage() {
     return Math.abs(ageDt.getUTCFullYear() - 1970);
   };
 
-  // Check if current user has an active premium subscription & load conversations
   useEffect(() => {
     if (!currentUser?.id) return;
     getUserById(currentUser.id)
@@ -65,7 +71,6 @@ export default function LikesPage() {
       .catch(() => {});
   }, [currentUser?.id]);
 
-  // Fetch likes from database
   const fetchLikes = useCallback(async () => {
     setLoading(true);
     try {
@@ -90,7 +95,6 @@ export default function LikesPage() {
     fetchLikes();
   }, [fetchLikes]);
 
-  // Handle Match / Like Back
   const handleLikeBack = async (targetUser) => {
     if (!targetUser?.id || actionLoadingId) return;
     setActionLoadingId(targetUser.id);
@@ -99,7 +103,6 @@ export default function LikesPage() {
       if (res.data?.matched) {
         setMatchModal(targetUser);
       }
-      // Update item in local state
       setLikesList((prev) =>
         prev.map((item) => {
           const u = item.user;
@@ -116,7 +119,6 @@ export default function LikesPage() {
     }
   };
 
-  // Handle Unlike / Remove Like
   const handleUnlike = async (targetUserId) => {
     if (!targetUserId || actionLoadingId) return;
     setActionLoadingId(targetUserId);
@@ -134,7 +136,6 @@ export default function LikesPage() {
     }
   };
 
-  // Handle Chat Now with 1 user conversation limit check
   const handleChatNow = (targetUser, name) => {
     if (!hasPaidSubscription && userConversations.length >= 1) {
       const isExistingConv = userConversations.some(
@@ -161,7 +162,6 @@ export default function LikesPage() {
   return (
     <DashboardLayout activeTab="likes">
       <div className="w-full space-y-5 animate-fadeIn pb-12">
-        {/* Page Header with Sub-tabs and Refresh */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] flex items-center justify-center shrink-0 shadow-xs">
@@ -181,7 +181,6 @@ export default function LikesPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Refresh Button */}
             <button
               type="button"
               onClick={fetchLikes}
@@ -195,7 +194,6 @@ export default function LikesPage() {
           </div>
         </div>
 
-        {/* Free Starter 10 Likes Banner on 'received' tab */}
         {activeSubTab === "received" && !hasPaidSubscription && (
           <div className="bg-gradient-to-r from-[#FFF0F5] via-white to-[#F4F0FF] p-4 sm:p-5 rounded-2xl border border-[#FFD0E0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -224,7 +222,6 @@ export default function LikesPage() {
           </div>
         )}
 
-        {/* Content Body: Loading, Empty, or Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((n) => (
@@ -273,7 +270,6 @@ export default function LikesPage() {
               const location = profile.city
                 ? `${profile.city}${profile.country ? `, ${profile.country}` : ""}`
                 : profile.country || "";
-              // Free Starter: first 10 likes visible, 10+ blurred
               const shouldBlur = activeSubTab === "received" && !hasPaidSubscription && index >= 10;
               const isMatched = item.isMatched;
 
@@ -282,8 +278,14 @@ export default function LikesPage() {
                   key={item.id}
                   className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-md hover:border-[#FF2D72]/40 transition-all flex flex-col group"
                 >
-                  {/* Photo Canvas */}
-                  <div className="relative h-60 w-full overflow-hidden bg-slate-100">
+                  <div
+                    onClick={() => {
+                      if (!shouldBlur) setSelectedProfileDrawer(item);
+                    }}
+                    className={`relative h-60 w-full overflow-hidden bg-slate-100 ${
+                      !shouldBlur ? "cursor-pointer" : ""
+                    }`}
+                  >
                     {image ? (
                       <img
                         src={image}
@@ -300,9 +302,7 @@ export default function LikesPage() {
                       </div>
                     )}
 
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-3.5">
-                      {/* Top Badges */}
                       <div className="flex items-center justify-between">
                         {shouldBlur ? (
                           <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[10px] font-black flex items-center gap-1 shadow-xs">
@@ -320,9 +320,26 @@ export default function LikesPage() {
                             <span>{activeSubTab === "received" ? "Liked You" : "You Liked"}</span>
                           </span>
                         )}
+
+                        {!shouldBlur && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportingUser({
+                                id: user.id,
+                                name,
+                                img: image,
+                              });
+                            }}
+                            className="p-1.5 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white/80 hover:text-rose-400 transition-colors cursor-pointer border border-white/20"
+                            title="Report User"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
 
-                      {/* Bottom Info on Card */}
                       <div className="text-white space-y-0.5">
                         <h4 className="font-black text-lg drop-shadow-md flex items-center gap-1.5">
                           <span>{shouldBlur ? name.slice(0, 2) + "***" : name}</span>
@@ -330,7 +347,7 @@ export default function LikesPage() {
                         </h4>
                         {location ? (
                           <p className="text-xs text-slate-200/90 flex items-center gap-1 font-medium drop-shadow-sm">
-                            <MapPin className="w-3 h-3 text-pink-300 shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 text-pink-300 shrink-0" />
                             <span className="truncate">{location}</span>
                           </p>
                         ) : null}
@@ -338,38 +355,69 @@ export default function LikesPage() {
                     </div>
                   </div>
 
-                  {/* Card Bottom Actions */}
                   <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
                     {isMatched ? (
-                      <button
-                        type="button"
-                        onClick={() => handleChatNow(user, name)}
-                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-105 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
-                      >
-                        <MessageCircle className="w-4 h-4 fill-white" />
-                        <span>Chat Now</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleChatNow(user, name)}
+                          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-105 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-white" />
+                          <span>Chat Now</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProfileDrawer(item)}
+                          className="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-all cursor-pointer shrink-0 shadow-2xs group/btn"
+                          title="View Profile"
+                        >
+                          <Eye className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+                        </button>
+                      </>
                     ) : activeSubTab === "received" ? (
-                      <button
-                        type="button"
-                        onClick={() => handleLikeBack(user)}
-                        disabled={actionLoadingId === user.id}
-                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] hover:brightness-105 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
-                      >
-                        {actionLoadingId === user.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Heart className="w-4 h-4 fill-white" />
-                            <span>Match Back</span>
-                          </>
-                        )}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleLikeBack(user)}
+                          disabled={actionLoadingId === user.id}
+                          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] hover:brightness-105 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+                        >
+                          {actionLoadingId === user.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Heart className="w-4 h-4 fill-white" />
+                              <span>Match Back</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            shouldBlur
+                              ? navigate("/#pricing")
+                              : setSelectedProfileDrawer(item)
+                          }
+                          className="p-2.5 rounded-xl border border-slate-200 hover:border-pink-300 bg-slate-50 hover:bg-pink-50 text-slate-600 hover:text-[#FF2D72] transition-all cursor-pointer shrink-0 shadow-2xs group/btn"
+                          title="View Profile"
+                        >
+                          <Eye className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+                        </button>
+                      </>
                     ) : (
                       <div className="w-full flex items-center gap-2">
                         <span className="flex-1 py-2 text-center text-xs font-bold text-slate-500 bg-slate-50 rounded-xl">
                           Sent 
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProfileDrawer(item)}
+                          className="p-2 rounded-xl text-slate-500 hover:text-[#7C3AED] hover:bg-purple-50 border border-slate-200 transition-colors cursor-pointer"
+                          title="View Profile"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleUnlike(user.id)}
@@ -393,110 +441,133 @@ export default function LikesPage() {
         )}
       </div>
 
-      {/* Match Celebration Modal */}
-      {matchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
-            <button
-              type="button"
-              onClick={() => setMatchModal(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
-              <Sparkles className="w-10 h-10 fill-white" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h2 className="text-2xl font-black text-[#17151A] tracking-tight">
-                It's a Match! 🎉
-              </h2>
-              <p className="text-xs text-slate-500">
-                You and{" "}
-                <span className="font-bold text-[#FF2D72]">
-                  {matchModal?.profile?.full_name || matchModal?.name || "your match"}
-                </span>{" "}
-                both liked each other!
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const partner = matchModal;
-                  setMatchModal(null);
-                  if (partner) {
-                    handleChatNow(
-                      partner,
-                      partner?.profile?.full_name || partner?.name || "Match"
-                    );
-                  }
-                }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <MessageCircle className="w-4 h-4 fill-white" />
-                <span>Send a Message</span>
-              </button>
+      {matchModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
               <button
                 type="button"
                 onClick={() => setMatchModal(null)}
-                className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                Keep Browsing
+                <X className="w-5 h-5" />
               </button>
+
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
+                <Sparkles className="w-10 h-10 fill-white" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-2xl font-black text-[#17151A] tracking-tight">
+                  It's a Match! 🎉
+                </h2>
+                <p className="text-xs text-slate-500">
+                  You and{" "}
+                  <span className="font-bold text-[#FF2D72]">
+                    {matchModal?.profile?.full_name || matchModal?.name || "your match"}
+                  </span>{" "}
+                  both liked each other!
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const partner = matchModal;
+                    setMatchModal(null);
+                    if (partner) {
+                      handleChatNow(
+                        partner,
+                        partner?.profile?.full_name || partner?.name || "Match"
+                      );
+                    }
+                  }}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white" />
+                  <span>Send a Message</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchModal(null)}
+                  className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Keep Browsing
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
-      {/* 1 User Chat Limit Modal */}
-      {chatLimitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
-            <button
-              type="button"
-              onClick={() => setChatLimitModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
-              <Crown className="w-10 h-10 fill-amber-300 text-amber-300" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h2 className="text-xl font-black text-[#17151A] tracking-tight">
-                1 User Chat Limit Reached 🔒
-              </h2>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple users se chat karne ke liye Premium plan upgrade karein!
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <Link
-                to="/#pricing"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
-                <span>View Premium Plans</span>
-              </Link>
+      {chatLimitModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
               <button
                 type="button"
                 onClick={() => setChatLimitModalOpen(false)}
-                className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                Cancel
+                <X className="w-5 h-5" />
               </button>
+
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
+                <Crown className="w-10 h-10 fill-amber-300 text-amber-300" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-xl font-black text-[#17151A] tracking-tight">
+                  1 User Chat Limit Reached 🔒
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple users se chat karne ke liye Premium plan upgrade karein!
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Link
+                  to="/#pricing"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
+                  <span>View Premium Plans</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setChatLimitModalOpen(false)}
+                  className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
+
+      <ReportUserModal
+        isOpen={Boolean(reportingUser)}
+        onClose={() => setReportingUser(null)}
+        reportedUser={reportingUser}
+      />
+
+      <UserProfileDrawer
+        isOpen={Boolean(selectedProfileDrawer)}
+        onClose={() => setSelectedProfileDrawer(null)}
+        userData={selectedProfileDrawer?.user || selectedProfileDrawer}
+        isMatched={selectedProfileDrawer?.isMatched}
+        isReceived={activeSubTab === "received"}
+        isSent={activeSubTab === "sent"}
+        onChatNow={handleChatNow}
+        onMatchBack={handleLikeBack}
+        onReport={(u) => {
+          setSelectedProfileDrawer(null);
+          setReportingUser(u);
+        }}
+        actionLoading={actionLoadingId === selectedProfileDrawer?.user?.id}
+      />
     </DashboardLayout>
   );
 }
-

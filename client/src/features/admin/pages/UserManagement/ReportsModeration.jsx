@@ -161,8 +161,6 @@ export default function ReportsModeration() {
   useEffect(() => {
     loadReports();
   }, []);
-
-  // Compute live KPI card metrics
   const totalReportsCount = stats?.totalReports ?? reportsData.length;
   const pendingCount =
     stats?.pending ?? reportsData.filter((r) => r.rawStatus === "pending").length;
@@ -274,8 +272,6 @@ export default function ReportsModeration() {
       setSelectedReport(null);
     }
   };
-
-  // Moderation Action: Resolve Report
   const handleResolveReport = async () => {
     if (!currentSelected) return;
     setActionLoading(true);
@@ -303,8 +299,6 @@ export default function ReportsModeration() {
       setActionLoading(false);
     }
   };
-
-  // Moderation Action: Suspend User
   const handleSuspendUser = async () => {
     if (!currentSelected) return;
     setActionLoading(true);
@@ -335,8 +329,6 @@ export default function ReportsModeration() {
       setActionLoading(false);
     }
   };
-
-  // Moderation Action: Dismiss Report
   const handleDismissReport = async () => {
     if (!currentSelected) return;
     setActionLoading(true);

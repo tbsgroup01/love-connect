@@ -51,11 +51,15 @@ const DEFAULT_FEATURES_LIST = [
   { id: 'chat', name: 'Chat (1 Chat vs Unlimited)' },
   { id: 'video', name: 'Video Calling' },
   { id: 'likes_you', name: 'See Who Likes You' },
-  { id: 'filters', name: 'Advanced Match Filters' },
-  { id: 'boost', name: 'Profile Boosts' },
-  { id: 'read_receipts', name: 'Read Receipts' },
-  { id: 'priority_support', name: 'VIP Priority Support' },
 ];
+
+// Features permanently removed from the system
+const REMOVED_FEATURE_IDS = new Set([
+  'filters',
+  'boost',
+  'read_receipts',
+  'priority_support',
+]);
 
 // Helper to parse DB plan records into UI presentation models
 const parsePlanData = (plan) => {
@@ -66,13 +70,28 @@ const parsePlanData = (plan) => {
   let features = null;
 
   try {
+    if (plan.features) {
+      if (typeof plan.features === 'string') {
+        try {
+          features = JSON.parse(plan.features);
+        } catch (_) {}
+      } else if (Array.isArray(plan.features)) {
+        features = plan.features;
+      }
+    }
+
     if (plan.description && plan.description.trim().startsWith('{')) {
       const meta = JSON.parse(plan.description);
       subtitle = meta.subtitle || subtitle;
       badge = meta.badge || '';
       discountPercent = meta.discountPercent || 0;
       basePrice = meta.basePrice || basePrice;
-      features = meta.features || null;
+      if (!features) features = meta.features || null;
+    }
+
+    // Permanently remove unwanted legacy features
+    if (features && Array.isArray(features)) {
+      features = features.filter((f) => f && !REMOVED_FEATURE_IDS.has(f.id));
     }
   } catch (e) {
     // Plain text description
@@ -91,10 +110,10 @@ const parsePlanData = (plan) => {
     billingCycle = '1 Month';
     periodText = '/ month';
     if (!badge) badge = 'Popular (Full Access)';
-  } else if (duration <= 90) {
-    billingCycle = '3 Months';
-    periodText = '/ 3 months';
-    if (!badge) badge = 'Save 20% (Full Access)';
+  // } else if (duration <= 90) {
+  //   billingCycle = '3 Months';
+  //   periodText = '/ 3 months';
+  //   if (!badge) badge = 'Save 20% (Full Access)';
   } else {
     billingCycle = '1 Year';
     periodText = '/ year';
@@ -120,7 +139,7 @@ const parsePlanData = (plan) => {
           included = false;
         }
       } else {
-        // Paid Plans (1 Month, 3 Months, 1 Year): ALL FEATURES UNLOCKED!
+        // Paid Plans (1 Month, 1 Year): ALL FEATURES UNLOCKED!
         if (df.id === 'likes') displayName = 'Unlimited Likes & Rewind';
         else if (df.id === 'chat') displayName = 'Unlimited Chat Messaging';
         included = true;
@@ -150,11 +169,11 @@ const parsePlanData = (plan) => {
     borderStyle = 'border-pink-300';
     badgeBg = '#FF2D72';
     badgeColor = '#FFFFFF';
-  } else if (duration <= 90) {
-    cardBg = '#FAF5FF';
-    borderStyle = 'border-purple-200';
-    badgeBg = '#7C3AED';
-    badgeColor = '#FFFFFF';
+  // } else if (duration <= 90) {
+  //   cardBg = '#FAF5FF';
+  //   borderStyle = 'border-purple-200';
+  //   badgeBg = '#7C3AED';
+  //   badgeColor = '#FFFFFF';
   } else {
     cardBg = '#FFFDF5';
     borderStyle = 'border-amber-300';
@@ -206,7 +225,7 @@ export default function Plans() {
 
   // Modal State for Create / Edit Plan
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [modalMode, setModalMode] = useState('create'); 
   const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -238,7 +257,11 @@ export default function Plans() {
 
       const res = await getPlans();
       const rawPlans = res.data?.plans || [];
-      const mapped = rawPlans.map(parsePlanData);
+      // Filter out 3 Months Plan (Commented Out)
+      const filteredPlans = rawPlans.filter(
+        (p) => Number(p.duration) !== 90 && p.name !== '3 Months Premium'
+      );
+      const mapped = filteredPlans.map(parsePlanData);
       setPlans(mapped);
     } catch (err) {
       console.error('Failed to load plans from DB:', err);
@@ -349,7 +372,10 @@ export default function Plans() {
   // Open Edit Plan Modal
   const handleOpenEditModal = (plan) => {
     setModalMode('edit');
-    const existingFeaturesMap = new Map((plan.features || []).map((f) => [f.id, f]));
+    const filteredSourceFeatures = (plan.features || []).filter(
+      (f) => f && !REMOVED_FEATURE_IDS.has(f.id)
+    );
+    const existingFeaturesMap = new Map(filteredSourceFeatures.map((f) => [f.id, f]));
     const mergedFeatures = DEFAULT_FEATURES_LIST.map((df) => {
       if (existingFeaturesMap.has(df.id)) {
         return existingFeaturesMap.get(df.id);
@@ -357,8 +383,11 @@ export default function Plans() {
       return { ...df, included: false };
     });
 
-    (plan.features || []).forEach((f) => {
-      if (!DEFAULT_FEATURES_LIST.some((df) => df.id === f.id)) {
+    filteredSourceFeatures.forEach((f) => {
+      if (
+        !DEFAULT_FEATURES_LIST.some((df) => df.id === f.id) &&
+        !REMOVED_FEATURE_IDS.has(f.id)
+      ) {
         mergedFeatures.push(f);
       }
     });
@@ -430,11 +459,11 @@ export default function Plans() {
     try {
       setSubmitting(true);
 
-      // Map duration in days from billingCycle (0, 1 Month, 3 Months, 1 Year)
+      // Map duration in days from billingCycle (0, 1 Month, 1 Year)
       let durationDays = 30;
       if (formData.billingCycle === 'Forever') durationDays = 0;
       else if (formData.billingCycle === '1 Month' || formData.billingCycle === 'Monthly') durationDays = 30;
-      else if (formData.billingCycle === '3 Months' || formData.billingCycle === 'Quarterly') durationDays = 90;
+      // else if (formData.billingCycle === '3 Months' || formData.billingCycle === 'Quarterly') durationDays = 90;
       else if (formData.billingCycle === '1 Year' || formData.billingCycle === 'Yearly') durationDays = 365;
 
       // Pack metadata into description field
@@ -451,6 +480,7 @@ export default function Plans() {
         price: Number(formData.finalPrice) || 0,
         duration: durationDays,
         description: metaPayload,
+        features: formData.features,
         status: formData.isActive ? 'active' : 'inactive',
       };
 
@@ -665,8 +695,8 @@ export default function Plans() {
                 </div>
               </div>
             ) : (
-              /* PLAN CARDS GRID - 4 COLUMN LAYOUT */
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+              /* PLAN CARDS GRID - 3 COLUMN LAYOUT (3 Months Plan Commented Out) */
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {plans.map((plan) => {
                   const isFree = plan.finalPrice === 0;
                   const hasDiscount = plan.discountPercent > 0;
@@ -917,7 +947,7 @@ export default function Plans() {
                       let pText = '/ month';
                       if (val === 'Forever') pText = '/ forever';
                       else if (val === '1 Month') pText = '/ month';
-                      else if (val === '3 Months') pText = '/ 3 months';
+                      // else if (val === '3 Months') pText = '/ 3 months';
                       else if (val === '1 Year') pText = '/ year';
                       setFormData({
                         ...formData,
@@ -929,7 +959,7 @@ export default function Plans() {
                   >
                     <option value="Forever">Free Plan (0 days - 10 Likes & 1 Chat)</option>
                     <option value="1 Month">1 Month Plan (30 days - All Features Unlocked)</option>
-                    <option value="3 Months">3 Months Plan (90 days - All Features Unlocked)</option>
+                    {/* <option value="3 Months">3 Months Plan (90 days - All Features Unlocked)</option> */}
                     <option value="1 Year">1 Year Plan (365 days - All Features Unlocked)</option>
                   </select>
                 </div>
@@ -1053,13 +1083,13 @@ export default function Plans() {
                   ))}
                 </div>
 
-                {/* Add Custom Feature */}
-                <div className="flex items-center gap-2 pt-1">
+                {/* Add Custom Feature - Commented Out */}
+                {/* <div className="flex items-center gap-2 pt-1">
                   <input
                     type="text"
                     value={customFeatureName}
                     onChange={(e) => setCustomFeatureName(e.target.value)}
-                    placeholder="Add custom feature (e.g. 10 Free Boosts)"
+                    placeholder="Add custom feature"
                     className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#FF2D72]"
                   />
                   <button
@@ -1069,7 +1099,7 @@ export default function Plans() {
                   >
                     Add Feature
                   </button>
-                </div>
+                </div> */}
               </div>
 
               {/* Modal Footer Actions */}

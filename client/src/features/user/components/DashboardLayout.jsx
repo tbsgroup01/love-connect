@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   Search,
   MapPin,
@@ -25,8 +26,11 @@ import priyaImg from "../../../assets/priya_profile.jpg";
 import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
-import { getLikes } from "../../../services/likesServices.js";
+import { getLikes, likeUser } from "../../../services/likesServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import NotificationBell from "../../../components/NotificationBell.jsx";
+import UserProfileDrawer from "./UserProfileDrawer.jsx";
+import ReportUserModal from "./ReportUserModal.jsx";
 
 
 const getProfileCompletionDetails = (percentage) => {
@@ -115,21 +119,63 @@ export default function DashboardLayout({
     currentUser?.profile_completion ??
     0;
   const completionDetails = getProfileCompletionDetails(completionPercentage);
-
   const [internalGender, setInternalGender] = useState("all");
   const [internalVerified, setInternalVerified] = useState(false);
-
   const showGender = filterGender !== undefined ? filterGender : internalGender;
   const setShowGender = setFilterGender || setInternalGender;
   const verifiedOnly = filterVerified !== undefined ? filterVerified : internalVerified;
   const setVerifiedOnly = setFilterVerified || setInternalVerified;
-
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const userMenuRef = useRef(null);
-
-  // Real Database Users for People Nearby widget
+  const userMenuRef = useRef(null)
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [likesCount, setLikesCount] = useState(0);
+  const [selectedNearbyUser, setSelectedNearbyUser] = useState(null);
+  const [reportingNearbyUser, setReportingNearbyUser] = useState(null);
+  const [drawerActionLoading, setDrawerActionLoading] = useState(false);
+  const [likedUserIds, setLikedUserIds] = useState(new Set());
+  const [nearbyMatchModal, setNearbyMatchModal] = useState(null);
+
+  const handleOpenNearbyUserDrawer = async (userItem) => {
+    const raw = userItem.raw || userItem;
+    setSelectedNearbyUser(raw);
+
+    if (userItem.id) {
+      try {
+        const res = await getUserById(userItem.id);
+        if (res.data?.user) {
+          setSelectedNearbyUser(res.data.user);
+        }
+      } catch (err) {
+        console.error("Error fetching nearby user details:", err);
+      }
+    }
+  };
+
+  const handleLikeNearbyUser = async (targetUser) => {
+    if (!targetUser?.id || drawerActionLoading) return;
+    setDrawerActionLoading(true);
+    try {
+      const res = await likeUser(targetUser.id);
+      setLikedUserIds((prev) => new Set([...prev, targetUser.id]));
+      if (res.data?.matched) {
+        setNearbyMatchModal(targetUser);
+      }
+    } catch (err) {
+      console.error("Error liking nearby user:", err);
+    } finally {
+      setDrawerActionLoading(false);
+    }
+  };
+
+  const handleChatNowNearbyUser = (targetUser, name) => {
+    setSelectedNearbyUser(null);
+    navigate("/messages", {
+      state: {
+        recipientId: targetUser.id,
+        recipientName: name,
+      },
+    });
+  };
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -167,6 +213,7 @@ export default function DashboardLayout({
                 name: p.full_name || u.name || "User",
                 age: calcAge || "",
                 img: p.profile_picture || u.profile_image || null,
+                raw: u,
               };
             });
           setNearbyUsers(list);
@@ -192,13 +239,9 @@ export default function DashboardLayout({
 
   return (
     <div className="h-screen w-full bg-[#FAFAFC] flex flex-col font-poppins select-none text-[#17151A] antialiased relative overflow-hidden pt-[65px]">
-      {/* Brand Color Ambient Glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl pointer-events-none rounded-full" />
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/40 to-transparent blur-3xl pointer-events-none rounded-full" />
-
-      {/* LOGGED IN USER NAVBAR HEADER (PERMANENTLY FIXED ON TOP) */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full h-[65px] bg-[#FFFFFF]/95 backdrop-blur-xl border-b border-[#FFE7F0] px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
-        {/* Brand Logo */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full h-[65px] bg-[#FFFFFF]/95 backdrop-blur-xl border-b border-[#FFE7F0] px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
         <Link
           to="/"
           title="LoveConnect Home"
@@ -214,19 +257,7 @@ export default function DashboardLayout({
         {/* Location Selector, Notification Bell & User Profile Dropdown */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           {/* Notification Bell */}
-          <button
-            type="button"
-            onClick={() =>
-              alert("Notifications: You have 3 new match activities!")
-            }
-            className="w-9 h-9 rounded-full bg-slate-100/90 hover:bg-[#FFE7F0] hover:text-[#FF2D72] text-[#17151A] flex items-center justify-center relative transition-all cursor-pointer border border-slate-200/50"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="w-4 h-4 rounded-full bg-[#FF2D72] text-[#FFFFFF] text-[10px] font-bold absolute -top-0.5 -right-0.5 flex items-center justify-center ring-2 ring-[#FFFFFF] shadow-xs">
-              3
-            </span>
-          </button>
+          <NotificationBell />
 
           {/* User Profile Dropdown Pill */}
           <div ref={userMenuRef} className="relative">
@@ -311,24 +342,18 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      {/* MAIN CONTAINER: Dynamic 2 or 3-Column SaaS Workspace Dashboard */}
       <div
         className={`flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 ${hideRightSidebar ? "lg:grid-cols-[280px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)_320px]"} gap-5 px-3 sm:px-5 lg:px-6 pt-3 pb-[72px] sm:pt-4 sm:pb-[76px] lg:py-4 h-[calc(100dvh-65px)] lg:h-[calc(100vh-65px)] overflow-hidden items-stretch relative z-10`}
       >
-        {/* ------------------------------------------------------- */}
-        {/* COLUMN 1: LEFT NAVIGATION SIDEBAR (FIXED VIEWPORT)      */}
-        {/* ------------------------------------------------------- */}
+
         <aside className="hidden lg:flex w-full h-full flex-col justify-between overflow-y-auto bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs [&_button]:text-sm scrollbar-none shrink-0">
-          {/* Main Navigation List */}
+
           <div className="space-y-2">
             <div className="mb-3 flex items-center justify-between px-3 pt-1">
               <span className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
                 Workspace
               </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[#FF2D72] shadow-[0_0_0_4px_#FFE7F0]" />
             </div>
-
-            {/* Nav: Discover */}
             <button
               type="button"
               onClick={() => navigate("/discover")}
@@ -345,8 +370,6 @@ export default function DashboardLayout({
                 <span>Discover</span>
               </div>
             </button>
-
-            {/* Nav: Likes You */}
             <button
               type="button"
               onClick={() => navigate("/likes")}
@@ -362,20 +385,8 @@ export default function DashboardLayout({
                 />
                 <span>Likes You</span>
               </div>
-              {likesCount > 0 && (
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
-                    activeTab === "likes"
-                      ? "bg-[#FFFFFF]/25 text-[#FFFFFF]"
-                      : "bg-[#FFE7F0] text-[#FF2D72]"
-                  }`}
-                >
-                  {likesCount}
-                </span>
-              )}
+            
             </button>
-
-            {/* Nav: Matches */}
             <button
               type="button"
               onClick={() => navigate("/matches")}
@@ -390,8 +401,6 @@ export default function DashboardLayout({
                 <span>Matches</span>
               </div>
             </button>
-
-            {/* Nav: Messages */}
             <button
               type="button"
               onClick={() => navigate("/messages")}
@@ -406,8 +415,6 @@ export default function DashboardLayout({
                 <span>Messages</span>
               </div>
             </button>
-
-            {/* Nav: My Profile */}
             <button
               type="button"
               onClick={() => navigate("/profile")}
@@ -422,8 +429,6 @@ export default function DashboardLayout({
             </button>
 
             <div className="my-3 border-t border-slate-200/60" />
-
-            {/* Nav: Premium */}
             <button
               type="button"
               onClick={() => navigate("/#pricing")}
@@ -437,8 +442,6 @@ export default function DashboardLayout({
                 Upgrade
               </span>
             </button>
-
-            {/* Nav: Help & Support */}
             <button
               type="button"
               onClick={() => navigate("/help")}
@@ -451,8 +454,6 @@ export default function DashboardLayout({
               <HelpCircle className="w-4 h-4" />
               <span>Help & Support</span>
             </button>
-
-            {/* Nav: Logout */}
             <button
               type="button"
               onClick={async () => {
@@ -465,8 +466,6 @@ export default function DashboardLayout({
               <span>Log Out</span>
             </button>
           </div>
-
-          {/* Bottom Promo: Upgrade to Premium */}
           <div className="relative overflow-hidden rounded-2xl border border-[#FFD0E0] bg-gradient-to-br from-[#FFF0F5] via-white to-[#F4F0FF] p-4 text-left shadow-2xs">
             <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#FF2D72]/10 blur-2xl" />
             <div className="relative mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#FF2D72]">
@@ -487,28 +486,18 @@ export default function DashboardLayout({
             </Link>
           </div>
         </aside>
-
-        {/* ------------------------------------------------------- */}
-        {/* COLUMN 2: CENTER WORKSPACE CANVAS (SCROLLABLE AREA)     */}
-        {/* ------------------------------------------------------- */}
         <main className="lg:col-start-2 flex flex-col w-full h-full min-h-0 overflow-y-auto scrollbar-none pr-0 lg:pr-1">
           {children}
         </main>
-
-        {/* ------------------------------------------------------- */}
-        {/* COLUMN 3: RIGHT SIDEBAR (FIXED VIEWPORT)               */}
-        {/* ------------------------------------------------------- */}
         <aside className="hidden lg:col-start-3 lg:flex flex-col gap-4 h-full overflow-y-auto scrollbar-none shrink-0">
           {customRightSidebar ? (
             customRightSidebar
           ) : (
             <>
-              {/* CARD 0: PROFILE COMPLETION WIDGET */}
               <Link
                 to="/profile"
                 className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center gap-4 animate-fadeIn hover:border-slate-300 hover:shadow-xs transition-all group cursor-pointer"
               >
-                {/* Circular Progress Ring */}
                 <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
                   <svg
                     className="w-full h-full transform -rotate-90"
@@ -553,11 +542,8 @@ export default function DashboardLayout({
                   </div>
                 </div>
               </Link>
-
-              {/* CARD 1: DISCOVERY FILTERS (Only visible on Discover page) */}
               {isDiscover && (
                 <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
-                  {/* Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h4 className="text-xs font-black uppercase tracking-wider text-[#17151A] flex items-center gap-2">
                       <SlidersHorizontal className="w-4 h-4 text-[#FF2D72]" />
@@ -574,8 +560,6 @@ export default function DashboardLayout({
                       Reset
                     </button>
                   </div>
-
-                  {/* Show Gender Pills */}
                   <div>
                     <div className="grid grid-cols-4 gap-1.5">
                       {["all", "women", "men", "others"].map((gender) => (
@@ -606,11 +590,14 @@ export default function DashboardLayout({
                 {nearbyUsers.length > 0 ? (
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {nearbyUsers.map((user, idx) => (
-                      <div
+                      <button
                         key={user.id || idx}
-                        className="flex flex-col items-center gap-1 cursor-pointer group"
+                        type="button"
+                        onClick={() => handleOpenNearbyUserDrawer(user)}
+                        className="flex flex-col items-center gap-1 cursor-pointer group hover:scale-105 active:scale-95 transition-all text-center focus:outline-none"
+                        title={`View ${user.name}'s profile details`}
                       >
-                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-[#FFFFFF] shadow-2xs group-hover:scale-105 transition-transform bg-slate-100 flex items-center justify-center">
+                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-[#FFFFFF] shadow-2xs group-hover:ring-2 group-hover:ring-[#FF2D72]/50 transition-all bg-slate-100 flex items-center justify-center">
                           {user.img ? (
                             <img
                               src={user.img}
@@ -626,7 +613,7 @@ export default function DashboardLayout({
                             ✓
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-[#17151A] truncate w-full">
+                        <span className="text-xs font-bold text-[#17151A] group-hover:text-[#FF2D72] transition-colors truncate w-full">
                           {user.name}
                         </span>
                         {user.age ? (
@@ -634,7 +621,7 @@ export default function DashboardLayout({
                             {user.age}
                           </span>
                         ) : null}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -709,6 +696,80 @@ export default function DashboardLayout({
           );
         })}
       </nav>
+
+      {/* USER PROFILE DRAWER FOR NEARBY PEOPLE */}
+      <UserProfileDrawer
+        isOpen={Boolean(selectedNearbyUser)}
+        onClose={() => setSelectedNearbyUser(null)}
+        userData={selectedNearbyUser}
+        onChatNow={handleChatNowNearbyUser}
+        onLike={handleLikeNearbyUser}
+        isSent={selectedNearbyUser?.id ? likedUserIds.has(selectedNearbyUser.id) : false}
+        actionLoading={drawerActionLoading}
+        onReport={(u) => {
+          setSelectedNearbyUser(null);
+          setReportingNearbyUser(u);
+        }}
+      />
+
+      {/* REPORT USER MODAL */}
+      <ReportUserModal
+        isOpen={Boolean(reportingNearbyUser)}
+        onClose={() => setReportingNearbyUser(null)}
+        reportedUser={reportingNearbyUser}
+      />
+
+      {/* NEARBY MATCH MODAL */}
+      {nearbyMatchModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 animate-fadeIn"
+            onClick={() => setNearbyMatchModal(null)}
+          >
+            <div
+              className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 border-2 border-[#FF2D72] shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+             
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-[#17151A]">
+                  It's a Match!
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  You and {nearbyMatchModal.name || nearbyMatchModal.profile?.full_name || "this user"} liked each other.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const matchedUser = nearbyMatchModal;
+                    setNearbyMatchModal(null);
+                    setSelectedNearbyUser(null);
+                    navigate("/messages", {
+                      state: {
+                        recipientId: matchedUser.id,
+                        recipientName: matchedUser.name || matchedUser.profile?.full_name,
+                      },
+                    });
+                  }}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md cursor-pointer hover:brightness-105"
+                >
+                  Send a Message Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNearbyMatchModal(null)}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs cursor-pointer"
+                >
+                  Keep Browsing
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

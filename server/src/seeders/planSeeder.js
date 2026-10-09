@@ -10,6 +10,14 @@ export const initialPlansData = [
     duration: 0,
     description:
       "10 Daily Likes aur 1 Chat conversation. Profile create karein, local members dekhein aur basic matching shuru karein.",
+    features: [
+      { id: "profile", name: "Create & Edit Profile", included: true },
+      { id: "browse", name: "Browse & Discover Matches", included: true },
+      { id: "likes", name: "10 Daily Likes", included: true },
+      { id: "chat", name: "1 Chat Conversation", included: true },
+      { id: "video", name: "Video Calling", included: false },
+      { id: "likes_you", name: "See Who Likes You", included: false },
+    ],
     status: "active",
   },
   {
@@ -19,24 +27,32 @@ export const initialPlansData = [
     duration: 30,
     description:
       "Full Unlimited Access (30 Din): Unlimited Likes, Unlimited Chat, Video Calling, See Who Likes You, Rewind Swipes & Super Likes.",
+    features: [
+      { id: "profile", name: "Create & Edit Profile", included: true },
+      { id: "browse", name: "Browse & Discover Matches", included: true },
+      { id: "likes", name: "Unlimited Likes & Rewind", included: true },
+      { id: "chat", name: "Unlimited Chat Messaging", included: true },
+      { id: "video", name: "Video Calling", included: true },
+      { id: "likes_you", name: "See Who Likes You", included: true },
+    ],
     status: "active",
   },
-  {
-    plan_id: 100003,
-    name: "3 Months Premium",
-    price: 1199.0,
-    duration: 90,
-    description:
-      "Full Unlimited Access (90 Din) with 20% savings: Sabhi features unlocked - Unlimited Likes & Chat, Video Calling, Profile Boosts & Advanced Filters.",
-    status: "active",
-  },
+  // 3 Months Plan commented out per user preference
   {
     plan_id: 100004,
     name: "1 Year VIP Elite",
     price: 3899.0,
     duration: 365,
     description:
-      "Full Unlimited Access (365 Din) with 35% savings: Sabhi features unlocked, Worldwide Passport Mode, 5 Monthly Boosts, Incognito Mode aur VIP Support.",
+      "Full Unlimited Access (365 Din) with 35% savings: Sabhi features unlocked, Worldwide Passport Mode, Rewind Swipes aur VIP Support.",
+    features: [
+      { id: "profile", name: "Create & Edit Profile", included: true },
+      { id: "browse", name: "Browse & Discover Matches", included: true },
+      { id: "likes", name: "Unlimited Likes & Rewind", included: true },
+      { id: "chat", name: "Unlimited Chat Messaging", included: true },
+      { id: "video", name: "Video Calling", included: true },
+      { id: "likes_you", name: "See Who Likes You", included: true },
+    ],
     status: "active",
   },
 ];
@@ -84,6 +100,7 @@ export const seedPlans = async () => {
           price: item.price,
           duration: item.duration,
           description: item.description,
+          features: item.features,
           status: item.status,
         });
         console.log(`[=] Synced Plan: "${item.name}" (ID: ${item.plan_id}, Duration: ${item.duration} days)`);

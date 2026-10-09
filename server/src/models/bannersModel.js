@@ -30,10 +30,6 @@ const Banners = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    ctaUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     isPublished: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

@@ -1,5 +1,6 @@
 import { Reports, Users, Profiles } from "../models/index.js";
 import { Op } from "sequelize";
+import { notifyReportToAdmins } from "../services/notificationsServices.js";
 
 // Create a new report
 export const createReport = async (req, res) => {
@@ -28,6 +29,17 @@ export const createReport = async (req, res) => {
       description: description ? description.trim() : null,
       status: "pending",
     });
+
+    try {
+      await notifyReportToAdmins({
+        reporterId: Number(reporter_id),
+        reportedUserId: Number(reported_user_id),
+        reportId: report.id,
+        reason: reason.trim(),
+      });
+    } catch (notifError) {
+      console.error("Report admin notification error:", notifError);
+    }
 
     // Fetch created report with associated users for return
     const createdReport = await Reports.findByPk(report.id, {

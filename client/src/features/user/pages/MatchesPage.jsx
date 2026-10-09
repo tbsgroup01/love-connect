@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -17,7 +18,9 @@ import {
   User,
   ArrowRight,
   X,
+  ShieldAlert,
 } from "lucide-react";
+import ReportUserModal from "../components/ReportUserModal.jsx";
 
 import { getUserMatches } from "../../../services/matchesServices.js";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
@@ -35,6 +38,7 @@ export default function MatchesPage() {
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [userConversations, setUserConversations] = useState([]);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
+  const [reportingUser, setReportingUser] = useState(null);
 
   const calculateAge = (dobString) => {
     if (!dobString) return null;
@@ -507,6 +511,20 @@ export default function MatchesPage() {
                   <div className="flex items-center gap-2 self-end sm:self-center">
                     <button
                       type="button"
+                      onClick={() =>
+                        setReportingUser({
+                          id: match.partnerId,
+                          name: match.name,
+                          img: match.img,
+                        })
+                      }
+                      className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors cursor-pointer"
+                      title="Report User"
+                    >
+                      <ShieldAlert className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleStartChat(match)}
                       className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-black text-xs shadow-2xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
                     >
@@ -521,50 +539,57 @@ export default function MatchesPage() {
         )}
       </div>
 
-      {/* 1 User Chat Limit Modal */}
-      {limitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
-            <button
-              type="button"
-              onClick={() => setLimitModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
-              <Crown className="w-10 h-10 fill-amber-300 text-amber-300" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h2 className="text-xl font-black text-[#17151A] tracking-tight">
-                1 User Chat Limit Reached 🔒
-              </h2>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple matches ke saath unlimited chats karne ke liye Premium plan upgrade karein!
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <Link
-                to="/#pricing"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
-                <span>View Premium Plans</span>
-              </Link>
+      {limitModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl border border-pink-100 relative">
               <button
                 type="button"
                 onClick={() => setLimitModalOpen(false)}
-                className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                Cancel
+                <X className="w-5 h-5" />
               </button>
+
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#FF2D72] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
+                <Crown className="w-10 h-10 fill-amber-300 text-amber-300" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-xl font-black text-[#17151A] tracking-tight">
+                  1 User Chat Limit Reached 🔒
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Free Starter plan mein aap sirf <strong>1 user</strong> se hi chat kar sakte hain. Multiple matches ke saath unlimited chats karne ke liye Premium plan upgrade karein!
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Link
+                  to="/#pricing"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-black text-xs shadow-md shadow-pink-500/30 hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
+                  <span>View Premium Plans</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setLimitModalOpen(false)}
+                  className="w-full py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
+
+      <ReportUserModal
+        isOpen={Boolean(reportingUser)}
+        onClose={() => setReportingUser(null)}
+        reportedUser={reportingUser}
+      />
     </DashboardLayout>
   );
 }

@@ -13,6 +13,7 @@ import { getAdminProfile } from "../../../services/authServices.js";
 import { getImageUrl, updateBrowserFavicon } from "../../../services/uploadServices.js";
 import { getSettings } from "../../../services/settingsServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import NotificationBell from "../../../components/NotificationBell.jsx";
 const COLORS = {
   pink: "#FF2D72",
   purple: "#7C3AED",
@@ -218,19 +219,7 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
           </Link>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
-          <Link
-            to="/admin/reports"
-            className="relative cursor-pointer p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors"
-            title="Moderation Alerts"
-          >
-            <Bell className="w-5 h-5" />
-            <span
-              className="absolute top-1 right-1 w-4 h-4 text-[10px] font-bold text-white rounded-full flex items-center justify-center border-2 border-white shadow-2xs"
-              style={{ backgroundColor: COLORS.pink }}
-            >
-              5
-            </span>
-          </Link>
+          <NotificationBell isAdmin={true} iconClass="w-5 h-5" />
 
           <div className="h-7 w-px bg-gray-200"></div>
           {!adminUser ? (

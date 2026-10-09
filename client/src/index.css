@@ -116,6 +116,19 @@ textarea::placeholder {
   animation: pulseSoft 4s ease-in-out infinite;
 }
 
+@keyframes slideDrawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-drawer-in {
+  animation: slideDrawerIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Hide scrollbars completely while keeping scroll functionality */
 .scrollbar-none::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {

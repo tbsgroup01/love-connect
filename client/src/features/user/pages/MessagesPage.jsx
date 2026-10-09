@@ -17,7 +17,10 @@ import {
   X,
   Crown,
   PhoneOff,
+  MoreVertical,
+  ShieldAlert,
 } from "lucide-react";
+import ReportUserModal from "../components/ReportUserModal.jsx";
 import { io } from "socket.io-client";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import snehaImg from "../../../assets/hero_woman.jpg";
@@ -58,6 +61,8 @@ export default function MessagesPage() {
   const [incomingCall, setIncomingCall] = useState(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
+  const [partnerMenuOpen, setPartnerMenuOpen] = useState(false);
+  const [reportingUser, setReportingUser] = useState(null);
 
   // Refs
   const socketRef = useRef(null);
@@ -789,8 +794,8 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                {/* Call actions */}
-                <div className="flex items-center gap-2">
+                {/* Call actions & More options */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     onClick={() => handleStartCall("voice")}
@@ -807,6 +812,40 @@ export default function MessagesPage() {
                   >
                     <Video className="w-4 h-4" />
                   </button>
+
+                  {/* 3-dots menu for Report User */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setPartnerMenuOpen((prev) => !prev)}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                      title="More Options"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+
+                    {partnerMenuOpen && (
+                      <div
+                        className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-fadeIn"
+                        onClick={() => setPartnerMenuOpen(false)}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReportingUser({
+                              id: currentChatPartner.partnerId,
+                              name: currentChatPartner.name,
+                              img: currentChatPartner.img,
+                            });
+                          }}
+                          className="w-full px-3.5 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
+                          <span>Report User</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1076,6 +1115,13 @@ export default function MessagesPage() {
           </div>
         </div>
       )}
+
+      {/* REPORT USER MODAL */}
+      <ReportUserModal
+        isOpen={Boolean(reportingUser)}
+        onClose={() => setReportingUser(null)}
+        reportedUser={reportingUser}
+      />
     </DashboardLayout>
   );
 }

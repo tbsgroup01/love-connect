@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Image as ImageIcon,
   UploadCloud,
@@ -9,10 +9,10 @@ import {
   Trash2,
   RotateCcw,
   Eye,
-  Link as LinkIcon,
   ArrowRight,
   Heart,
   Camera,
+  Loader2,
 } from "lucide-react";
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
@@ -20,6 +20,18 @@ import AdminSidebar from "../../components/Sidebar";
 // Default assets
 import defaultWebBanner from "../../../../assets/bannerr.jpeg";
 import defaultMobileBanner from "../../../../assets/hero_couple_romantic.jpg";
+
+// Services
+import {
+  getBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+} from "../../../../services/bannersServices.js";
+import {
+  uploadProfileImage,
+  getImageUrl,
+} from "../../../../services/uploadServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -37,66 +49,28 @@ const COLORS = {
 export default function BannersAds() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Banners & Ads");
-  const [platformFilter, setPlatformFilter] = useState("web"); // 'web' | 'mobile'
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState("web");
 
-  // File Input Refs
+  const [bannerId, setBannerId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const webFileInputRef = useRef(null);
   const mobileFileInputRef = useRef(null);
-
-  // Drag states
   const [isDraggingWeb, setIsDraggingWeb] = useState(false);
   const [isDraggingMobile, setIsDraggingMobile] = useState(false);
 
-  // Default state values
-  const defaultWebData = {
-    image: defaultWebBanner,
-    fileName: "bannerr.jpeg",
-    fileSize: "1.2 MB",
-    title: "Find Your Perfect Match",
+  const [bannerData, setBannerData] = useState({
+    desktopImage: defaultWebBanner,
+    mobileImage: defaultMobileBanner,
+    headline: "Find Your Perfect Match",
     tagline: "Connect with real people!",
-    description:
-      "LoveConnect brings together like-minded people who believe in real connections. Meet, chat and build something meaningful.",
-    ctaText: "Get Started Free",
-    ctaLink: "/register",
-    isActive: true,
-    lastUpdated: "Default Asset",
-  };
-
-  const defaultMobileData = {
-    image: defaultMobileBanner,
-    fileName: "hero_couple_romantic.jpg",
-    fileSize: "854 KB",
-    title: "Real People, Real Love",
-    tagline: "Spark genuine connections nearby",
-    description:
-      "Discover verified singles in your city with our intelligent match compatibility engine.",
-    ctaText: "Join Free Now",
-    ctaLink: "/register",
-    isActive: true,
-    lastUpdated: "Default Asset",
-  };
-
-  // Website Hero Banner State
-  const [webBanner, setWebBanner] = useState(() => {
-    try {
-      const saved = localStorage.getItem("loveconnect_hero_banner_web");
-      if (saved) return JSON.parse(saved);
-    } catch (err) {
-      console.debug("Web banner load error:", err);
-    }
-    return defaultWebData;
-  });
-
-  // Mobile Hero Banner State
-  const [mobileBanner, setMobileBanner] = useState(() => {
-    try {
-      const saved = localStorage.getItem("loveconnect_hero_banner_mobile");
-      if (saved) return JSON.parse(saved);
-    } catch (err) {
-      console.debug("Mobile banner load error:", err);
-    }
-    return defaultMobileData;
+    ctaLabel: "Get Started Free",
+    isPublished: true,
+    webFileName: "bannerr.jpeg",
+    webFileSize: "1.2 MB",
+    mobileFileName: "hero_couple_romantic.jpg",
+    mobileFileSize: "854 KB",
   });
 
   // Format file size helper
@@ -109,8 +83,44 @@ export default function BannersAds() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  // Upload handler for Website Hero Banner
-  const handleWebFileUpload = (file) => {
+  // Fetch banners from DB on component mount
+  useEffect(() => {
+    const fetchBanners = async () => {
+      setLoading(true);
+      try {
+        const res = await getBanners();
+        const banners = res.data?.banners || [];
+        if (banners.length > 0) {
+          const current = banners[0]; // Load the latest / primary banner
+          setBannerId(current.id);
+          setBannerData((prev) => ({
+            ...prev,
+            desktopImage: current.desktopImage || defaultWebBanner,
+            mobileImage: current.mobileImage || defaultMobileBanner,
+            headline: current.headline || "Find Your Perfect Match",
+            tagline: current.tagline || "Connect with real people!",
+            ctaLabel: current.ctaLabel || "Get Started Free",
+            isPublished: current.isPublished ?? true,
+            webFileName: current.desktopImage
+              ? current.desktopImage.split("/").pop()
+              : "bannerr.jpeg",
+            mobileFileName: current.mobileImage
+              ? current.mobileImage.split("/").pop()
+              : "hero_couple_romantic.jpg",
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch banners from database:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
+  // Upload handler for Website Hero Banner (Desktop)
+  const handleWebFileUpload = async (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file (JPG, PNG, WebP).");
@@ -121,21 +131,33 @@ export default function BannersAds() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setWebBanner((prev) => ({
-        ...prev,
-        image: e.target.result,
-        fileName: file.name,
-        fileSize: formatBytes(file.size),
-        lastUpdated: "Just Now",
-      }));
-    };
-    reader.readAsDataURL(file);
+    // Instant local preview
+    const localUrl = URL.createObjectURL(file);
+    setBannerData((prev) => ({
+      ...prev,
+      desktopImage: localUrl,
+      webFileName: file.name,
+      webFileSize: formatBytes(file.size),
+    }));
+
+    // Upload to server to get permanent URL
+    try {
+      const uploadRes = await uploadProfileImage(file);
+      const serverUrl =
+        uploadRes.data?.url || uploadRes.data?.path || uploadRes.data?.file;
+      if (serverUrl) {
+        setBannerData((prev) => ({
+          ...prev,
+          desktopImage: serverUrl,
+        }));
+      }
+    } catch (uploadErr) {
+      console.warn("Server file upload warning, using local preview:", uploadErr);
+    }
   };
 
   // Upload handler for Mobile Hero Banner
-  const handleMobileFileUpload = (file) => {
+  const handleMobileFileUpload = async (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file (JPG, PNG, WebP).");
@@ -146,58 +168,123 @@ export default function BannersAds() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setMobileBanner((prev) => ({
-        ...prev,
-        image: e.target.result,
-        fileName: file.name,
-        fileSize: formatBytes(file.size),
-        lastUpdated: "Just Now",
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+    // Instant local preview
+    const localUrl = URL.createObjectURL(file);
+    setBannerData((prev) => ({
+      ...prev,
+      mobileImage: localUrl,
+      mobileFileName: file.name,
+      mobileFileSize: formatBytes(file.size),
+    }));
 
-  // Save changes handler
-  const handleSave = (e) => {
-    if (e) e.preventDefault();
+    // Upload to server to get permanent URL
     try {
-      localStorage.setItem(
-        "loveconnect_hero_banner_web",
-        JSON.stringify(webBanner),
-      );
-      localStorage.setItem(
-        "loveconnect_hero_banner_mobile",
-        JSON.stringify(mobileBanner),
-      );
-    } catch (err) {
-      console.warn("Storage quota or error saving banners:", err);
+      const uploadRes = await uploadProfileImage(file);
+      const serverUrl =
+        uploadRes.data?.url || uploadRes.data?.path || uploadRes.data?.file;
+      if (serverUrl) {
+        setBannerData((prev) => ({
+          ...prev,
+          mobileImage: serverUrl,
+        }));
+      }
+    } catch (uploadErr) {
+      console.warn("Server file upload warning, using local preview:", uploadErr);
     }
-
-    setSaveSuccess(true);
-    setTimeout(() => {
-      setSaveSuccess(false);
-    }, 2800);
   };
 
-  // Reset to default banners
-  const handleResetDefaults = () => {
+  // Save changes handler: connects directly with bannersServices.js
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    setSaving(true);
+
+    try {
+      const payload = {
+        desktopImage: bannerData.desktopImage,
+        mobileImage: bannerData.mobileImage,
+        headline: bannerData.headline?.trim() || "Find Your Perfect Match",
+        tagline: bannerData.tagline?.trim() || "",
+        ctaLabel: bannerData.ctaLabel?.trim() || "Get Started Free",
+        isPublished: Boolean(bannerData.isPublished),
+      };
+
+      let savedBanner = null;
+      if (bannerId) {
+        // Update existing banner in DB
+        const res = await updateBanner(bannerId, payload);
+        savedBanner = res.data?.banner;
+        if (savedBanner) {
+          setBannerId(savedBanner.id);
+        }
+      } else {
+        // Create new banner in DB
+        const res = await createBanner(payload);
+        savedBanner = res.data?.banner;
+        if (savedBanner) {
+          setBannerId(savedBanner.id);
+        }
+      }
+
+      if (savedBanner) {
+        try {
+          localStorage.setItem("active_hero_banner", JSON.stringify(savedBanner));
+          window.dispatchEvent(new CustomEvent("banner_updated", { detail: savedBanner }));
+        } catch {}
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+    } catch (err) {
+      console.error("Error saving banner to database:", err);
+      alert(
+        err.response?.data?.message ||
+          "Failed to save banner. Please check all required fields."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Reset to default banners handler
+  const handleResetDefaults = async () => {
     if (
       window.confirm(
-        "Are you sure you want to reset both Website and Mobile hero banners to default assets?",
+        "Are you sure you want to reset both Website and Mobile hero banners to default assets?"
       )
     ) {
-      setWebBanner(defaultWebData);
-      setMobileBanner(defaultMobileData);
       try {
-        localStorage.removeItem("loveconnect_hero_banner_web");
-        localStorage.removeItem("loveconnect_hero_banner_mobile");
+        if (bannerId) {
+          await deleteBanner(bannerId);
+          setBannerId(null);
+        }
+        try {
+          localStorage.removeItem("active_hero_banner");
+          window.dispatchEvent(new CustomEvent("banner_updated", { detail: null }));
+        } catch {}
+
+        setBannerData({
+          desktopImage: defaultWebBanner,
+          mobileImage: defaultMobileBanner,
+          headline: "Find Your Perfect Match",
+          tagline: "Connect with real people!",
+          ctaLabel: "Get Started Free",
+          isPublished: true,
+          webFileName: "bannerr.jpeg",
+          webFileSize: "1.2 MB",
+          mobileFileName: "hero_couple_romantic.jpg",
+          mobileFileSize: "854 KB",
+        });
+
+        if (webFileInputRef.current) webFileInputRef.current.value = "";
+        if (mobileFileInputRef.current) mobileFileInputRef.current.value = "";
+
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2500);
       } catch (err) {
-        console.debug("Reset error:", err);
+        console.error("Reset error:", err);
       }
-      if (webFileInputRef.current) webFileInputRef.current.value = "";
-      if (mobileFileInputRef.current) mobileFileInputRef.current.value = "";
     }
   };
 
@@ -225,12 +312,12 @@ export default function BannersAds() {
                   Hero Banners Management
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFE7F0] text-[#FF2D72]">
-                  Website & Mobile
+                  {bannerData.isPublished ? "Published" : "Draft"}
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 Upload and configure hero banners for desktop website and mobile
-                app views.
+                app views connected to MySQL DB.
               </p>
             </div>
 
@@ -238,7 +325,8 @@ export default function BannersAds() {
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all cursor-pointer shadow-2xs"
+                disabled={saving}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset Defaults</span>
@@ -247,27 +335,37 @@ export default function BannersAds() {
               <button
                 type="button"
                 onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md transition-all hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md transition-all hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50"
                 style={{ backgroundColor: COLORS.pink }}
               >
-                <Save className="w-4 h-4 stroke-[2.5]" />
-                <span>Save & Publish Banners</span>
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 stroke-[2.5]" />
+                )}
+                <span>
+                  {saving
+                    ? "Saving to DB..."
+                    : bannerId
+                    ? "Update Banner"
+                    : "Save & Publish Banner"}
+                </span>
               </button>
             </div>
           </div>
 
           {/* SAVE SUCCESS NOTIFICATION */}
           {saveSuccess && (
-            <div className="p-3.5 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs animate-fadeIn">
+            <div className="p-3.5 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs animate-in fade-in duration-200">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4.5 h-4.5 text-green-600 shrink-0" />
                 <span>
-                  Hero banners have been saved and updated successfully across
-                  Website & Mobile!
+                  Hero banner has been saved to database and updated successfully!
                 </span>
               </div>
               <span className="text-[10px] text-green-600 uppercase font-extrabold tracking-wider bg-green-100/60 px-2 py-0.5 rounded-md">
-                Active in Production
+                Database Synced
               </span>
             </div>
           )}
@@ -337,23 +435,25 @@ export default function BannersAds() {
                 {/* Status Toggle Switch */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gray-600">
-                    {webBanner.isActive ? "Published" : "Draft (Hidden)"}
+                    {bannerData.isPublished ? "Published" : "Draft (Hidden)"}
                   </span>
                   <button
                     type="button"
                     onClick={() =>
-                      setWebBanner((prev) => ({
+                      setBannerData((prev) => ({
                         ...prev,
-                        isActive: !prev.isActive,
+                        isPublished: !prev.isPublished,
                       }))
                     }
                     className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-                      webBanner.isActive ? "bg-[#FF2D72]" : "bg-gray-200"
+                      bannerData.isPublished ? "bg-[#FF2D72]" : "bg-gray-200"
                     }`}
                   >
                     <div
                       className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${
-                        webBanner.isActive ? "translate-x-6" : "translate-x-0"
+                        bannerData.isPublished
+                          ? "translate-x-6"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -366,7 +466,7 @@ export default function BannersAds() {
                 <div className="xl:col-span-6 space-y-5">
                   {/* File Upload Dropzone */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Camera className="w-3.5 h-3.5 text-[#FF2D72]" />
                         <span>Desktop Hero Image Asset *</span>
@@ -411,9 +511,9 @@ export default function BannersAds() {
 
                       {/* Current Image Thumbnail */}
                       <div className="relative w-28 h-20 sm:w-32 sm:h-22 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shrink-0 shadow-2xs group">
-                        {webBanner.image ? (
+                        {bannerData.desktopImage ? (
                           <img
-                            src={webBanner.image}
+                            src={getImageUrl(bannerData.desktopImage)}
                             alt="Website Banner Preview"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
@@ -430,10 +530,10 @@ export default function BannersAds() {
                       {/* Upload Details & Actions */}
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <p className="text-xs font-bold text-gray-800 truncate">
-                          {webBanner.fileName || "hero-desktop-banner.jpg"}
+                          {bannerData.webFileName || "hero-desktop-banner.jpg"}
                         </p>
                         <p className="text-[11px] text-gray-400 mt-0.5">
-                          {webBanner.fileSize} • 16:9 Aspect Ratio
+                          {bannerData.webFileSize} • 16:9 Aspect Ratio
                         </p>
 
                         <div className="flex items-center justify-center sm:justify-start gap-2 mt-2.5">
@@ -450,16 +550,16 @@ export default function BannersAds() {
                             <span>Browse File</span>
                           </button>
 
-                          {webBanner.image && (
+                          {bannerData.desktopImage && (
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setWebBanner((prev) => ({
+                                setBannerData((prev) => ({
                                   ...prev,
-                                  image: "",
-                                  fileName: "No banner selected",
-                                  fileSize: "0 KB",
+                                  desktopImage: "",
+                                  webFileName: "No banner selected",
+                                  webFileSize: "0 KB",
                                 }));
                                 if (webFileInputRef.current)
                                   webFileInputRef.current.value = "";
@@ -480,13 +580,16 @@ export default function BannersAds() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-gray-700 mb-1">
-                        Hero Main Headline
+                        Hero Main Headline *
                       </label>
                       <input
                         type="text"
-                        value={webBanner.title}
+                        value={bannerData.headline}
                         onChange={(e) =>
-                          setWebBanner({ ...webBanner, title: e.target.value })
+                          setBannerData({
+                            ...bannerData,
+                            headline: e.target.value,
+                          })
                         }
                         placeholder="e.g. Find Your Perfect Match"
                         className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#FF2D72] focus:outline-none transition-colors"
@@ -499,10 +602,10 @@ export default function BannersAds() {
                       </label>
                       <input
                         type="text"
-                        value={webBanner.tagline}
+                        value={bannerData.tagline}
                         onChange={(e) =>
-                          setWebBanner({
-                            ...webBanner,
+                          setBannerData({
+                            ...bannerData,
                             tagline: e.target.value,
                           })
                         }
@@ -517,19 +620,17 @@ export default function BannersAds() {
                       </label>
                       <input
                         type="text"
-                        value={webBanner.ctaText}
+                        value={bannerData.ctaLabel}
                         onChange={(e) =>
-                          setWebBanner({
-                            ...webBanner,
-                            ctaText: e.target.value,
+                          setBannerData({
+                            ...bannerData,
+                            ctaLabel: e.target.value,
                           })
                         }
                         placeholder="e.g. Get Started Free"
                         className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#FF2D72] focus:outline-none transition-colors"
                       />
                     </div>
-
-                   
                   </div>
                 </div>
 
@@ -563,27 +664,29 @@ export default function BannersAds() {
                     <div className="relative h-64 sm:h-72 w-full bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3] overflow-hidden flex items-center p-5 select-none">
                       {/* Left Column Content */}
                       <div className="w-3/5 z-10 space-y-2.5">
-                        {webBanner.tagline && (
+                        {bannerData.tagline && (
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 border border-[#FFE4EE] shadow-2xs">
                             <Heart className="w-2.5 h-2.5 fill-[#FF2D72] text-[#FF2D72]" />
                             <span className="text-[9px] font-bold text-[#FF2D72]">
-                              {webBanner.tagline}
+                              {bannerData.tagline}
                             </span>
                           </div>
                         )}
 
                         <h3 className="text-xl sm:text-2xl font-black text-[#18181B] leading-tight tracking-tight">
-                          {webBanner.title || "Find Your Perfect Match"}
+                          {bannerData.headline || "Find Your Perfect Match"}
                         </h3>
 
                         <p className="text-[10px] text-[#52525B] leading-relaxed line-clamp-2 max-w-xs">
-                          {webBanner.description}
+                          LoveConnect brings together like-minded people who
+                          believe in real connections. Meet, chat and build
+                          something meaningful.
                         </p>
 
                         <div className="pt-1">
                           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] text-white text-[10px] font-bold shadow-xs">
                             <span>
-                              {webBanner.ctaText || "Get Started Free"}
+                              {bannerData.ctaLabel || "Get Started Free"}
                             </span>
                             <ArrowRight className="w-2.5 h-2.5 stroke-[2.5]" />
                           </span>
@@ -592,12 +695,11 @@ export default function BannersAds() {
 
                       {/* Right Visual Image Layer */}
                       <div className="absolute right-0 top-0 bottom-0 w-[55%] h-full overflow-hidden">
-                        {/* Organic arch gradient backdrop */}
                         <div className="absolute top-1/2 -translate-y-1/2 right-0 w-44 h-56 rounded-t-full rounded-b-[100px] bg-gradient-to-tr from-[#7C3AED] via-[#E11D48] to-[#FF2D72] opacity-80 -rotate-3" />
 
-                        {webBanner.image ? (
+                        {bannerData.desktopImage ? (
                           <img
-                            src={webBanner.image}
+                            src={getImageUrl(bannerData.desktopImage)}
                             alt="Website Hero Banner"
                             className="relative z-10 w-full h-full object-cover object-center [mask-image:linear-gradient(to_right,transparent_0%,black_35%)]"
                           />
@@ -659,23 +761,23 @@ export default function BannersAds() {
                 {/* Status Toggle Switch */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gray-600">
-                    {mobileBanner.isActive ? "Published" : "Draft (Hidden)"}
+                    {bannerData.isPublished ? "Published" : "Draft (Hidden)"}
                   </span>
                   <button
                     type="button"
                     onClick={() =>
-                      setMobileBanner((prev) => ({
+                      setBannerData((prev) => ({
                         ...prev,
-                        isActive: !prev.isActive,
+                        isPublished: !prev.isPublished,
                       }))
                     }
                     className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
-                      mobileBanner.isActive ? "bg-[#7C3AED]" : "bg-gray-200"
+                      bannerData.isPublished ? "bg-[#7C3AED]" : "bg-gray-200"
                     }`}
                   >
                     <div
                       className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${
-                        mobileBanner.isActive
+                        bannerData.isPublished
                           ? "translate-x-6"
                           : "translate-x-0"
                       }`}
@@ -690,7 +792,7 @@ export default function BannersAds() {
                 <div className="xl:col-span-6 space-y-5">
                   {/* File Upload Dropzone */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Camera className="w-3.5 h-3.5 text-[#7C3AED]" />
                         <span>Mobile Hero Image Asset *</span>
@@ -735,9 +837,9 @@ export default function BannersAds() {
 
                       {/* Current Image Thumbnail */}
                       <div className="relative w-20 h-28 sm:w-24 sm:h-32 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shrink-0 shadow-2xs group">
-                        {mobileBanner.image ? (
+                        {bannerData.mobileImage ? (
                           <img
-                            src={mobileBanner.image}
+                            src={getImageUrl(bannerData.mobileImage)}
                             alt="Mobile Banner Preview"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
@@ -754,10 +856,10 @@ export default function BannersAds() {
                       {/* Upload Details & Actions */}
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <p className="text-xs font-bold text-gray-800 truncate">
-                          {mobileBanner.fileName || "hero-mobile-banner.jpg"}
+                          {bannerData.mobileFileName || "hero-mobile-banner.jpg"}
                         </p>
                         <p className="text-[11px] text-gray-400 mt-0.5">
-                          {mobileBanner.fileSize} • 9:16 Portrait Ratio
+                          {bannerData.mobileFileSize} • 9:16 Portrait Ratio
                         </p>
 
                         <div className="flex items-center justify-center sm:justify-start gap-2 mt-2.5">
@@ -774,16 +876,16 @@ export default function BannersAds() {
                             <span>Browse File</span>
                           </button>
 
-                          {mobileBanner.image && (
+                          {bannerData.mobileImage && (
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setMobileBanner((prev) => ({
+                                setBannerData((prev) => ({
                                   ...prev,
-                                  image: "",
-                                  fileName: "No banner selected",
-                                  fileSize: "0 KB",
+                                  mobileImage: "",
+                                  mobileFileName: "No banner selected",
+                                  mobileFileSize: "0 KB",
                                 }));
                                 if (mobileFileInputRef.current)
                                   mobileFileInputRef.current.value = "";
@@ -804,15 +906,15 @@ export default function BannersAds() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-gray-700 mb-1">
-                        Mobile Hero Headline
+                        Mobile Hero Headline *
                       </label>
                       <input
                         type="text"
-                        value={mobileBanner.title}
+                        value={bannerData.headline}
                         onChange={(e) =>
-                          setMobileBanner({
-                            ...mobileBanner,
-                            title: e.target.value,
+                          setBannerData({
+                            ...bannerData,
+                            headline: e.target.value,
                           })
                         }
                         placeholder="e.g. Real People, Real Love"
@@ -826,10 +928,10 @@ export default function BannersAds() {
                       </label>
                       <input
                         type="text"
-                        value={mobileBanner.tagline}
+                        value={bannerData.tagline}
                         onChange={(e) =>
-                          setMobileBanner({
-                            ...mobileBanner,
+                          setBannerData({
+                            ...bannerData,
                             tagline: e.target.value,
                           })
                         }
@@ -844,18 +946,17 @@ export default function BannersAds() {
                       </label>
                       <input
                         type="text"
-                        value={mobileBanner.ctaText}
+                        value={bannerData.ctaLabel}
                         onChange={(e) =>
-                          setMobileBanner({
-                            ...mobileBanner,
-                            ctaText: e.target.value,
+                          setBannerData({
+                            ...bannerData,
+                            ctaLabel: e.target.value,
                           })
                         }
                         placeholder="e.g. Join Free Now"
                         className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#7C3AED] focus:outline-none transition-colors"
                       />
                     </div>
-
                   </div>
                 </div>
 
@@ -871,55 +972,36 @@ export default function BannersAds() {
                     </span>
                   </div>
 
-                  {/* Centered Latest iPhone 16 Pro Smartphone Mockup */}
+                  {/* Smartphone Mockup */}
                   <div className="flex justify-center p-3">
-                    {/* iPhone 16 Pro Chassis with Titanium Finish & Hardware Buttons */}
                     <div className="relative select-none">
-                      {/* Left Hardware Buttons: Action Button, Volume Up, Volume Down */}
-                      <div
-                        className="absolute -left-[3px] top-24 w-[3px] h-7 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10"
-                        title="Action Button"
-                      />
-                      <div
-                        className="absolute -left-[3px] top-35 w-[3px] h-12 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10"
-                        title="Volume Up"
-                      />
-                      <div
-                        className="absolute -left-[3px] top-50 w-[3px] h-12 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10"
-                        title="Volume Down"
-                      />
+                      {/* Left Hardware Buttons */}
+                      <div className="absolute -left-[3px] top-24 w-[3px] h-7 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10" />
+                      <div className="absolute -left-[3px] top-35 w-[3px] h-12 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10" />
+                      <div className="absolute -left-[3px] top-50 w-[3px] h-12 bg-[#4d4b55] rounded-l-xs border-y border-l border-[#615e6c] z-10" />
 
-                      {/* Right Hardware Buttons: Power / Side Button, Camera Control */}
-                      <div
-                        className="absolute -right-[3px] top-34 w-[3px] h-16 bg-[#4d4b55] rounded-r-xs border-y border-r border-[#615e6c] z-10"
-                        title="Side Button"
-                      />
-                      <div
-                        className="absolute -right-[3px] top-55 w-[3px] h-10 bg-[#3d3b45] rounded-r-xs border-y border-r border-[#545260] z-10"
-                        title="Camera Control"
-                      />
+                      {/* Right Hardware Buttons */}
+                      <div className="absolute -right-[3px] top-34 w-[3px] h-16 bg-[#4d4b55] rounded-r-xs border-y border-r border-[#615e6c] z-10" />
+                      <div className="absolute -right-[3px] top-55 w-[3px] h-10 bg-[#3d3b45] rounded-r-xs border-y border-r border-[#545260] z-10" />
 
-                      {/* iPhone Outer Titanium Bezel */}
+                      {/* Chassis */}
                       <div className="w-[285px] sm:w-[310px] h-[580px] sm:h-[610px] rounded-[52px] sm:rounded-[56px] p-[10px] bg-gradient-to-b from-[#3a3942] via-[#24232a] to-[#18171d] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.12),0_8px_20px_-6px_rgba(0,0,0,0.4)] border border-[#44434d] relative">
-                        {/* Inner OLED Screen Container with Super-thin Bezel */}
                         <div className="w-full h-full rounded-[42px] sm:rounded-[46px] overflow-hidden relative bg-black flex flex-col justify-between border-[2.5px] border-[#0c0c0e]">
                           {/* Dynamic Island */}
                           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-[94px] h-[25px] bg-black rounded-full z-40 flex items-center justify-between px-3 shadow-lg pointer-events-none">
-                            {/* Selfie Camera Lens with optical reflection */}
                             <div className="w-2.5 h-2.5 rounded-full bg-[#0d0d12] ring-1 ring-white/10 flex items-center justify-center">
                               <div className="w-1 h-1 rounded-full bg-[#1e293b]" />
                             </div>
-                            {/* FaceID Sensor */}
                             <div className="w-2 h-2 rounded-full bg-[#0a0a0f]" />
                           </div>
 
-                          {/* Subtle Glass Glare Reflection */}
+                          {/* Subtle Glass Glare */}
                           <div className="absolute -top-10 -right-10 w-44 h-44 bg-gradient-to-bl from-white/15 via-white/4 to-transparent rounded-full pointer-events-none z-30 transform -rotate-12" />
 
-                          {/* Background Hero Banner Image Layer */}
-                          {mobileBanner.image ? (
+                          {/* Image */}
+                          {bannerData.mobileImage ? (
                             <img
-                              src={mobileBanner.image}
+                              src={getImageUrl(bannerData.mobileImage)}
                               alt="Mobile Hero Banner"
                               className="absolute inset-0 w-full h-full object-cover object-center"
                             />
@@ -929,32 +1011,24 @@ export default function BannersAds() {
                             </div>
                           )}
 
-                          {/* Top Gradient Overlay for Status Bar Readability */}
+                          {/* Top Gradient */}
                           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/85 via-black/45 to-transparent z-10 pointer-events-none" />
 
-                          {/* Authentic iOS 18 Status Bar */}
+                          {/* Status Bar */}
                           <div className="relative z-30 px-6 pt-3 flex items-center justify-between text-white text-[11px] font-semibold select-none pointer-events-none">
-                            {/* Time */}
                             <span className="tracking-tight font-medium">
                               9:41
                             </span>
-
-                            {/* Status Icons: Cellular, 5G, Battery */}
                             <div className="flex items-center gap-1.5">
-                              {/* Cellular Signal Bars */}
                               <div className="flex items-end gap-[1.5px] h-2.5">
                                 <span className="w-[2.5px] h-1 bg-white rounded-2xs" />
                                 <span className="w-[2.5px] h-1.5 bg-white rounded-2xs" />
                                 <span className="w-[2.5px] h-2 bg-white rounded-2xs" />
                                 <span className="w-[2.5px] h-2.5 bg-white rounded-2xs" />
                               </div>
-
-                              {/* 5G Badge */}
                               <span className="text-[9.5px] font-bold tracking-tight">
                                 5G
                               </span>
-
-                              {/* iOS Battery Indicator with Terminal Tip */}
                               <div className="flex items-center">
                                 <div className="w-[19px] h-[9.5px] rounded-[3.5px] border border-white/90 p-[1.5px] flex items-center">
                                   <div className="w-full h-full bg-white rounded-[1.5px]" />
@@ -964,24 +1038,25 @@ export default function BannersAds() {
                             </div>
                           </div>
 
-                          {/* Bottom Gradient Overlay for Content Readability */}
+                          {/* Bottom Gradient */}
                           <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black via-black/80 via-black/40 to-transparent z-10 pointer-events-none" />
 
-                          {/* Bottom Content Area */}
+                          {/* Content Overlay */}
                           <div className="relative z-20 p-5 space-y-2 mt-auto text-white">
-                            {mobileBanner.tagline && (
+                            {bannerData.tagline && (
                               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-[9px] font-bold text-pink-200 border border-white/20 shadow-xs">
                                 <Heart className="w-2.5 h-2.5 fill-pink-400 text-pink-400" />
-                                <span>{mobileBanner.tagline}</span>
+                                <span>{bannerData.tagline}</span>
                               </div>
                             )}
 
                             <h4 className="text-xl font-black leading-tight tracking-tight drop-shadow-md">
-                              {mobileBanner.title || "Real People, Real Love"}
+                              {bannerData.headline || "Real People, Real Love"}
                             </h4>
 
                             <p className="text-[10.5px] text-gray-200 line-clamp-2 leading-relaxed opacity-95">
-                              {mobileBanner.description}
+                              Discover verified singles in your city with our
+                              intelligent match compatibility engine.
                             </p>
 
                             <div className="pt-2">
@@ -990,13 +1065,13 @@ export default function BannersAds() {
                                 className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] text-white text-xs font-black shadow-lg shadow-pink-500/35 hover:opacity-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                               >
                                 <span>
-                                  {mobileBanner.ctaText || "Join Free Now"}
+                                  {bannerData.ctaLabel || "Join Free Now"}
                                 </span>
                                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                               </button>
                             </div>
 
-                            {/* iOS Home Indicator Bar */}
+                            {/* Home Indicator */}
                             <div className="pt-2">
                               <div className="w-28 h-[4px] bg-white/70 rounded-full mx-auto shadow-xs" />
                             </div>

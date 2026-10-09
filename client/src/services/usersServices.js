@@ -27,4 +27,3 @@ export const uploadProfileImage = (fileOrFormData, userId) => {
     },
   });
 };
-

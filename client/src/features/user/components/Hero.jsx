@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  Star,
-  Users,
   ShieldCheck,
   Rocket,
   Lock,
@@ -12,37 +10,144 @@ import {
   Heart,
 } from "lucide-react";
 import heroBannerImg from "../../../assets/bannerr.jpeg";
-import priyaProfileImg from "../../../assets/priya_profile.jpg";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getPublishedBanners } from "../../../services/bannersServices.js";
+import { getImageUrl } from "../../../services/uploadServices.js";
 
 export default function Hero() {
   const { isAuthenticated: isLoggedIn } = useAuth();
+  const [banner, setBanner] = useState(() => {
+    try {
+      const cached = localStorage.getItem("active_hero_banner");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const fetchPublishedBanner = async () => {
+      try {
+        const res = await getPublishedBanners();
+        const banners = res.data?.banners || [];
+        if (banners.length > 0) {
+          setBanner(banners[0]);
+          try {
+            localStorage.setItem("active_hero_banner", JSON.stringify(banners[0]));
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Failed to fetch published banner for Hero section:", err);
+      }
+    };
+    fetchPublishedBanner();
+    const handleBannerUpdate = (e) => {
+      if (e?.detail) {
+        setBanner(e.detail);
+      } else {
+        fetchPublishedBanner();
+      }
+    };
+    window.addEventListener("banner_updated", handleBannerUpdate);
+    window.addEventListener("storage", fetchPublishedBanner);
+    return () => {
+      window.removeEventListener("banner_updated", handleBannerUpdate);
+      window.removeEventListener("storage", fetchPublishedBanner);
+    };
+  }, []);
+
+  const desktopImgSrc = banner?.desktopImage
+    ? getImageUrl(banner.desktopImage)
+    : heroBannerImg;
+
+  const mobileImgSrc = banner?.mobileImage
+    ? getImageUrl(banner.mobileImage)
+    : desktopImgSrc;
+
+  const renderHeadline = (text) => {
+    const words = text.trim().split(" ");
+    if (words.length <= 2) {
+      return (
+        <span className="bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] bg-clip-text text-transparent">
+          {text}
+        </span>
+      );
+    }
+    const splitIndex = Math.ceil(words.length / 2);
+    const firstPart = words.slice(0, splitIndex).join(" ");
+    const secondPart = words.slice(splitIndex).join(" ");
+    return (
+      <>
+        {firstPart} <br />
+        <span className="bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] bg-clip-text text-transparent">
+          {secondPart}
+        </span>
+      </>
+    );
+  };
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-r from-[#FAF9FC] via-[#FFF5F8] to-[#FCEBF3] font-poppins">
-      {/* Ambient Sunset Glows matching the reference design background color */}
       <div className="absolute top-0 right-0 -z-10 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_75%_20%,rgba(254,215,170,0.45)_0%,rgba(255,143,163,0.30)_40%,transparent_70%)] pointer-events-none" />
       <div className="absolute top-1/3 left-1/4 -z-10 w-[600px] h-[600px] bg-[radial-gradient(circle_at_40%_40%,rgba(255,45,114,0.07)_0%,transparent_65%)] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 -z-10 w-[500px] h-[400px] bg-[radial-gradient(circle,rgba(192,132,252,0.18)_0%,transparent_70%)] pointer-events-none" />
-
-      {/* Subtle Floating Hearts */}
       <div className="absolute top-12 left-1/3 text-[#FF2D72]/20 animate-float-slow pointer-events-none">
         <Heart className="w-5 h-5 fill-[#FF2D72]/15" />
       </div>
       <div className="absolute bottom-32 left-10 text-[#FF2D72]/20 animate-float-reverse pointer-events-none">
         <Heart className="w-4 h-4 fill-[#FF2D72]/15" />
       </div>
+      <div className="relative w-full min-h-[580px] sm:min-h-[640px] overflow-hidden flex flex-col justify-end lg:hidden">
+        <img
+          src={mobileImgSrc}
+          alt={banner?.headline || "Find Your Perfect Match"}
+          onError={(e) => {
+            e.currentTarget.src = heroBannerImg;
+          }}
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 via-black/30 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-black via-black/85 via-black/40 to-transparent z-10 pointer-events-none" />
+        <div className="relative z-20 px-6 pb-8 pt-4 space-y-3.5 text-white">
+          {banner?.tagline && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold text-pink-200 border border-white/25 shadow-xs">
+              <Heart className="w-3.5 h-3.5 fill-pink-400 text-pink-400" />
+              <span>{banner.tagline}</span>
+            </div>
+          )}
 
-      {/* TOP HERO BANNER AREA (Full bleed on Top, Right, and Bottom) */}
-      <div className="relative w-full min-h-[580px] lg:min-h-[660px] xl:min-h-[700px] 2xl:min-h-[740px] flex flex-col justify-center">
+          <h2 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight drop-shadow-md text-white">
+            {banner?.headline || "Find Your Perfect Match"}
+          </h2>
+
+          <p className="text-xs sm:text-sm text-gray-200 line-clamp-3 leading-relaxed opacity-95">
+            Discover verified singles in your city with our intelligent match compatibility engine.
+          </p>
+
+          <div className="pt-2">
+            <Link
+              to={isLoggedIn ? "/discover" : "/register"}
+              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] hover:from-[#e61b61] hover:to-[#7c3aed] text-white text-sm sm:text-base font-bold shadow-lg shadow-[#FF2D72]/35 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
+            >
+              <span>{isLoggedIn ? "Explore Matches" : (banner?.ctaLabel || "Get Started Free")}</span>
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+            </Link>
+          </div>
+
+
+        </div>
+      </div>
+
+      {/* 2. DESKTOP HERO BANNER (Visible on desktop >= lg) */}
+      <div className="hidden lg:flex relative w-full min-h-[660px] xl:min-h-[700px] 2xl:min-h-[740px] flex-col justify-center">
         {/* LEFT COLUMN CONTENT: Aligned with standard Navbar container */}
-        <div className="max-w-[1600px] order-2 mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-16 xl:py-20 z-10 relative">
+        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-16 xl:py-20 z-10 relative">
           <div className="lg:w-[48%] xl:w-[46%] flex flex-col justify-center space-y-7">
             <div className="inline-flex items-center gap-2.5 self-start px-4 py-1.5 rounded-full bg-white/95 border border-[#FFE4EE] shadow-[0_2px_12px_rgba(255,45,114,0.08)]">
               <div className="flex items-center gap-1.5 text-[#FF2D72]">
                 <Heart className="w-3.5 h-3.5 fill-[#FF2D72] text-[#FF2D72]" />
                 <span className="text-xs sm:text-sm font-bold tracking-wide">
-                  Connect with real people!
+                  {banner?.tagline || "Connect with real people!"}
                 </span>
               </div>
             </div>
@@ -50,10 +155,16 @@ export default function Hero() {
             {/* 2. Main Headline: Find Your Perfect Match */}
             <div className="space-y-4">
               <h1 className="text-5xl sm:text-6xl lg:text-[64px] xl:text-[72px] font-black text-[#18181B] tracking-tight leading-[1.06]">
-                Find Your <br />
-                <span className="bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] bg-clip-text text-transparent">
-                  Perfect Match
-                </span>
+                {banner?.headline && banner.headline !== "Find Your Perfect Match" ? (
+                  renderHeadline(banner.headline)
+                ) : (
+                  <>
+                    Find Your <br />
+                    <span className="bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] bg-clip-text text-transparent">
+                      Perfect Match
+                    </span>
+                  </>
+                )}
               </h1>
               <p className="text-[#52525B] text-base sm:text-lg tracking-wide font-normal max-w-lg leading-relaxed pt-1">
                 LoveConnect brings together like-minded people who believe in
@@ -68,81 +179,32 @@ export default function Hero() {
                 to={isLoggedIn ? "/discover" : "/register"}
                 className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#FF2D72] via-[#E11D48] to-[#8B5CF6] hover:from-[#e61b61] hover:to-[#7c3aed] text-white font-bold text-sm sm:text-base shadow-[0_12px_28px_rgba(255,45,114,0.3)] hover:shadow-[0_16px_36px_rgba(255,45,114,0.42)] transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer group"
               >
-                <span>{isLoggedIn ? "Explore Matches" : "Get Started Free"}</span>
+                <span>{isLoggedIn ? "Explore Matches" : (banner?.ctaLabel || "Get Started Free")}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            {/* 4. Stats Strip with Icons */}
-            <div className="pt-6 border-t border-[#FFE4EE]/80 flex flex-wrap items-center gap-6 sm:gap-10">
-              {/* Stat 1: 1M+ Happy Members */}
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#FFF0F5] flex items-center justify-center text-[#FF2D72]">
-                  <Users className="w-5 h-5 fill-[#FF2D72]/20 text-[#FF2D72]" />
-                </div>
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-black text-[#18181B] tracking-tight leading-tight">
-                    1M+
-                  </h3>
-                  <p className="text-xs text-[#71717A] font-medium">
-                    Happy Members
-                  </p>
-                </div>
-              </div>
 
-              {/* Divider */}
-              <div className="hidden sm:block h-8 w-[1px] bg-[#FFE4EE]" />
-
-              {/* Stat 2: 500K+ Real Matches */}
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#F5EEFF] flex items-center justify-center text-[#8B5CF6]">
-                  <Heart className="w-4.5 h-4.5 fill-[#8B5CF6] text-[#8B5CF6]" />
-                </div>
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-black text-[#18181B] tracking-tight leading-tight">
-                    500K+
-                  </h3>
-                  <p className="text-xs text-[#71717A] font-medium">
-                    Real Matches
-                  </p>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block h-8 w-[1px] bg-[#FFE4EE]" />
-
-              {/* Stat 3: 4.8 App Rating */}
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#FFF0F5] flex items-center justify-center text-[#FF2D72]">
-                  <Star className="w-5 h-5 fill-[#FF2D72] text-[#FF2D72]" />
-                </div>
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-black text-[#18181B] tracking-tight leading-tight">
-                    4.8
-                  </h3>
-                  <p className="text-xs text-[#71717A] font-medium">
-                    App Rating
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* RIGHT VISUAL AREA (Full Bleed on 3 sides: Top 0, Right 0, Bottom 0) */}
-        <div className="relative order-1 lg:absolute lg:top-0 lg:right-0 lg:bottom-0 w-full lg:w-[58%] xl:w-[56%] 2xl:w-[55%] h-[480px] sm:h-[560px] lg:h-full overflow-hidden flex items-center justify-end select-none">
+        <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[58%] xl:w-[56%] 2xl:w-[55%] h-full overflow-hidden flex items-center justify-end select-none">
           {/* Signature Organic Pink-Purple Gradient Arch behind the couple */}
           <div className="absolute top-1/2 -translate-y-1/2 left-0 sm:left-6 lg:left-2 w-[420px] sm:w-[480px] lg:w-[520px] h-[520px] sm:h-[580px] lg:h-[620px] rounded-t-full rounded-b-[180px] bg-gradient-to-tr from-[#7C3AED] via-[#E11D48] to-[#FF2D72] opacity-95 shadow-2xl shadow-[#FF2D72]/25 pointer-events-none transform -rotate-3" />
 
           {/* Secondary Soft Purple Bubble at bottom-left */}
           <div className="absolute bottom-0 left-0 sm:left-4 w-[240px] sm:w-[300px] h-[240px] sm:h-[300px] rounded-full bg-gradient-to-tr from-[#7C3AED]/75 via-[#9333EA]/55 to-[#C084FC]/35 blur-xs pointer-events-none" />
 
-          {/* Couple Image Layer: 100% Solid & Genuine using bannerr.jpeg */}
+          {/* Couple Image Layer: Connected dynamically with DB banner (Desktop) */}
           <div className="relative z-10 w-full h-full flex items-center justify-end overflow-hidden">
             <img
-              src={heroBannerImg}
-              alt="Find Your Perfect Match - Couple in romantic embrace"
-              className="w-full h-full object-cover object-[center_center] lg:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.15)_8%,rgba(0,0,0,0.85)_22%,black_32%)] pointer-events-none"
+              src={desktopImgSrc}
+              alt={banner?.headline || "Find Your Perfect Match - Couple in romantic embrace"}
+              onError={(e) => {
+                e.currentTarget.src = heroBannerImg;
+              }}
+              className="w-full h-full object-cover object-[center_center] lg:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.15)_8%,rgba(0,0,0,0.85)_22%,black_32%)] pointer-events-none transition-opacity duration-300"
             />
 
             {/* 1. Left Se Shadow: Gentle inner shadow & transition from hero background */}

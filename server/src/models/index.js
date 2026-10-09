@@ -15,6 +15,7 @@ import Faqs from "./faqsModel.js";
 import Settings from "./settingsModel.js";
 import Support from "./supportModel.js";
 import Calls from "./callsModel.js";
+import Notifications from "./notificationsModel.js";
 
 
 Users.hasOne(Profiles, {
@@ -242,7 +243,37 @@ Calls.belongsTo(Conversation, {
   as: "conversation",
 });
 
+Users.hasMany(Notifications, {
+  foreignKey: "user_id",
+  as: "notifications",
+});
 
+Notifications.belongsTo(Users, {
+  foreignKey: "user_id",
+  as: "recipient",
+});
+
+Users.hasMany(Notifications, {
+  foreignKey: "sender_id",
+  as: "sentNotifications",
+});
+
+Notifications.belongsTo(Users, {
+  foreignKey: "sender_id",
+  as: "sender",
+});
+
+Admin.hasMany(Notifications, {
+  foreignKey: "admin_id",
+  sourceKey: "admin_id",
+  as: "adminNotifications",
+});
+
+Notifications.belongsTo(Admin, {
+  foreignKey: "admin_id",
+  targetKey: "admin_id",
+  as: "adminRecipient",
+});
 
 export {
   Users,
@@ -262,6 +293,7 @@ export {
   Settings,
   Support,
   Calls,
+  Notifications,
 };
 
 export default {
@@ -282,4 +314,5 @@ export default {
   Settings,
   Support,
   Calls,
+  Notifications,
 };

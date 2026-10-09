@@ -8,7 +8,6 @@ export const createBanner = async (req, res) => {
       headline,
       tagline,
       ctaLabel,
-      ctaUrl,
       isPublished,
     } = req.body;
 
@@ -24,7 +23,6 @@ export const createBanner = async (req, res) => {
       headline: headline.trim(),
       tagline,
       ctaLabel,
-      ctaUrl,
       isPublished: isPublished ?? false,
     });
 
@@ -93,7 +91,6 @@ export const updateBanner = async (req, res) => {
       headline,
       tagline,
       ctaLabel,
-      ctaUrl,
       isPublished,
     } = req.body;
 
@@ -103,7 +100,6 @@ export const updateBanner = async (req, res) => {
       ...(headline !== undefined && { headline }),
       ...(tagline !== undefined && { tagline }),
       ...(ctaLabel !== undefined && { ctaLabel }),
-      ...(ctaUrl !== undefined && { ctaUrl }),
       ...(isPublished !== undefined && { isPublished }),
     });
 

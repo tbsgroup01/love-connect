@@ -1,5 +1,6 @@
 import { Likes, Matches, Users, Profiles } from "../models/index.js";
 import { Op } from "sequelize";
+import { notifyLike, notifyMatch } from "../services/notificationsServices.js";
 
 export const likeUser = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ export const likeUser = async (req, res) => {
       });
     }
 
-    await Likes.create({
+    const like = await Likes.create({
       sender_id,
       receiver_id,
     });
@@ -56,6 +57,16 @@ export const likeUser = async (req, res) => {
           user_two_id: receiver_id,
         });
 
+        try {
+          await notifyMatch({
+            userOneId: sender_id,
+            userTwoId: Number(receiver_id),
+            matchId: match.id,
+          });
+        } catch (notifError) {
+          console.error("Match notification trigger error:", notifError);
+        }
+
         return res.status(201).json({
           message: "It's a match!",
           liked: true,
@@ -63,6 +74,16 @@ export const likeUser = async (req, res) => {
           match,
         });
       }
+    }
+
+    try {
+      await notifyLike({
+        senderId: sender_id,
+        receiverId: Number(receiver_id),
+        referenceId: like.id,
+      });
+    } catch (notifError) {
+      console.error("Like notification trigger error:", notifError);
     }
 
     return res.status(201).json({

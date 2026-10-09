@@ -7,6 +7,7 @@ import {
   Profiles,
 } from "../models/index.js";
 import { validateUserChatPermission } from "../controllers/chatsController.js";
+import { notifyMessage } from "../services/notificationsServices.js";
 
 let io;
 
@@ -29,6 +30,7 @@ export const initializeSocket = (server) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       socket.userId = decoded.id;
+      socket.role = decoded.role || "user";
 
       next();
     } catch (error) {
@@ -40,6 +42,10 @@ export const initializeSocket = (server) => {
     console.log("User connected to socket:", socket.userId);
 
     socket.join(`user_${socket.userId}`);
+    if (socket.role === "admin") {
+      socket.join(`admin_${socket.userId}`);
+      socket.join("admins");
+    }
     socket.on("join_conversation", async (conversationId) => {
       try {
         const conversation = await Conversation.findByPk(conversationId);
@@ -137,6 +143,21 @@ export const initializeSocket = (server) => {
           "new_message",
           messageWithSender || newMessage
         );
+
+        const receiverId =
+          Number(conversation.user_one_id) === Number(socket.userId)
+            ? conversation.user_two_id
+            : conversation.user_one_id;
+
+        try {
+          await notifyMessage({
+            senderId: socket.userId,
+            receiverId: Number(receiverId),
+            conversationId: conversation.id,
+          });
+        } catch (notifErr) {
+          console.error("Message notification trigger error:", notifErr);
+        }
       } catch (error) {
         console.error("Socket send message error:", error);
       }

@@ -458,10 +458,21 @@ export const getAllUsers = async (req, res) => {
       return json;
     });
 
+    const totalUsers = usersResponse.length;
+    const activeUsers = usersResponse.filter((u) => u.status === "active").length;
+    const inactiveUsers = usersResponse.filter((u) => u.status === "inactive").length;
+    const suspendedUsers = usersResponse.filter((u) => u.status === "suspended").length;
+
     return res.status(200).json({
       success: true,
       message: "Users fetched successfully",
       users: usersResponse,
+      stats: {
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        suspendedUsers,
+      },
     });
   } catch (error) {
     console.error("Error in getAllUsers:", error);
