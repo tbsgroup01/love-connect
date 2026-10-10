@@ -39,7 +39,7 @@ const app = express();
 const PORT = process.env.PORT;
 app.use(
   cors({
-    origin: true,
+    origin: ["http://localhost:5173", "http://localhost:4010", "http://localhost:4000", "https://app.loveconnect.com", "https://app.loveconnect.com/api/"],
     credentials: true,
     methods: [
       "GET",
