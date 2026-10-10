@@ -18,11 +18,7 @@ export const createOrder = async (req, res) => {
         message: "Plan ID is required.",
       });
     }
-
-    const plan =
-      (await Plans.findOne({ where: { plan_id } })) ||
-      (await Plans.findByPk(plan_id));
-
+    const plan = (await Plans.findOne({ where: { plan_id } })) || (await Plans.findByPk(plan_id));
     if (!plan) {
       return res.status(404).json({
         message: "Plan not found.",
@@ -158,7 +154,6 @@ export const verifyPayment = async (req, res) => {
     });
 
     const now = new Date();
-
     const activeSubscription = await Subscriptions.findOne({
       where: {
         user_id,

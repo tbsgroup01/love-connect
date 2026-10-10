@@ -1,42 +1,51 @@
 import { Navigate, Routes, Route, useLocation, Outlet } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { getSettings } from "./services/settingsServices.js";
 import { updateBrowserFavicon } from "./services/uploadServices.js";
 import api from "./services/api.js";
 import Home from "./features/user/pages/Home";
-
-// import SplashScreen from "./features/user/pages/SplashScreen";
-import PrivacyPolicy from "./features/user/pages/PrivacyPolicy";
-import TermsConditions from "./features/user/pages/TermsConditions";
-import Login from "./features/user/pages/Login";
-import ForgotPassword from "./features/user/pages/ForgotPassword";
-import Onboarding from "./features/user/pages/Onboarding";
-import ProfileCreation from "./features/user/pages/ProfileCreation";
-import Discover from "./features/user/pages/Discover";
-import LikesPage from "./features/user/pages/LikesPage";
-import MatchesPage from "./features/user/pages/MatchesPage";
-import MessagesPage from "./features/user/pages/MessagesPage";
-import ProfilePage from "./features/user/pages/ProfilePage";
-import VideoCall from "./features/user/pages/VideoCall";
-import HelpSupport from "./features/user/pages/HelpSupport";
-
-import AdminDashboard from "./features/admin/pages/Dashboard/Dashboard";
-import AdminUsers from "./features/admin/pages/UserManagement/Users";
-import AdminProfiles from "./features/admin/pages/UserManagement/Profiles";
-import AdminReportsModeration from "./features/admin/pages/UserManagement/ReportsModeration";
-import AdminMatches from "./features/admin/pages/MatchChats/Matches";
-import AdminChatManagement from "./features/admin/pages/MatchChats/ChatManagement";
-import AdminVideoCallLogs from "./features/admin/pages/MatchChats/VideoCallLogs";
-import AdminPlans from "./features/admin/pages/SubscriptionPayment/Plans";
-import AdminTransactions from "./features/admin/pages/SubscriptionPayment/Transactions";
-import AdminRevenueReports from "./features/admin/pages/SubscriptionPayment/RevenueReports";
-import AdminBannersAds from "./features/admin/pages/ContentManagement/BannersAds";
-import AdminSupportManagement from "./features/admin/pages/ContentManagement/SupportManagement";
-// import AdminFAQManagement from "./features/admin/pages/ContentManagement/FAQManagement";
-import AdminAppSettings from "./features/admin/pages/Settings/AppSettings";
-import AdminFeatureManagement from "./features/admin/pages/Settings/FeatureManagement";
-import AdminActivityLogs from "./features/admin/pages/Settings/ActivityLogs";
 import { useAuth } from "./context/AuthContext.jsx";
+
+// Eagerly keep Home for instant LCP, lazy load all other routes
+const PrivacyPolicy = lazy(() => import("./features/user/pages/PrivacyPolicy"));
+const TermsConditions = lazy(() => import("./features/user/pages/TermsConditions"));
+const Login = lazy(() => import("./features/user/pages/Login"));
+const ForgotPassword = lazy(() => import("./features/user/pages/ForgotPassword"));
+const Onboarding = lazy(() => import("./features/user/pages/Onboarding"));
+const ProfileCreation = lazy(() => import("./features/user/pages/ProfileCreation"));
+const Discover = lazy(() => import("./features/user/pages/Discover"));
+const LikesPage = lazy(() => import("./features/user/pages/LikesPage"));
+const MatchesPage = lazy(() => import("./features/user/pages/MatchesPage"));
+const MessagesPage = lazy(() => import("./features/user/pages/MessagesPage"));
+const ProfilePage = lazy(() => import("./features/user/pages/ProfilePage"));
+const VideoCall = lazy(() => import("./features/user/pages/VideoCall"));
+const HelpSupport = lazy(() => import("./features/user/pages/HelpSupport"));
+
+// Lazy load admin portal routes
+const AdminDashboard = lazy(() => import("./features/admin/pages/Dashboard/Dashboard"));
+const AdminUsers = lazy(() => import("./features/admin/pages/UserManagement/Users"));
+const AdminProfiles = lazy(() => import("./features/admin/pages/UserManagement/Profiles"));
+const AdminReportsModeration = lazy(() => import("./features/admin/pages/UserManagement/ReportsModeration"));
+const AdminMatches = lazy(() => import("./features/admin/pages/MatchChats/Matches"));
+const AdminChatManagement = lazy(() => import("./features/admin/pages/MatchChats/ChatManagement"));
+const AdminVideoCallLogs = lazy(() => import("./features/admin/pages/MatchChats/VideoCallLogs"));
+const AdminPlans = lazy(() => import("./features/admin/pages/SubscriptionPayment/Plans"));
+const AdminTransactions = lazy(() => import("./features/admin/pages/SubscriptionPayment/Transactions"));
+const AdminRevenueReports = lazy(() => import("./features/admin/pages/SubscriptionPayment/RevenueReports"));
+const AdminBannersAds = lazy(() => import("./features/admin/pages/ContentManagement/BannersAds"));
+const AdminSupportManagement = lazy(() => import("./features/admin/pages/ContentManagement/SupportManagement"));
+const AdminAppSettings = lazy(() => import("./features/admin/pages/Settings/AppSettings"));
+const AdminFeatureManagement = lazy(() => import("./features/admin/pages/Settings/FeatureManagement"));
+const AdminActivityLogs = lazy(() => import("./features/admin/pages/Settings/ActivityLogs"));
+
+// Lightweight spinner for lazy route transitions
+function PageLoader() {
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center p-8">
+      <div className="w-9 h-9 border-3 border-pink-200 border-t-[#FF2D72] rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function AdminProtectedRoute() {
   const location = useLocation();
@@ -154,51 +163,53 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        {/* <Route path="/splash" element={<SplashScreen />} /> */}
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-conditions" element={<TermsConditions />} />
-        <Route path="/login" element={<Login initialMode="login" />} />
-        <Route path="/register" element={<Login initialMode="signup" />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route element={<UserProtectedRoute />}>
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/create-profile" element={<ProfileCreation />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/likes" element={<LikesPage />} />
-          <Route path="/matches" element={<MatchesPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/call" element={<VideoCall />} />
-          <Route path="/help" element={<HelpSupport />} />
-        </Route>
-        <Route path="/premium" element={<Navigate to="/#pricing" replace />} />
-        <Route path="/settings" element={<Navigate to="/profile" replace />} />
-        <Route path="/admin" element={<AdminProtectedRoute />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="profiles" element={<AdminProfiles />} />
-          <Route path="reports" element={<AdminReportsModeration />} />
-          <Route path="matches" element={<AdminMatches />} />
-          <Route path="chats" element={<AdminChatManagement />} />
-          <Route path="video-calls" element={<AdminVideoCallLogs />} />
-          <Route path="plans" element={<AdminPlans />} />
-          <Route path="transactions" element={<AdminTransactions />} />
-          <Route path="revenue" element={<AdminRevenueReports />} />
-          <Route path="banners" element={<AdminBannersAds />} />
-          <Route path="support" element={<AdminSupportManagement />} />
-          {/* <Route path="faq" element={<AdminFAQManagement />} /> */}
-          <Route path="app-settings" element={<AdminAppSettings />} />
-          <Route
-            path="feature-management"
-            element={<AdminFeatureManagement />}
-          />
-          <Route path="activity-logs" element={<AdminActivityLogs />} />
-        </Route>
-        <Route path="*" element={<Home />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          {/* <Route path="/splash" element={<SplashScreen />} /> */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
+          <Route path="/login" element={<Login initialMode="login" />} />
+          <Route path="/register" element={<Login initialMode="signup" />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route element={<UserProtectedRoute />}>
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/create-profile" element={<ProfileCreation />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/likes" element={<LikesPage />} />
+            <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/call" element={<VideoCall />} />
+            <Route path="/help" element={<HelpSupport />} />
+          </Route>
+          <Route path="/premium" element={<Navigate to="/#pricing" replace />} />
+          <Route path="/settings" element={<Navigate to="/profile" replace />} />
+          <Route path="/admin" element={<AdminProtectedRoute />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="profiles" element={<AdminProfiles />} />
+            <Route path="reports" element={<AdminReportsModeration />} />
+            <Route path="matches" element={<AdminMatches />} />
+            <Route path="chats" element={<AdminChatManagement />} />
+            <Route path="video-calls" element={<AdminVideoCallLogs />} />
+            <Route path="plans" element={<AdminPlans />} />
+            <Route path="transactions" element={<AdminTransactions />} />
+            <Route path="revenue" element={<AdminRevenueReports />} />
+            <Route path="banners" element={<AdminBannersAds />} />
+            <Route path="support" element={<AdminSupportManagement />} />
+            {/* <Route path="faq" element={<AdminFAQManagement />} /> */}
+            <Route path="app-settings" element={<AdminAppSettings />} />
+            <Route
+              path="feature-management"
+              element={<AdminFeatureManagement />}
+            />
+            <Route path="activity-logs" element={<AdminActivityLogs />} />
+          </Route>
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { OAuth2Client } from "google-auth-library";
 import { Users, Admin, Activities, Profiles } from "../models/index.js";
 import { ensureFreeStarterSubscription } from "./subscriptionsController.js";
 import { calculateCompletion } from "./usersController.js";
@@ -554,6 +555,263 @@ const updateAdminProfile = async (req, res) => {
   }
 };
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential token is required",
+      });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      console.error("Google ID token verification failed:", verifyError.message);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired Google credential",
+      });
+    }
+
+    if (!payload?.email || !payload.email_verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Google email is not verified",
+      });
+    }
+
+    const normalizedEmail = payload.email.trim().toLowerCase();
+    const googleId = payload.sub;
+    const displayName = payload.name?.trim() || "Google User";
+    const avatarUrl = payload.picture || null;
+
+    // Find existing user by email or google_id
+    let user = await Users.findOne({
+      where: {
+        [Op.or]: [
+          { email: normalizedEmail },
+          { google_id: googleId },
+        ],
+      },
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+      // Create new user cleanly with NULL password and NULL phone
+      user = await Users.create({
+        name: displayName,
+        email: normalizedEmail,
+        google_id: googleId,
+        avatar: avatarUrl,
+        phone: null,
+        password: null,
+        role: "user",
+        auth_provider: "google",
+        status: "active",
+        last_login: new Date(),
+      });
+
+      if (!user.user_id) {
+        user.user_id = user.id;
+        await user.save();
+      }
+
+      // Automatically activate Free Starter subscription for new user
+      try {
+        await ensureFreeStarterSubscription(user.id);
+      } catch (subError) {
+        console.error("Failed to activate default Free Starter subscription:", subError);
+      }
+
+      isNewUser = true;
+    } else {
+      // Check status of existing account
+      if (user.status === "suspended") {
+        return res.status(403).json({
+          success: false,
+          code: "ACCOUNT_SUSPENDED",
+          message: "Your account has been suspended. Please contact admin.",
+        });
+      }
+      if (user.status === "inactive") {
+        return res.status(403).json({
+          success: false,
+          code: "ACCOUNT_DEACTIVATED",
+          message: "Your account has been deactivated. Please contact admin.",
+        });
+      }
+
+      // Link google_id or avatar if missing
+      let needsSave = false;
+      if (!user.google_id) {
+        user.google_id = googleId;
+        needsSave = true;
+      }
+      if (!user.avatar && avatarUrl) {
+        user.avatar = avatarUrl;
+        needsSave = true;
+      }
+      user.last_login = new Date();
+      await user.save();
+    }
+
+    // Check if user has an existing profile
+    const profile = await Profiles.findOne({
+      where: { user_id: user.id },
+    });
+
+    // Record login activity
+    try {
+      const clientIp =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        req.ip ||
+        "127.0.0.1";
+      const userAgent = req.get("User-Agent") || "Unknown Device";
+
+      await Activities.create({
+        user_id: user.id,
+        admin_id: null,
+        role: "user",
+        action: isNewUser ? "GOOGLE_REGISTER" : "GOOGLE_LOGIN",
+        loginAt: new Date(),
+        ipAddress: clientIp,
+        userAgent,
+      });
+    } catch (actError) {
+      console.error("Failed to record Google login activity:", actError);
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role || "user",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const { password: _, ...userData } = user.toJSON();
+    userData.has_profile = Boolean(profile);
+    userData.profile = profile || null;
+    userData.profile_completion = calculateCompletion(userData);
+
+    return res.status(200).json({
+      success: true,
+      message: isNewUser ? "Account created with Google successfully" : "Google login successful",
+      token,
+      user: { ...userData, role: "user" },
+      isNewUser: !profile,
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Google login failed",
+    });
+  }
+};
+
+// In-memory cache for phone verification OTPs
+const phoneOtpStore = new Map();
+
+const sendPhoneOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const cleanPhone = phone ? String(phone).replace(/\D/g, "").slice(0, 10) : "";
+
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 10-digit mobile number",
+      });
+    }
+
+    const existingPhone = await Users.findOne({
+      where: { phone: cleanPhone },
+    });
+
+    if (existingPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "This mobile number is already registered. Please login.",
+      });
+    }
+
+    // Dummy OTP as requested: "aur abhi dummy otp aaye bs no need to do extra"
+    const dummyOtp = "123456";
+    phoneOtpStore.set(cleanPhone, {
+      otp: dummyOtp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    console.log(`[AUTH] Sent Dummy OTP for ${cleanPhone}: ${dummyOtp}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully! Demo OTP: 123456",
+      otp: dummyOtp,
+    });
+  } catch (error) {
+    console.error("sendPhoneOtp error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  }
+};
+
+const verifyPhoneOtp = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    const cleanPhone = phone ? String(phone).replace(/\D/g, "").slice(0, 10) : "";
+    const cleanOtp = otp ? String(otp).trim() : "";
+
+    if (!cleanPhone || !cleanOtp) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number and OTP are required",
+      });
+    }
+
+    const stored = phoneOtpStore.get(cleanPhone);
+    const isValid =
+      cleanOtp === "123456" ||
+      (stored && stored.otp === cleanOtp && stored.expiresAt > Date.now());
+
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP. (Demo OTP is 123456)",
+      });
+    }
+
+    phoneOtpStore.delete(cleanPhone);
+
+    return res.status(200).json({
+      success: true,
+      message: "Mobile number verified successfully!",
+    });
+  } catch (error) {
+    console.error("verifyPhoneOtp error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify OTP",
+    });
+  }
+};
+
 export {
   userRegister,
   adminCreate,
@@ -563,5 +821,7 @@ export {
   resetPassword,
   getAdminProfile,
   updateAdminProfile,
+  sendPhoneOtp,
+  verifyPhoneOtp,
 };
 

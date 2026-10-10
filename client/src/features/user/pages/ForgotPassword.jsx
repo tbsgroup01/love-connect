@@ -193,7 +193,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-5 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-8 lg:py-0">
+    <main className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-5 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-8 lg:py-0">
       {/* Ambient Fluid Glows */}
       <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
@@ -212,7 +212,7 @@ export default function ForgotPassword() {
         {/* ========================================================= */}
         {/* LEFT COLUMN: Form Section                                */}
         {/* ========================================================= */}
-        <div className="lg:col-span-7 order-1 lg:order-1 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
+        <section aria-label="Password Reset Form" className="lg:col-span-7 order-1 lg:order-1 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
           {/* Top Brand Logo */}
           <div className="mb-4 sm:mb-6">
             <Link
@@ -222,7 +222,11 @@ export default function ForgotPassword() {
             >
               <img
                 src={loveConnectLogo}
-                alt="LoveConnect"
+                alt="LoveConnect Dating and Matchmaking platform logo"
+                width="160"
+                height="44"
+                loading="eager"
+                decoding="async"
                 className="h-9 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
@@ -609,23 +613,27 @@ export default function ForgotPassword() {
               </div>
             </div>
           )}
-        </div>
+        </section>
 
         {/* ========================================================= */}
         {/* RIGHT COLUMN: 3D Isometric Envelope Illustration          */}
         {/* ========================================================= */}
-        <div className="lg:col-span-5 order-2 lg:order-2 bg-gradient-to-tr from-purple-50/50 via-pink-50/30 to-white flex items-center justify-center p-6 sm:p-8 relative overflow-hidden border-t lg:border-t-0 lg:border-l border-[#FFE7F0]/60">
+        <aside aria-label="Password Recovery Security Illustration" className="lg:col-span-5 order-2 lg:order-2 bg-gradient-to-tr from-purple-50/50 via-pink-50/30 to-white flex items-center justify-center p-6 sm:p-8 relative overflow-hidden border-t lg:border-t-0 lg:border-l border-[#FFE7F0]/60">
           <div className="absolute inset-0 bg-gradient-to-br from-[#FFE7F0]/30 via-transparent to-[#7C3AED]/5 pointer-events-none" />
 
           <div className="relative z-10 w-full max-w-[280px] sm:max-w-[320px] aspect-square flex items-center justify-center group">
             <img
               src={envelopeIllustration}
-              alt="Forgot Password Love Letter"
+              alt="LoveConnect password recovery reset code security envelope illustration"
+              width="320"
+              height="320"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain rounded-2xl transition-transform duration-700 group-hover:scale-105"
             />
           </div>
-        </div>
+        </aside>
       </div>
-    </div>
+    </main>
   );
 }

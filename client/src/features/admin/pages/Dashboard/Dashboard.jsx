@@ -614,10 +614,7 @@ export default function AdminDashboard() {
                 >
                   Dashboard
                 </h1>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200/60 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Live Database</span>
-                </div>
+            
               </div>
               <p className="text-sm text-gray-400 mt-1">
                 Real-time operational metrics, member matching pulse and

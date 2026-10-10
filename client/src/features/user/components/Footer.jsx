@@ -1,27 +1,16 @@
-import React, { useState } from "react"
+import React from "react"
 import { Link } from "react-router-dom"
 import {
   MapPin,
   ShieldCheck,
-  Sparkles,
   AlertCircle,
+  Sparkles,
 } from "lucide-react"
-import Logo from "../../../assets/loveconnect.png"
+import LogoWebp from "../../../assets/loveconnect.webp"
+import LogoWebp2x from "../../../assets/loveconnect@2x.webp"
+import LogoPng from "../../../assets/loveconnect.png"
 
 export default function Footer() {
-  const [email, setEmail] = useState("")
-  const [subscribed, setSubscribed] = useState(false)
-
-  const activeCities = ["Mumbai", "Delhi NCR", "Bengaluru", "Pune", "Hyderabad", "Goa"]
-
-  const handleSubscribe = (e) => {
-    e.preventDefault()
-    if (email.trim()) {
-      setSubscribed(true)
-      setTimeout(() => setSubscribed(false), 4000)
-      setEmail("")
-    }
-  }
 
   return (
     <footer className="relative bg-[#17151A] text-white pt-16 sm:pt-20 pb-10 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/10 font-poppins">
@@ -38,9 +27,21 @@ export default function Footer() {
           {/* Column 1: Brand, Tagline, Socials & App Badges (Col 4) */}
           <div className="md:col-span-5 lg:col-span-4 flex flex-col space-y-5">
             {/* Logo in Frosted Badge for maximum visual pop */}
-            <div className="inline-flex items-center self-start px-3.5 py-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg shadow-black/25">
-              <img src={Logo} alt="LoveConnect Logo" className="h-9 sm:h-10 w-auto object-contain" />
-            </div>
+            <Link to="/" aria-label="LoveConnect Homepage" className="inline-flex items-center self-start px-3.5 py-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg shadow-black/25">
+              <picture>
+                <source srcSet={`${LogoWebp} 1x, ${LogoWebp2x} 2x`} type="image/webp" />
+                <img
+                  src={LogoWebp}
+                  srcSet={`${LogoWebp} 1x, ${LogoWebp2x} 2x`}
+                  alt="LoveConnect - Trusted Dating and Matchmaking Platform"
+                  className="h-9 sm:h-10 w-auto object-contain"
+                  width="160"
+                  height="40"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            </Link>
 
             <p className="text-slate-300 text-sm leading-relaxed max-w-sm font-normal">
               A premier dating platform built for genuine people seeking authentic, lifelong relationships. Powered by AI compatibility and verified security.
@@ -50,8 +51,10 @@ export default function Footer() {
             <div className="flex items-center gap-3 pt-1">
               {/* Facebook */}
               <a
-                href="#"
-                aria-label="Facebook"
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow LoveConnect on Facebook"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-gradient-to-tr hover:from-[#FF2D72] hover:to-[#7C3AED] hover:border-transparent hover:shadow-lg hover:shadow-[#FF2D72]/25 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <svg className="w-4.5 h-4.5 fill-currentColor" viewBox="0 0 24 24">
@@ -61,8 +64,10 @@ export default function Footer() {
 
               {/* Instagram */}
               <a
-                href="#"
-                aria-label="Instagram"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow LoveConnect on Instagram"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-gradient-to-tr hover:from-[#FF2D72] hover:to-[#7C3AED] hover:border-transparent hover:shadow-lg hover:shadow-[#FF2D72]/25 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <svg className="w-4.5 h-4.5 fill-currentColor" viewBox="0 0 24 24">
@@ -72,8 +77,10 @@ export default function Footer() {
 
               {/* Twitter/X */}
               <a
-                href="#"
-                aria-label="Twitter"
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow LoveConnect on Twitter"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-gradient-to-tr hover:from-[#FF2D72] hover:to-[#7C3AED] hover:border-transparent hover:shadow-lg hover:shadow-[#FF2D72]/25 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <svg className="w-4.5 h-4.5 fill-currentColor" viewBox="0 0 24 24">
@@ -83,8 +90,10 @@ export default function Footer() {
 
               {/* YouTube */}
               <a
-                href="#"
-                aria-label="YouTube"
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow LoveConnect on YouTube"
                 className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-gradient-to-tr hover:from-[#FF2D72] hover:to-[#7C3AED] hover:border-transparent hover:shadow-lg hover:shadow-[#FF2D72]/25 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <svg className="w-4.5 h-4.5 fill-currentColor" viewBox="0 0 24 24">
@@ -99,11 +108,10 @@ export default function Footer() {
                 Download the App
               </span>
               <div className="flex flex-wrap items-center gap-2.5">
- 
-
                 {/* Google Play */}
                 <a
                   href="#"
+                  aria-label="Download LoveConnect on Google Play"
                   className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#7C3AED]/40 transition-all duration-200 group"
                 >
                   <Sparkles className="w-5 h-5 text-[#7C3AED]" />
@@ -120,73 +128,62 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Quick Links (Col 2) */}
-          <div className="md:col-span-3 lg:col-span-2">
+          <nav className="md:col-span-3 lg:col-span-2" aria-label="Explore Links">
             <h4 className="text-sm font-bold text-white tracking-wider mb-5 flex items-center gap-2">
               <span className="w-1.5 h-3.5 rounded-full bg-gradient-to-b from-[#FF2D72] to-[#7C3AED]" />
               <span>Explore</span>
             </h4>
-            <ul className="space-y-3 text-sm text-slate-400">
+            <ul className="space-y-3 text-sm text-slate-400 list-none p-0 m-0">
               <li>
-                <a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                <Link to="/" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
                   <span className="group-hover:text-[#FF2D72] transition-colors">Home</span>
-                </a>
-              </li>
+                </Link>
+              </li>   
               <li>
-                <a href="#features" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
-                  <span className="group-hover:text-[#FF2D72] transition-colors">Features</span>
-
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                <a href="/#pricing" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
                   <span className="group-hover:text-[#FF2D72] transition-colors">Pricing</span>
-
                 </a>
               </li>
               <li>
-                <a href="#testimonials" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                <a href="/#testimonials" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
                   <span className="group-hover:text-[#FF2D72] transition-colors">Success Stories</span>
                 </a>
               </li>
               <li>
-                <a href="#how-it-works" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                <a href="/#how-it-works" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
                   <span className="group-hover:text-[#FF2D72] transition-colors">How It Works</span>
                 </a>
               </li>
-
             </ul>
-          </div>
+          </nav>
 
           {/* Column 3: Trust & Safety (Col 3) */}
-          <div className="md:col-span-4 lg:col-span-3">
+          <nav className="md:col-span-4 lg:col-span-3" aria-label="Safety & Legal Links">
             <h4 className="text-sm font-bold text-white tracking-wider mb-5 flex items-center gap-2">
               <span className="w-1.5 h-3.5 rounded-full bg-gradient-to-b from-[#22C55E] to-[#7C3AED]" />
               <span>Safety & Trust</span>
             </h4>
-            <ul className="space-y-3 text-sm text-slate-400">
+            <ul className="space-y-3 text-sm text-slate-400 list-none p-0 m-0">
               <li>
-                <a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                <span className="hover:text-white transition-all inline-flex items-center gap-1.5 group cursor-default">
                   <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
                   <span className="group-hover:text-white transition-colors">Verified Profile Guarantee</span>
-                </a>
+                </span>
               </li>
-
-
               <li>
-                <a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
-                  <span className="group-hover:text-[#FF2D72] transition-colors">Community Guidelines</span>
-                </a>
+                <Link to="/help" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
+                  <span className="group-hover:text-[#FF2D72] transition-colors">Community Support</span>
+                </Link>
               </li>
               {/* Emergency Danger SOS Badge */}
               <li className="pt-1">
-                <a
-                  href="#"
+                <Link
+                  to="/help"
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 hover:bg-[#EF4444]/25 text-[#EF4444] text-xs font-bold transition-all group"
                 >
                   <AlertCircle className="w-3.5 h-3.5 text-[#EF4444]" />
-                  <span>24/7 Safety SOS & Zero Fake Policy</span>
-                </a>
+                  <span>24/7 Safety Support & Zero Fake Policy</span>
+                </Link>
               </li>
               <li>
                 <Link to="/privacy-policy" className="hover:text-white hover:translate-x-1 transition-all inline-flex items-center gap-1.5 group">
@@ -198,9 +195,8 @@ export default function Footer() {
                   <span className="group-hover:text-[#FF2D72] transition-colors">Terms of Service</span>
                 </Link>
               </li>
-
             </ul>
-          </div>
+          </nav>
 
           {/* Column 4: Locations & Headquarters (Col 3) */}
           <div className="md:col-span-12 lg:col-span-3">
@@ -226,11 +222,15 @@ export default function Footer() {
                   Noida, India
                 </p>
               </div>
-
-
             </div>
           </div>
 
+        </div>
+
+        {/* Copyright Footer Sub-bar */}
+        <div className="pt-8 text-center sm:flex sm:justify-between sm:items-center text-xs text-slate-400">
+          <p>© {new Date().getFullYear()} LoveConnect. All rights reserved.</p>
+          <p className="mt-2 sm:mt-0">Built for genuine relationships and authentic connections.</p>
         </div>
 
       </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Heart } from "lucide-react";
 import heroCoupleRomanticImg from "../../../assets/hero_couple_romantic.jpg";
-import priyaProfileImg from "../../../assets/priya_profile.jpg";
+import heroCoupleRomanticWebp from "../../../assets/hero_couple_romantic.webp";
 import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function CTA() {
@@ -65,11 +65,18 @@ export default function CTA() {
 
                 {/* Romantic Couple Photo in Soft Oval/Pill Frame */}
                 <div className="relative z-10 w-[260px] sm:w-[320px] h-[200px] sm:h-[230px] rounded-[36px] overflow-hidden border-4 border-white/20 shadow-2xl shadow-black/40">
-                  <img
-                    src={heroCoupleRomanticImg}
-                    alt="Romantic Couple"
-                    className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
-                  />
+                  <picture>
+                    <source srcSet={heroCoupleRomanticWebp} type="image/webp" />
+                    <img
+                      src={heroCoupleRomanticImg}
+                      alt="Happy romantic couple in love on LoveConnect matchmaking platform"
+                      loading="lazy"
+                      decoding="async"
+                      width="320"
+                      height="230"
+                      className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
+                    />
+                  </picture>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 </div>
               </div>

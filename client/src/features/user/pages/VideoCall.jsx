@@ -24,8 +24,6 @@ export default function VideoCall() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: currentUser, token } = useAuth();
-
-  // Call params from navigation state
   const callId = location.state?.callId || null;
   const otherUserId =
     location.state?.otherUserId ||
@@ -45,7 +43,6 @@ export default function VideoCall() {
   const callType = location.state?.callType || "video";
   const isCaller = location.state?.isCaller ?? true;
 
-  // Stream & Peer Refs
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const remoteAudioRef = useRef(null);
@@ -57,8 +54,7 @@ export default function VideoCall() {
   const isAnsweringOffer = useRef(false);
   const fallbackAnimRef = useRef(null);
 
-  // Call States
-  const [callStatus, setCallStatus] = useState("initializing"); // 'initializing' | 'calling' | 'connected' | 'declined' | 'ended'
+  const [callStatus, setCallStatus] = useState("initializing"); 
   const [seconds, setSeconds] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(callType === "video");
@@ -69,14 +65,12 @@ export default function VideoCall() {
   const [hasRealAudio, setHasRealAudio] = useState(false);
   const [hardwareWarning, setHardwareWarning] = useState(null);
 
-  // Format call duration MM:SS
+
   const formatDuration = (sec) => {
     const mins = Math.floor(sec / 60);
     const remainingSecs = sec % 60;
     return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
   };
-
-  // Timer running while call is connected
   useEffect(() => {
     if (callStatus !== "connected") return;
     const timer = setInterval(() => {
@@ -84,8 +78,6 @@ export default function VideoCall() {
     }, 1000);
     return () => clearInterval(timer);
   }, [callStatus]);
-
-  // Clean up streams & peer connection
   const cleanupMediaAndPeer = useCallback(() => {
     if (fallbackAnimRef.current) {
       cancelAnimationFrame(fallbackAnimRef.current);
@@ -100,8 +92,6 @@ export default function VideoCall() {
       pcRef.current = null;
     }
   }, []);
-
-  // Helper to create an animated fallback video stream when webcam is absent or inaccessible
   const createFallbackVideoStream = useCallback((name) => {
     try {
       const canvas = document.createElement("canvas");
@@ -152,14 +142,11 @@ export default function VideoCall() {
         ctx.fill();
         ctx.restore();
 
-        // User name
         ctx.font = "bold 20px sans-serif";
         ctx.fillText(name || "You", 320, 300);
-
         ctx.font = "normal 14px sans-serif";
         ctx.fillStyle = "#94A3B8";
         ctx.fillText("Simulated Video Feed", 320, 328);
-
         fallbackAnimRef.current = requestAnimationFrame(render);
       };
 
@@ -170,8 +157,6 @@ export default function VideoCall() {
       return null;
     }
   }, []);
-
-  // Helper to create an active WebRTC silent audio track when mic is absent
   const createSilentAudioTrack = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -180,7 +165,7 @@ export default function VideoCall() {
       const osc = ctx.createOscillator();
       const dst = ctx.createMediaStreamDestination();
       const gain = ctx.createGain();
-      gain.gain.value = 0.0001; // tiny gain keeping WebRTC RTP packet flow active
+      gain.gain.value = 0.0001;
       osc.connect(gain);
       gain.connect(dst);
       osc.start();
@@ -191,7 +176,6 @@ export default function VideoCall() {
     }
   }, []);
 
-  // Intelligent hardware acquisition with independent fallbacks
   const acquireMediaStream = useCallback(async () => {
     let videoTrack = null;
     let audioTrack = null;
@@ -202,7 +186,6 @@ export default function VideoCall() {
     if (!hasMedia) {
       warningMessage = "Camera & Mic require HTTPS or localhost. If on mobile LAN, open via localhost.";
     } else {
-      // 1. Try standard combined request (flexible, no rigid constraints)
       try {
         const combined = await navigator.mediaDevices.getUserMedia({
           video: callType === "video",
@@ -249,14 +232,11 @@ export default function VideoCall() {
 
     const realVideo = !!videoTrack;
     const realAudio = !!audioTrack;
-
-    // Build the master stream
     const finalStream = new MediaStream();
 
     if (videoTrack) {
       finalStream.addTrack(videoTrack);
     } else if (callType === "video") {
-      // Generate active canvas video fallback
       const fallbackVideo = createFallbackVideoStream(currentUser?.name || "You");
       if (fallbackVideo && fallbackVideo.getVideoTracks()[0]) {
         finalStream.addTrack(fallbackVideo.getVideoTracks()[0]);
@@ -770,7 +750,7 @@ export default function VideoCall() {
   };
 
   return (
-    <div
+    <main
       onClick={handleInteraction}
       className="relative h-screen w-full bg-[#17151A] overflow-hidden select-none text-white font-poppins"
     >
@@ -822,7 +802,11 @@ export default function VideoCall() {
                 {otherUserAvatar ? (
                   <img
                     src={otherUserAvatar}
-                    alt={otherUserName}
+                    alt={`${otherUserName || "Call partner"} call profile avatar`}
+                    width="176"
+                    height="176"
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -995,7 +979,11 @@ export default function VideoCall() {
             <div className="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-[#FF2D72] shadow-md">
               <img
                 src={otherUserAvatar}
-                alt={otherUserName}
+                alt={`${otherUserName || "Call partner"} call summary avatar`}
+                width="64"
+                height="64"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -1028,6 +1016,6 @@ export default function VideoCall() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

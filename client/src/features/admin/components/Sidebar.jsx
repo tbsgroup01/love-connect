@@ -216,9 +216,10 @@ export default function AdminSidebar({
         )}
       </button>
 
-      <div
+      <nav
         ref={scrollContainerRef}
         onScroll={handleScroll}
+        aria-label="Admin Navigation"
         className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-hide overscroll-contain"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
@@ -345,7 +346,7 @@ export default function AdminSidebar({
             })}
           </div>
         ))}
-      </div>
+      </nav>
     </aside>
   );
 }

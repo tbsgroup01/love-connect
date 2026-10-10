@@ -607,9 +607,10 @@ export default function MessagesPage() {
 
   return (
     <DashboardLayout activeTab="messages">
-      <div className="w-full bg-[#FFFFFF] rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-full min-h-0 md:h-[700px] animate-fadeIn">
+      <section aria-label="Messages and Conversations" className="w-full bg-[#FFFFFF] rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row h-full min-h-0 md:h-[700px] animate-fadeIn">
         {/* LEFT CONVERSATION LIST SIDEBAR */}
-        <div
+        <aside
+          aria-label="Conversations List"
           className={`w-full md:w-80 border-r border-slate-200/80 flex flex-col shrink-0 bg-white ${
             activeChat ? "hidden md:flex" : "flex"
           }`}
@@ -618,7 +619,7 @@ export default function MessagesPage() {
           <div className="p-4 border-b border-slate-100 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-[#17151A]">Messages</h2>
+                <h1 className="text-lg font-black text-[#17151A]">Messages</h1>
                 {!hasPaidPlan && (
                   <span className="text-[10px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-100 inline-block mt-0.5">
                     Free Starter: 1 Chat
@@ -678,14 +679,13 @@ export default function MessagesPage() {
                   </p>
                 </div>
                 {!searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/matches")}
+                  <Link
+                    to="/matches"
                     className="mt-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-xs font-bold shadow-xs hover:brightness-105 transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     <Heart className="w-3.5 h-3.5 fill-white" />
                     <span>View Matches</span>
-                  </button>
+                  </Link>
                 )}
               </div>
             ) : (
@@ -704,7 +704,11 @@ export default function MessagesPage() {
                     {chat.img ? (
                       <img
                         src={chat.img}
-                        alt={chat.name}
+                        alt={`${chat.name} conversation avatar`}
+                        width="48"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -741,10 +745,11 @@ export default function MessagesPage() {
               ))
             )}
           </div>
-        </div>
+        </aside>
 
         {/* RIGHT CHAT WINDOW */}
-        <div
+        <main
+          aria-label="Active Conversation"
           className={`flex-1 flex flex-col h-full bg-slate-50/50 ${
             !activeChat ? "hidden md:flex" : "flex"
           }`}
@@ -768,7 +773,11 @@ export default function MessagesPage() {
                     {currentChatPartner.img ? (
                       <img
                         src={currentChatPartner.img}
-                        alt={currentChatPartner.name}
+                        alt={`${currentChatPartner.name} chat partner avatar`}
+                        width="40"
+                        height="40"
+                        loading="eager"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -963,18 +972,17 @@ export default function MessagesPage() {
                   chatting, or explore new connections!
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate("/matches")}
+              <Link
+                to="/matches"
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-xs font-black shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Find New Matches</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </Link>
             </div>
           )}
-        </div>
-      </div>
+        </main>
+      </section>
 
       {/* INCOMING CALL MODAL POPUP */}
       {incomingCall && (
@@ -986,7 +994,11 @@ export default function MessagesPage() {
                 {incomingCall.caller_avatar ? (
                   <img
                     src={incomingCall.caller_avatar}
-                    alt={incomingCall.caller_name || "Caller"}
+                    alt={`${incomingCall.caller_name || "Caller"} incoming call avatar`}
+                    width="96"
+                    height="96"
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (

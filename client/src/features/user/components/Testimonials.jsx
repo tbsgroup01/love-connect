@@ -1,13 +1,5 @@
 import React, { useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Quote,
-  Heart,
-  ShieldCheck,
-  Sparkles,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote, Sparkles } from "lucide-react";
 
 export default function Testimonials() {
   const testimonials = [
@@ -148,7 +140,7 @@ export default function Testimonials() {
           {/* 3 Testimonials Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 items-stretch">
             {visibleTestimonials.map((item, index) => (
-              <div
+              <article
                 key={`${item.id}-${index}`}
                 className="relative bg-gradient-to-b from-white via-white to-[#FFE7F0]/25 rounded-3xl p-7 sm:p-8 border border-[#FFE7F0] shadow-[0_4px_24px_rgba(255,45,114,0.06)] hover:shadow-[0_16px_40px_rgba(255,45,114,0.12)] hover:border-[#FF2D72]/40 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group overflow-hidden"
               >
@@ -164,7 +156,11 @@ export default function Testimonials() {
                         <div className="w-13 h-13 rounded-full p-[2px] bg-gradient-to-tr from-[#FF2D72] via-[#ff4382] to-[#7C3AED] shadow-xs">
                           <img
                             src={item.avatar}
-                            alt={item.name}
+                            alt={`${item.name} from ${item.location} - LoveConnect Success Story`}
+                            loading="lazy"
+                            decoding="async"
+                            width="52"
+                            height="52"
                             className="w-full h-full rounded-full object-cover"
                           />
                         </div>
@@ -172,9 +168,9 @@ export default function Testimonials() {
 
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-[#17151A] text-base sm:text-lg leading-tight group-hover:text-[#FF2D72] transition-colors duration-200">
+                          <h3 className="font-bold text-[#17151A] text-base sm:text-lg leading-tight group-hover:text-[#FF2D72] transition-colors duration-200">
                             {item.name}
-                          </h4>
+                          </h3>
                         </div>
                         <p className="text-xs text-[#767393] font-medium mt-0.5">
                           {item.location}
@@ -184,11 +180,11 @@ export default function Testimonials() {
                   </div>
 
                   {/* Quote Content */}
-                  <p className="text-sm sm:text-base text-[#475569] leading-relaxed font-normal italic relative z-10 mb-6">
+                  <blockquote className="text-sm sm:text-base text-[#475569] leading-relaxed font-normal italic relative z-10 mb-6">
                     "{item.quote}"
-                  </p>
+                  </blockquote>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>

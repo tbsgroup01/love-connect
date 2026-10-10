@@ -333,7 +333,7 @@ export default function ProfileCreation() {
   };
 
   const handleNext = () => {
-    if (currentStep < 8) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     } else {
       handleComplete();
@@ -347,7 +347,7 @@ export default function ProfileCreation() {
   };
 
   const handleSkip = () => {
-    if (currentStep < 8) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     } else {
       handleComplete();
@@ -486,16 +486,13 @@ export default function ProfileCreation() {
   // Step Headings Metadata
   const stepMeta = {
     1: { title: "Add Your Photo", subtitle: "Upload a clear photo of yourself for your profile picture." },
-    2: { title: "Basic Information", subtitle: "Tell us about yourself" },
-    3: { title: "About Me", subtitle: "Write a bio that captures your personality, vibe, and passions" },
-    4: { title: "What do you do for work?", subtitle: "Share your profession and workplace or industry" },
-    5: { title: "What is your education?", subtitle: "Add your qualification and university or college" },
-    6: { title: "What are your interests?", subtitle: "Select all that apply to help find great matches" },
-    7: { title: "Your Lifestyle", subtitle: "Share your daily habits and preferences" },
-    8: { title: "Relationship Preference", subtitle: "What kind of connection are you hoping to find?" },
+    2: { title: "Basic Information", subtitle: "Tell us about yourself and write a short bio" },
+    3: { title: "Work & Education", subtitle: "Share your profession, workplace, and educational background" },
+    4: { title: "Your Lifestyle", subtitle: "Share your daily habits and preferences" },
+    5: { title: "Interests & Preferences", subtitle: "Select your interests and the kind of connection you're looking for" },
   };
 
-  const progressPercent = Math.round((currentStep / 8) * 100);
+  const progressPercent = Math.round((currentStep / 5) * 100);
 
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex flex-col justify-between p-3 sm:p-6 lg:p-8 relative overflow-y-auto lg:overflow-hidden font-poppins select-none">
@@ -519,7 +516,7 @@ export default function ProfileCreation() {
                 <div className="flex items-center justify-between mt-3">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[11px] font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF2D72] animate-pulse" />
-                    <span>Step {currentStep} of 8</span>
+                    <span>Step {currentStep} of 5</span>
                   </div>
                   <span className="text-xs font-semibold text-slate-400">
                     {stepMeta[currentStep]?.title}
@@ -596,7 +593,11 @@ export default function ProfileCreation() {
                       <div className="relative w-64 h-72 sm:w-72 sm:h-80 rounded-3xl overflow-hidden border-2 border-[#FF2D72] shadow-xl shadow-[#FF2D72]/15 ring-4 ring-[#FFE7F0] group">
                         <img
                           src={photo}
-                          alt="Profile Preview"
+                          alt="Uploaded LoveConnect profile picture preview"
+                          width="288"
+                          height="320"
+                          loading="eager"
+                          decoding="async"
                           className="w-full h-full object-cover object-center"
                         />
 
@@ -671,19 +672,19 @@ export default function ProfileCreation() {
                 </div>
               )}
 
-              {/* STEP 2: Basic Information */}
+              {/* STEP 2: Basic Information & About Me */}
               {currentStep === 2 && (
-                <div className="animate-fadeIn space-y-4">
+                <div className="animate-fadeIn space-y-3.5">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
                       {stepMeta[2].title}
                     </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
+                    <p className="text-xs sm:text-sm text-[#64748b] mt-0.5 font-normal">
                       {stepMeta[2].subtitle}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-0.5">
                     <div>
                       <label className="block text-xs font-bold text-[#17151A] mb-1">
                         Name *
@@ -696,7 +697,7 @@ export default function ProfileCreation() {
                           onChange={(e) =>
                             setBasicInfo({ ...basicInfo, name: e.target.value })
                           }
-                          className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white hover:border-slate-300 focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0] outline-none shadow-2xs"
+                          className="w-full px-4 py-2.5 sm:py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white hover:border-slate-300 focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0] outline-none shadow-2xs"
                         />
                         <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -713,7 +714,7 @@ export default function ProfileCreation() {
                           onChange={(e) =>
                             setBasicInfo({ ...basicInfo, dob: e.target.value })
                           }
-                          className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          className="w-full px-4 py-2.5 sm:py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
                         />                       
                       </div>
                     </div>
@@ -731,10 +732,10 @@ export default function ProfileCreation() {
                               gender: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs appearance-none cursor-pointer focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          className="w-full px-4 py-2.5 sm:py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs appearance-none cursor-pointer focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
                         >
-                          <option value="Woman">Woman</option>
-                          <option value="Man">Man</option>
+                          <option value="Man">Male </option>
+                          <option value="Woman">Female</option>
                           <option value="Other">Other</option>
                         </select>
                         <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -756,72 +757,234 @@ export default function ProfileCreation() {
                               location: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          className="w-full px-4 py-2.5 sm:py-3 pr-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
                         />
                         <MapPin className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* About Me / Bio Section */}
+                  <div className="pt-1.5 border-t border-slate-100">
+                    <label className="block text-xs font-bold text-[#17151A] mb-1">
+                      About Me / Bio
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        rows={3}
+                        maxLength={500}
+                        value={aboutMe}
+                        onChange={(e) => setAboutMe(e.target.value)}
+                        placeholder="Tell matches what you love, your passions, sense of humor, or what you're looking for in life..."
+                        className="w-full p-3.5 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white hover:border-slate-300 focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0] outline-none shadow-2xs resize-none"
+                      />
+                      <div className="flex justify-between items-center mt-1 px-1">
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          Express your genuine self
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-bold">
+                          {aboutMe.length}/500
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Inspiration quick starter chips */}
+                    <div className="mt-2">
+                      <p className="text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+                        <Quote className="w-3.5 h-3.5 text-[#FF2D72]" />
+                        <span>Need inspiration? Tap a quick starter:</span>
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {aboutMePrompts.map((prompt, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setAboutMe((prev) =>
+                                prev ? `${prev} ${prompt}` : prompt
+                              )
+                            }
+                            className="p-2 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-[#FFE7F0]/30 hover:border-[#FF2D72] text-slate-600 hover:text-[#FF2D72] text-left text-xs font-medium transition-all cursor-pointer"
+                          >
+                            {prompt}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: About Me */}
+              {/* STEP 3: Work & Education */}
               {currentStep === 3 && (
                 <div className="animate-fadeIn space-y-4">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
                       {stepMeta[3].title}
                     </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
+                    <p className="text-xs sm:text-sm text-[#64748b] mt-0.5 font-normal">
                       {stepMeta[3].subtitle}
                     </p>
                   </div>
 
-                  <div className="relative pt-1">
-                    <textarea
-                      rows={5}
-                      maxLength={500}
-                      value={aboutMe}
-                      onChange={(e) => setAboutMe(e.target.value)}
-                      placeholder="Tell matches what you love, your passions, sense of humor, or what you're looking for in life..."
-                      className="w-full p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white hover:border-slate-300 focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0] outline-none shadow-2xs resize-none"
-                    />
-                    <div className="flex justify-between items-center mt-1 px-1">
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        Express your genuine self
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-bold">
-                        {aboutMe.length}/500
-                      </span>
+                  {/* Work & Profession */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                      <Briefcase className="w-3.5 h-3.5 text-[#FF2D72]" />
+                      <span>Work & Profession</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#17151A] mb-1">
+                          Job Title / Profession *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="e.g. Product Designer, Doctor, Engineer"
+                            value={profession.title}
+                            onChange={(e) =>
+                              setProfession({ ...profession, title: e.target.value })
+                            }
+                            className="w-full px-4 py-2.5 sm:py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          />
+                          <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[#17151A] mb-1">
+                          Company / Workplace
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="e.g. Google, Freelance, Apollo Hospital"
+                            value={profession.company}
+                            onChange={(e) =>
+                              setProfession({
+                                ...profession,
+                                company: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2.5 sm:py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          />
+                          <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1.5">
+                        Industry / Field
+                      </label>
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {industryList.map((ind) => {
+                          const isSelected = profession.industry === ind;
+                          return (
+                            <button
+                              key={ind}
+                              type="button"
+                              onClick={() =>
+                                setProfession({ ...profession, industry: ind })
+                              }
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#FFE7F0] text-[#FF2D72] border-[#FF2D72] shadow-2xs"
+                                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                              }`}
+                            >
+                              {ind}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <p className="text-xs font-bold text-slate-600 mb-2 flex items-center gap-1.5">
-                      <Quote className="w-3.5 h-3.5 text-[#FF2D72]" />
-                      <span>Need inspiration? Tap a quick starter:</span>
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {aboutMePrompts.map((prompt, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() =>
-                            setAboutMe((prev) =>
-                              prev ? `${prev} ${prompt}` : prompt
-                            )
-                          }
-                          className="p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-[#FFE7F0]/30 hover:border-[#FF2D72] text-slate-600 hover:text-[#FF2D72] text-left text-xs font-medium transition-all cursor-pointer"
-                        >
-                          {prompt}
-                        </button>
-                      ))}
+                  {/* Education */}
+                  <div className="pt-3 border-t border-slate-100 space-y-3">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                      <GraduationCap className="w-3.5 h-3.5 text-[#7C3AED]" />
+                      <span>Education</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#17151A] mb-1.5">
+                        Highest Qualification / Degree *
+                      </label>
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {degreeList.map((deg) => {
+                          const isSelected = education.degree === deg;
+                          return (
+                            <button
+                              key={deg}
+                              type="button"
+                              onClick={() =>
+                                setEducation({ ...education, degree: deg })
+                              }
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#FFE7F0] text-[#FF2D72] border-[#FF2D72] shadow-2xs"
+                                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                              }`}
+                            >
+                              {deg}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#17151A] mb-1">
+                          College / University
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="e.g. Delhi University, IIT Bombay"
+                            value={education.institution}
+                            onChange={(e) =>
+                              setEducation({
+                                ...education,
+                                institution: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2.5 sm:py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          />
+                          <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[#17151A] mb-1">
+                          Field of Study / Major
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="e.g. Computer Science, Business, Design"
+                            value={education.field}
+                            onChange={(e) =>
+                              setEducation({
+                                ...education,
+                                field: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2.5 sm:py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
+                          />
+                          <BookOpen className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: Profession */}
+              {/* STEP 4: Lifestyle */}
               {currentStep === 4 && (
                 <div className="animate-fadeIn space-y-4">
                   <div>
@@ -830,218 +993,6 @@ export default function ProfileCreation() {
                     </h1>
                     <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
                       {stepMeta[4].subtitle}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1">
-                    <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">
-                        Job Title / Profession *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="e.g. Product Designer, Doctor, Engineer"
-                          value={profession.title}
-                          onChange={(e) =>
-                            setProfession({ ...profession, title: e.target.value })
-                          }
-                          className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
-                        />
-                        <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">
-                        Company / Workplace
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="e.g. Google, Freelance, Apollo Hospital"
-                          value={profession.company}
-                          onChange={(e) =>
-                            setProfession({
-                              ...profession,
-                              company: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
-                        />
-                        <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#17151A] mb-2">
-                      Industry / Field
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {industryList.map((ind) => {
-                        const isSelected = profession.industry === ind;
-                        return (
-                          <button
-                            key={ind}
-                            type="button"
-                            onClick={() =>
-                              setProfession({ ...profession, industry: ind })
-                            }
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-[#FFE7F0] text-[#FF2D72] border-[#FF2D72] shadow-2xs"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                            }`}
-                          >
-                            {ind}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 5: Education */}
-              {currentStep === 5 && (
-                <div className="animate-fadeIn space-y-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
-                      {stepMeta[5].title}
-                    </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      {stepMeta[5].subtitle}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#17151A] mb-2">
-                      Highest Qualification / Degree *
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {degreeList.map((deg) => {
-                        const isSelected = education.degree === deg;
-                        return (
-                          <button
-                            key={deg}
-                            type="button"
-                            onClick={() =>
-                              setEducation({ ...education, degree: deg })
-                            }
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-[#FFE7F0] text-[#FF2D72] border-[#FF2D72] shadow-2xs"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                            }`}
-                          >
-                            {deg}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1">
-                    <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">
-                        College / University
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="e.g. Delhi University, IIT Bombay"
-                          value={education.institution}
-                          onChange={(e) =>
-                            setEducation({
-                              ...education,
-                              institution: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
-                        />
-                        <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#17151A] mb-1">
-                        Field of Study / Major
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="e.g. Computer Science, Business, Design"
-                          value={education.field}
-                          onChange={(e) =>
-                            setEducation({
-                              ...education,
-                              field: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 text-xs sm:text-sm text-[#17151A] bg-white outline-none shadow-2xs focus:border-[#FF2D72] focus:ring-3 focus:ring-[#FFE7F0]"
-                        />
-                        <BookOpen className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 6: Interests */}
-              {currentStep === 6 && (
-                <div className="animate-fadeIn">
-                  <div className="mb-5">
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
-                      {stepMeta[6].title}
-                    </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      {stepMeta[6].subtitle}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2.5 pt-1">
-                    {interestOptions.map((item) => {
-                      const isSelected = selectedInterests.includes(item.name);
-                      const IconComponent = item.icon;
-                      return (
-                        <button
-                          key={item.name}
-                          type="button"
-                          onClick={() => toggleInterest(item.name)}
-                          className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border ${
-                            isSelected
-                              ? "border-[#FF2D72] bg-[#FFE7F0] text-[#FF2D72] shadow-2xs scale-[1.02]"
-                              : "border-slate-200 hover:border-slate-300 bg-white text-[#17151A] hover:bg-slate-50"
-                          }`}
-                        >
-                          <IconComponent
-                            className={`w-4 h-4 ${
-                              isSelected ? "text-[#FF2D72]" : "text-slate-500"
-                            }`}
-                          />
-                          <span>{item.name}</span>
-                          {isSelected && (
-                            <span className="w-4 h-4 rounded-full bg-[#FF2D72] text-white flex items-center justify-center text-[9px] font-black">
-                              ✓
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 7: Lifestyle */}
-              {currentStep === 7 && (
-                <div className="animate-fadeIn space-y-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
-                      {stepMeta[7].title}
-                    </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      {stepMeta[7].subtitle}
                     </p>
                   </div>
 
@@ -1169,85 +1120,132 @@ export default function ProfileCreation() {
                 </div>
               )}
 
-              {/* STEP 8: Relationship Preference */}
-              {currentStep === 8 && (
+              {/* STEP 5: Interests & Relationship Preference (Final Step) */}
+              {currentStep === 5 && (
                 <div className="animate-fadeIn space-y-4">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-black text-[#17151A] tracking-tight">
-                      {stepMeta[8].title}
+                      {stepMeta[5].title}
                     </h1>
-                    <p className="text-xs sm:text-sm text-[#64748b] mt-1 font-normal">
-                      {stepMeta[8].subtitle}
+                    <p className="text-xs sm:text-sm text-[#64748b] mt-0.5 font-normal">
+                      {stepMeta[5].subtitle}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
-                    {relationshipOptions.map((opt) => {
-                      const isSelected = relationshipPreference === opt.id;
-                      const IconComponent = opt.icon;
-                      return (
-                        <div
-                          key={opt.id}
-                          onClick={() => setRelationshipPreference(opt.id)}
-                          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between group ${
-                            isSelected
-                              ? "border-[#FF2D72] bg-gradient-to-b from-[#FFE7F0]/60 to-white shadow-md shadow-[#FF2D72]/15 scale-[1.02]"
-                              : "border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60"
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-3">
+                  {/* Section 1: Interests (Upar) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                      <Heart className="w-3.5 h-3.5 text-[#FF2D72]" />
+                      <span>What are your interests? (Select all that apply)</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 pt-0.5">
+                      {interestOptions.map((item) => {
+                        const isSelected = selectedInterests.includes(item.name);
+                        const IconComponent = item.icon;
+                        return (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => toggleInterest(item.name)}
+                            className={`px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                              isSelected
+                                ? "border-[#FF2D72] bg-[#FFE7F0] text-[#FF2D72] shadow-2xs scale-[1.02]"
+                                : "border-slate-200 hover:border-slate-300 bg-white text-[#17151A] hover:bg-slate-50"
+                            }`}
+                          >
+                            <IconComponent
+                              className={`w-3.5 h-3.5 ${
+                                isSelected ? "text-[#FF2D72]" : "text-slate-500"
+                              }`}
+                            />
+                            <span>{item.name}</span>
+                            {isSelected && (
+                              <span className="w-3.5 h-3.5 rounded-full bg-[#FF2D72] text-white flex items-center justify-center text-[9px] font-black">
+                                ✓
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 2: Relationship Preference (Niche) */}
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                      <Users className="w-3.5 h-3.5 text-[#7C3AED]" />
+                      <span>Relationship Preference</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-0.5">
+                      {relationshipOptions.map((opt) => {
+                        const isSelected = relationshipPreference === opt.id;
+                        const IconComponent = opt.icon;
+                        return (
+                          <div
+                            key={opt.id}
+                            onClick={() => setRelationshipPreference(opt.id)}
+                            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between group ${
+                              isSelected
+                                ? "border-[#FF2D72] bg-gradient-to-b from-[#FFE7F0]/60 to-white shadow-md shadow-[#FF2D72]/15 scale-[1.01]"
+                                : "border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <div
+                                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                                    isSelected
+                                      ? "bg-[#FF2D72] text-white shadow-sm shadow-[#FF2D72]/30"
+                                      : "bg-slate-100 text-slate-600 group-hover:text-[#FF2D72]"
+                                  }`}
+                                >
+                                  <IconComponent className="w-4 h-4" />
+                                </div>
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    isSelected
+                                      ? "bg-[#FF2D72] text-white"
+                                      : "bg-slate-100 text-slate-500"
+                                  }`}
+                                >
+                                  {opt.tag}
+                                </span>
+                              </div>
+
+                              <h3 className="text-sm font-bold text-[#17151A] mb-1">
+                                {opt.title}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
+                                {opt.description}
+                              </p>
+                            </div>
+
+                            <div className="pt-3 flex items-center gap-2">
                               <div
-                                className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-colors ${
+                                className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${
                                   isSelected
-                                    ? "bg-[#FF2D72] text-white shadow-sm shadow-[#FF2D72]/30"
-                                    : "bg-slate-100 text-slate-600 group-hover:text-[#FF2D72]"
+                                    ? "border-[#FF2D72] bg-[#FF2D72]"
+                                    : "border-slate-300"
                                 }`}
                               >
-                                <IconComponent className="w-5 h-5" />
+                                {isSelected && (
+                                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                )}
                               </div>
                               <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  isSelected
-                                    ? "bg-[#FF2D72] text-white"
-                                    : "bg-slate-100 text-slate-500"
+                                className={`text-[11px] font-bold ${
+                                  isSelected ? "text-[#FF2D72]" : "text-slate-400"
                                 }`}
                               >
-                                {opt.tag}
+                                {isSelected ? "Selected" : "Select this"}
                               </span>
                             </div>
-
-                            <h3 className="text-base font-bold text-[#17151A] mb-1">
-                              {opt.title}
-                            </h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-normal">
-                              {opt.description}
-                            </p>
                           </div>
-
-                          <div className="pt-4 flex items-center gap-2">
-                            <div
-                              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                isSelected
-                                  ? "border-[#FF2D72] bg-[#FF2D72]"
-                                  : "border-slate-300"
-                              }`}
-                            >
-                              {isSelected && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                              )}
-                            </div>
-                            <span
-                              className={`text-[11px] font-bold ${
-                                isSelected ? "text-[#FF2D72]" : "text-slate-400"
-                              }`}
-                            >
-                              {isSelected ? "Selected" : "Select this"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1287,8 +1285,8 @@ export default function ProfileCreation() {
                   </>
                 ) : (
                   <>
-                    <span>{currentStep === 8 ? "Complete Profile" : "Next"}</span>
-                    {currentStep === 8 && <Check className="w-4 h-4" />}
+                    <span>{currentStep === 5 ? "Complete Profile" : "Next"}</span>
+                    {currentStep === 5 && <Check className="w-4 h-4" />}
                   </>
                 )}
               </button>

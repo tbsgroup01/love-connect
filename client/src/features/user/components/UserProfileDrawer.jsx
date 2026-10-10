@@ -122,7 +122,7 @@ export default function UserProfileDrawer({
         className="relative w-full max-w-md sm:max-w-lg bg-white h-full shadow-2xl flex flex-col z-[10000] animate-drawer-in overflow-hidden border-l border-slate-200"
         role="dialog"
         aria-modal="true"
-        aria-label="User Profile Details"
+        aria-label={`${name}'s Profile Details`}
       >
         <div className="px-5 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-100 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-2">
@@ -165,12 +165,18 @@ export default function UserProfileDrawer({
                   src={image}
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-60 pointer-events-none"
                 />
                 {/* Uncropped full image */}
                 <img
                   src={image}
-                  alt={name}
+                  alt={`${name}${age ? `, ${age}` : ""} profile details on LoveConnect`}
+                  width="480"
+                  height="320"
+                  loading="lazy"
+                  decoding="async"
                   className="relative z-10 w-full h-full object-contain object-center drop-shadow-md"
                 />
               </>

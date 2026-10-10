@@ -162,7 +162,11 @@ export default function Onboarding() {
         >
           <img
             src={loveConnectLogo}
-            alt="LoveConnect"
+            alt="LoveConnect Dating and Matchmaking platform logo"
+            width="160"
+            height="44"
+            loading="eager"
+            decoding="async"
             className="h-9 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
@@ -206,7 +210,7 @@ export default function Onboarding() {
           {/* ------------------------------------------------------- */}
           {/* LEFT COLUMN: Storytelling, Features & Step Navigation   */}
           {/* ------------------------------------------------------- */}
-          <div className="lg:col-span-7 p-5 sm:p-7 lg:p-8 flex flex-col justify-between order-2 lg:order-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <section aria-labelledby="onboarding-step-heading" className="lg:col-span-7 p-5 sm:p-7 lg:p-8 flex flex-col justify-between order-2 lg:order-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div>
               {/* Step Tag & Live Chemistry Pill */}
               <div className="flex items-center gap-2 mb-2 sm:mb-2.5">
@@ -220,7 +224,7 @@ export default function Onboarding() {
               </div>
 
               {/* Bold Expressive Title */}
-              <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#17151A] tracking-tight leading-[1.2]">
+              <h1 id="onboarding-step-heading" className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#17151A] tracking-tight leading-[1.2]">
                 <span>{step.titlePrefix} </span>
                 <span className="bg-gradient-to-r from-[#FF2D72] via-[#ff3b7c] to-[#7C3AED] bg-clip-text text-transparent">
                   {step.titleHighlight}
@@ -300,17 +304,21 @@ export default function Onboarding() {
                 </button>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* ------------------------------------------------------- */}
           {/* RIGHT COLUMN: Big Visual Showcase & Floating Badges     */}
           {/* ------------------------------------------------------- */}
-          <div className="lg:col-span-5 relative min-h-[300px] sm:min-h-[380px] lg:min-h-0 order-1 lg:order-2 overflow-hidden bg-[#17151A] group">
+          <section aria-label="Onboarding Visual Showcase" className="lg:col-span-5 relative min-h-[300px] sm:min-h-[380px] lg:min-h-0 order-1 lg:order-2 overflow-hidden bg-[#17151A] group">
             {/* Main Stage Image with smooth cross-fade */}
             <img
               key={currentStep}
               src={step.image}
-              alt={step.titleHighlight}
+              alt={`${step.title} ${step.titleHighlight} on LoveConnect matchmaking platform`}
+              width="500"
+              height="600"
+              loading="eager"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-700 animate-fadeIn group-hover:scale-105"
             />
 
@@ -326,7 +334,7 @@ export default function Onboarding() {
             >
               Skip
             </button>
-          </div>
+          </section>
         </div>
       </main>
 

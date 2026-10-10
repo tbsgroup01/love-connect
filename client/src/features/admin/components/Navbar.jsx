@@ -210,7 +210,11 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
           >
             <img
               src={brandLogo || logo}
-              alt={`${brandName} Logo`}
+              alt={`${brandName} Admin Portal Logo`}
+              width="160"
+              height="40"
+              loading="eager"
+              decoding="async"
               className="h-8 sm:h-10 w-auto max-w-[140px] sm:max-w-[180px] object-contain"
             />
             <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-extrabold uppercase tracking-wider">
@@ -245,7 +249,11 @@ export default function AdminNavbar({ sidebarOpen, setSidebarOpen }) {
                 <div className="relative">
                   <img
                     src={getImageUrl(adminUser.avatar)}
-                    alt={adminUser.name}
+                    alt={`${adminUser.name} admin avatar`}
+                    width="32"
+                    height="32"
+                    loading="eager"
+                    decoding="async"
                     onError={(e) => {
                       e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                         adminUser.name

@@ -117,7 +117,7 @@ export default function HowItWorks() {
                 )}
 
                 {/* Individual Card */}
-                <div
+                <article
                   className={`flex-1 bg-white rounded-3xl p-6 sm:p-7 flex flex-col items-center text-center border transition-all duration-300 hover:-translate-y-1 relative z-10 ${step.cardBorder}`}
                 >
                   {/* Icon Circle */}
@@ -143,7 +143,7 @@ export default function HowItWorks() {
                   <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
                     {step.description}
                   </p>
-                </div>
+                </article>
               </div>
             );
           })}

@@ -19,24 +19,38 @@ const Users = sequelize.define(
       type: Sequelize.STRING,
       allowNull: false,
     },
+    avatar: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     email: {
       type: Sequelize.STRING,
       allowNull: false,
       unique: true,
     },
+    google_id: {
+      type: Sequelize.STRING,
+      allowNull: true,
+      unique: true,
+    },
     phone: {
       type: Sequelize.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true,
     },
     password: {
       type: Sequelize.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     role: {
       type: Sequelize.ENUM("user"),
       defaultValue: "user",
       allowNull: false,
+    },
+    auth_provider: {
+      type: Sequelize.STRING,
+      defaultValue: "local",
+      allowNull: true,
     },
     status: {
       type: Sequelize.ENUM("active", "inactive", "suspended"),

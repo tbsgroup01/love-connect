@@ -257,7 +257,11 @@ export default function MatchesPage() {
         {/* Artwork banner */}
         <img
           src={snehaImg}
-          alt="Upgrade Premium"
+          alt="Upgrade to LoveConnect Premium - Unlock 10x More Matches"
+          width="128"
+          height="176"
+          loading="lazy"
+          decoding="async"
           className="absolute -right-1 -bottom-1 w-32 h-44 object-cover rounded-xl shadow-xs border-2 border-white pointer-events-none"
         />
       </div>
@@ -290,7 +294,11 @@ export default function MatchesPage() {
                   {person.img ? (
                     <img
                       src={person.img}
-                      alt={person.name}
+                      alt={`${person.name}${person.age ? `, ${person.age}` : ""} profile on LoveConnect`}
+                      width="80"
+                      height="80"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -319,7 +327,7 @@ export default function MatchesPage() {
 
   return (
     <DashboardLayout activeTab="matches" customRightSidebar={customRightSidebar}>
-      <div className="w-full space-y-5 animate-fadeIn">
+      <section aria-labelledby="matches-heading" className="w-full space-y-5 animate-fadeIn">
         {/* 1. PAGE HEADER SECTION */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-3">
@@ -328,7 +336,7 @@ export default function MatchesPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-[#17151A] tracking-tight">
+                <h1 id="matches-heading" className="text-xl sm:text-2xl font-black text-[#17151A] tracking-tight">
                   Your Matches ({matches.length})
                 </h1>
                 <button
@@ -374,26 +382,25 @@ export default function MatchesPage() {
               <Heart className="w-8 h-8 fill-[#FF2D72]" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-black text-[#17151A]">
+              <h3 className="text-lg sm:xl font-black text-[#17151A]">
                 No Matches Yet
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
                 When you and another member both like each other, they'll show up here as a mutual match so you can start chatting!
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate("/discover")}
+            <Link
+              to="/discover"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-bold text-xs sm:text-sm shadow-md hover:brightness-105 transition-all"
             >
               <span>Explore Discover Feed</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         ) : (
           <>
             {/* 4. NEW MATCHES (START CHAT) HORIZONTAL AVATARS ROW */}
-            <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3">
+            <section aria-label="New Matches Fast Tray" className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 className="text-sm font-black text-[#17151A] flex items-center gap-2">
                   <span className="w-7 h-7 rounded-lg bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
@@ -421,7 +428,11 @@ export default function MatchesPage() {
                       {match.img ? (
                         <img
                           src={match.img}
-                          alt={match.name}
+                          alt={`${match.name}${match.age ? `, ${match.age}` : ""} profile on LoveConnect`}
+                          width="64"
+                          height="64"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
@@ -441,12 +452,12 @@ export default function MatchesPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* 5. MATCH CARDS LIST */}
             <div className="space-y-3.5">
               {matches.map((match) => (
-                <div
+                <article
                   key={match.matchId}
                   className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#FF2D72]/40 hover:shadow-sm transition-all"
                 >
@@ -456,7 +467,11 @@ export default function MatchesPage() {
                       {match.img ? (
                         <img
                           src={match.img}
-                          alt={match.name}
+                          alt={`${match.name}${match.age ? `, ${match.age}` : ""} matched on LoveConnect`}
+                          width="96"
+                          height="96"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -532,12 +547,12 @@ export default function MatchesPage() {
                       <span>Message</span>
                     </button>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           </>
         )}
-      </div>
+      </section>
 
       {limitModalOpen &&
         createPortal(

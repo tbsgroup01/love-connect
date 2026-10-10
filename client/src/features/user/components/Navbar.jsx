@@ -6,11 +6,12 @@ import {
   User,
   Flame,
   ChevronDown,
-  Sparkles,
   Heart,
   MessageSquare,
 } from "lucide-react";
-import Logo from "../../../assets/loveconnect.png";
+import LogoWebp from "../../../assets/loveconnect.webp";
+import LogoWebp2x from "../../../assets/loveconnect@2x.webp";
+import LogoPng from "../../../assets/loveconnect.png";
 import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Navbar() {
@@ -65,9 +66,19 @@ export default function Navbar() {
       setActiveSection("home");
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
 
   const handleNavClick = (e, item) => {
@@ -119,7 +130,7 @@ export default function Navbar() {
 
   return (
     <header className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-[#FFE7F0] font-poppins">
-      <nav className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <nav className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between" aria-label="Main Navigation">
         {/* Logo Section */}
         <div className="flex items-center shrink-0">
           <Link
@@ -133,17 +144,29 @@ export default function Navbar() {
               }
             }}
             className="flex items-center gap-2 cursor-pointer"
+            aria-label="LoveConnect Home"
           >
-            <img
-              src={Logo}
-              className="h-10 sm:h-20 w-auto object-contain"
-              alt="LoveConnect Logo"
-            />
+            <picture>
+              <source
+                srcSet={`${LogoWebp} 1x, ${LogoWebp2x} 2x`}
+                type="image/webp"
+              />
+              <img
+                src={LogoWebp}
+                srcSet={`${LogoWebp} 1x, ${LogoWebp2x} 2x`}
+                className="h-10 sm:h-20 w-auto object-contain"
+                alt="LoveConnect - Online Dating and Matchmaking Platform Logo"
+                width="240"
+                height="80"
+                loading="eager"
+                decoding="async"
+              />
+            </picture>
           </Link>
         </div>
 
         {/* Navigation Links */}
-        <div className="hidden md:flex items-center justify-center gap-7 lg:gap-9">
+        <ul className="hidden md:flex items-center justify-center gap-7 lg:gap-9 list-none m-0 p-0">
           {navItems.map((item) => {
             const isActive =
               location.pathname === "/"
@@ -151,21 +174,22 @@ export default function Navbar() {
                 : location.pathname + location.hash === item.path;
 
             return (
-              <a
-                key={item.name}
-                href={item.path}
-                onClick={(e) => handleNavClick(e, item)}
-                className={`text-sm font-semibold transition-colors duration-200 cursor-pointer ${
-                  isActive
-                    ? "text-[#FF2D72]"
-                    : "text-[#17151A]/70 hover:text-[#FF2D72]"
-                }`}
-              >
-                {item.name}
-              </a>
+              <li key={item.name}>
+                <a
+                  href={item.path}
+                  onClick={(e) => handleNavClick(e, item)}
+                  className={`text-sm font-semibold transition-colors duration-200 cursor-pointer ${
+                    isActive
+                      ? "text-[#FF2D72]"
+                      : "text-[#17151A]/70 hover:text-[#FF2D72]"
+                  }`}
+                >
+                  {item.name}
+                </a>
+              </li>
             );
           })}
-        </div>
+        </ul>
 
         {/* Actions Section */}
         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -228,7 +252,11 @@ export default function Navbar() {
                 >
                   <img
                     src={userAvatar}
-                    alt={userName}
+                    alt={`${userName}'s profile avatar`}
+                    width="32"
+                    height="32"
+                    loading="lazy"
+                    decoding="async"
                     className="w-8 h-8 rounded-full object-cover border-2 border-[#FF2D72]"
                   />
                   <span className="hidden md:inline text-xs font-bold text-[#17151A] max-w-[110px] truncate">

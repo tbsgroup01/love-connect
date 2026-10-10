@@ -6,10 +6,10 @@ import {
   Lock,
   Globe,
   ArrowRight,
-  Play,
   Heart,
 } from "lucide-react";
 import heroBannerImg from "../../../assets/bannerr.jpeg";
+import heroBannerWebp from "../../../assets/bannerr.webp";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import { getPublishedBanners } from "../../../services/bannersServices.js";
 import { getImageUrl } from "../../../services/uploadServices.js";
@@ -56,13 +56,24 @@ export default function Hero() {
     };
   }, []);
 
+  const defaultBanner = heroBannerWebp || heroBannerImg;
+
   const desktopImgSrc = banner?.desktopImage
     ? getImageUrl(banner.desktopImage)
-    : heroBannerImg;
+    : defaultBanner;
 
   const mobileImgSrc = banner?.mobileImage
     ? getImageUrl(banner.mobileImage)
     : desktopImgSrc;
+
+  const getWebpVariant = (url) => {
+    if (!url || typeof url !== "string") return null;
+    if (url.endsWith(".webp")) return url;
+    if (/\.(jpe?g|png)$/i.test(url)) {
+      return url.replace(/\.(jpe?g|png)$/i, ".webp");
+    }
+    return null;
+  };
 
   const renderHeadline = (text) => {
     const words = text.trim().split(" ");
@@ -98,14 +109,27 @@ export default function Hero() {
         <Heart className="w-4 h-4 fill-[#FF2D72]/15" />
       </div>
       <div className="relative w-full min-h-[580px] sm:min-h-[640px] overflow-hidden flex flex-col justify-end lg:hidden">
-        <img
-          src={mobileImgSrc}
-          alt={banner?.headline || "Find Your Perfect Match"}
-          onError={(e) => {
-            e.currentTarget.src = heroBannerImg;
-          }}
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
+        <picture className="absolute inset-0 w-full h-full block">
+          {getWebpVariant(mobileImgSrc) && (
+            <source
+              srcSet={getWebpVariant(mobileImgSrc)}
+              type="image/webp"
+            />
+          )}
+          <img
+            src={mobileImgSrc}
+            alt={banner?.headline ? `${banner.headline} - LoveConnect Dating App` : "Couple in romantic embrace - Find your perfect match on LoveConnect"}
+            onError={(e) => {
+              e.currentTarget.src = heroBannerWebp || heroBannerImg;
+            }}
+            width="600"
+            height="800"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="w-full h-full object-cover object-center"
+          />
+        </picture>
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 via-black/30 to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-black via-black/85 via-black/40 to-transparent z-10 pointer-events-none" />
         <div className="relative z-20 px-6 pb-8 pt-4 space-y-3.5 text-white">
@@ -198,14 +222,27 @@ export default function Hero() {
 
           {/* Couple Image Layer: Connected dynamically with DB banner (Desktop) */}
           <div className="relative z-10 w-full h-full flex items-center justify-end overflow-hidden">
-            <img
-              src={desktopImgSrc}
-              alt={banner?.headline || "Find Your Perfect Match - Couple in romantic embrace"}
-              onError={(e) => {
-                e.currentTarget.src = heroBannerImg;
-              }}
-              className="w-full h-full object-cover object-[center_center] lg:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.15)_8%,rgba(0,0,0,0.85)_22%,black_32%)] pointer-events-none transition-opacity duration-300"
-            />
+            <picture className="w-full h-full block">
+              {getWebpVariant(desktopImgSrc) && (
+                <source
+                  srcSet={getWebpVariant(desktopImgSrc)}
+                  type="image/webp"
+                />
+              )}
+              <img
+                src={desktopImgSrc}
+                alt={banner?.headline ? `${banner.headline} - Romantic Couple on LoveConnect Dating App` : "Couple in romantic embrace - Find your perfect match on LoveConnect"}
+                onError={(e) => {
+                  e.currentTarget.src = heroBannerWebp || heroBannerImg;
+                }}
+                width="1200"
+                height="675"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                className="w-full h-full object-cover object-[center_center] lg:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.15)_8%,rgba(0,0,0,0.85)_22%,black_32%)] pointer-events-none transition-opacity duration-300"
+              />
+            </picture>
 
             {/* 1. Left Se Shadow: Gentle inner shadow & transition from hero background */}
             <div className="absolute inset-y-0 left-0 w-36 sm:w-56 lg:w-72 z-15 pointer-events-none bg-gradient-to-r from-[#FAF9FC] via-[#FAF9FC]/90 via-[#F5E6ED]/40 via-[rgba(24,20,32,0.05)] to-transparent" />
@@ -259,64 +296,64 @@ export default function Hero() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Feature 1: Verified Profiles */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(255,45,114,0.12)] hover:border-[#FF2D72]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FFF9FB] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
+            <article className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(255,45,114,0.12)] hover:border-[#FF2D72]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FFF9FB] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FFF0F5] to-[#FFE4EE] border border-[#FFE4EE] flex items-center justify-center text-[#FF2D72] group-hover:scale-110 group-hover:border-[#FF2D72]/30 group-hover:shadow-[0_8px_20px_rgba(255,45,114,0.2)] group-hover:from-[#FFE8F0] group-hover:to-[#FFD8E6] transition-all duration-300 shrink-0 shadow-xs">
                 <ShieldCheck className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
               </div>
               <div>
-                <h4 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#FF2D72] transition-colors duration-200">
+                <h3 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#FF2D72] transition-colors duration-200">
                   Verified Profiles
-                </h4>
+                </h3>
                 <p className="text-xs text-[#71717A] font-medium mt-0.5">
                   100% Real & authentic people
                 </p>
               </div>
-            </div>
+            </article>
 
             {/* Feature 2: Smart Matching */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(139,92,246,0.12)] hover:border-[#8B5CF6]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FAF7FF] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
+            <article className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(139,92,246,0.12)] hover:border-[#8B5CF6]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FAF7FF] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F5EEFF] to-[#EDE4FF] border border-[#EDE4FF] flex items-center justify-center text-[#8B5CF6] group-hover:scale-110 group-hover:border-[#8B5CF6]/30 group-hover:shadow-[0_8px_20px_rgba(139,92,246,0.2)] group-hover:from-[#EFE5FF] group-hover:to-[#E5D4FF] transition-all duration-300 shrink-0 shadow-xs">
                 <Rocket className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
               </div>
               <div>
-                <h4 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#8B5CF6] transition-colors duration-200">
+                <h3 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#8B5CF6] transition-colors duration-200">
                   Smart Matching
-                </h4>
+                </h3>
                 <p className="text-xs text-[#71717A] font-medium mt-0.5">
                   Find people with similar values
                 </p>
               </div>
-            </div>
+            </article>
 
             {/* Feature 3: Safe & Secure */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(34,197,94,0.12)] hover:border-[#22C55E]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#F5FDF7] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
+            <article className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(34,197,94,0.12)] hover:border-[#22C55E]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#F5FDF7] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#DCFCE7] border border-[#DCFCE7] flex items-center justify-center text-[#16A34A] group-hover:scale-110 group-hover:border-[#22C55E]/30 group-hover:shadow-[0_8px_20px_rgba(22,163,74,0.2)] group-hover:from-[#E6F9EE] group-hover:to-[#D1F6DF] transition-all duration-300 shrink-0 shadow-xs">
                 <Lock className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
               </div>
               <div>
-                <h4 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#16A34A] transition-colors duration-200">
+                <h3 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#16A34A] transition-colors duration-200">
                   Safe & Secure
-                </h4>
+                </h3>
                 <p className="text-xs text-[#71717A] font-medium mt-0.5">
                   Your privacy is our highest priority
                 </p>
               </div>
-            </div>
+            </article>
 
             {/* Feature 4: Global Community */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(139,92,246,0.12)] hover:border-[#8B5CF6]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FAF7FF] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
+            <article className="bg-white rounded-2xl p-4 sm:p-5 border border-[#FFE8F0] shadow-xs hover:shadow-[0_16px_32px_rgba(139,92,246,0.12)] hover:border-[#8B5CF6]/40 hover:bg-gradient-to-b hover:from-white hover:to-[#FAF7FF] hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex items-center gap-4 group cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F5EEFF] to-[#EDE4FF] border border-[#EDE4FF] flex items-center justify-center text-[#8B5CF6] group-hover:scale-110 group-hover:border-[#8B5CF6]/30 group-hover:shadow-[0_8px_20px_rgba(139,92,246,0.2)] group-hover:from-[#EFE5FF] group-hover:to-[#E5D4FF] transition-all duration-300 shrink-0 shadow-xs">
                 <Globe className="w-6 h-6 transition-transform duration-300 group-hover:scale-105" />
               </div>
               <div>
-                <h4 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#8B5CF6] transition-colors duration-200">
+                <h3 className="font-bold text-[#18181B] text-sm sm:text-base leading-snug group-hover:text-[#8B5CF6] transition-colors duration-200">
                   Global Community
-                </h4>
+                </h3>
                 <p className="text-xs text-[#71717A] font-medium mt-0.5">
                   Meet genuine people everywhere
                 </p>
               </div>
-            </div>
+            </article>
           </div>
         </div>
       </div>

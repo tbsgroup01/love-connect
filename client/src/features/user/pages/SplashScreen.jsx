@@ -9,7 +9,7 @@ export default function SplashScreen() {
   const [deviceFrame, setDeviceFrame] = useState(false);
 
   return (
-    <div className={`min-h-screen bg-[#17151A] flex flex-col items-center justify-center font-poppins ${deviceFrame ? 'p-4 sm:p-8' : ''} select-none transition-all`}>
+    <main className={`min-h-screen bg-[#17151A] flex flex-col items-center justify-center font-poppins ${deviceFrame ? 'p-4 sm:p-8' : ''} select-none transition-all`}>
       {/* FRAME TOGGLE FOR MOBILE APP 390x844 SIMULATION */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 text-white text-xs font-semibold">
         <button
@@ -32,7 +32,11 @@ export default function SplashScreen() {
         <div className="absolute inset-0 z-0">
           <img
             src={heroCoupleRomantic}
-            alt="Romantic Couple"
+            alt="Romantic couple celebrating genuine love on LoveConnect matchmaking app"
+            width="800"
+            height="1000"
+            loading="eager"
+            decoding="async"
             className="w-full h-full object-cover scale-105 animate-pulse duration-[10000ms]"
           />
           {/* Beautiful Pink/Purple gradient overlay as requested */}
@@ -65,7 +69,11 @@ export default function SplashScreen() {
 
           <img
             src={loveConnectLogo}
-            alt="LoveConnect"
+            alt="LoveConnect Dating and Matchmaking platform official logo"
+            width="180"
+            height="48"
+            loading="eager"
+            decoding="async"
             className="h-10 sm:h-12 w-auto object-contain drop-shadow-xl brightness-110"
           />
 
@@ -121,6 +129,6 @@ export default function SplashScreen() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -473,7 +473,7 @@ export default function ProfilePage() {
 
   return (
     <DashboardLayout activeTab="profile">
-      <div className="w-full space-y-6 animate-fadeIn pb-12 relative">
+      <section aria-labelledby="profile-heading" className="w-full space-y-6 animate-fadeIn pb-12 relative">
         {/* FLOATING SUCCESS TOAST */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 bg-[#17151A] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-slideUp">
@@ -492,12 +492,16 @@ export default function ProfilePage() {
         />
 
         {/* 1. HERO PROFILE CARD WITH COVER PHOTO, AVATAR & GENDER */}
-        <div className="bg-[#FFFFFF] rounded-3xl overflow-hidden border border-slate-200/80 relative shadow-xs">
+        <header className="bg-[#FFFFFF] rounded-3xl overflow-hidden border border-slate-200/80 relative shadow-xs">
           {/* Cover Banner (Clean Cover Banner without Upload Button) */}
           <div className="relative h-48 sm:h-60 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 overflow-hidden">
             <img
               src={displayCover}
-              alt="Cover Header"
+              alt={`${displayName}'s profile banner cover`}
+              width="1200"
+              height="240"
+              loading="eager"
+              decoding="async"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
@@ -510,8 +514,12 @@ export default function ProfilePage() {
               <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full p-1 bg-[#FFFFFF] shrink-0 shadow-lg group">
                 <img
                   src={displayAvatar}
-                  alt={displayName}
-                  className="w-full h-full rounded-full object-cover"
+                  alt={`${displayName}'s profile avatar picture`}
+                  width="144"
+                  height="144"
+                  loading="eager"
+                  decoding="async"
+                  className="w-full h-full rounded-full object-cover object-top"
                 />
                 <button
                   type="button"
@@ -548,9 +556,9 @@ export default function ProfilePage() {
             {/* User Info Details with Gender Highlighted */}
             <div className="space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-2xl sm:text-3xl font-black text-[#17151A]">
+                <h1 id="profile-heading" className="text-2xl sm:text-3xl font-black text-[#17151A]">
                   {displayName}, {displayAge}
-                </h2>
+                </h1>
 
                 {/* PROMINENT GENDER BADGE */}
                 <span
@@ -634,7 +642,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* 2. MAIN BODY SECTIONS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -1375,7 +1383,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </DashboardLayout>
   );
 }

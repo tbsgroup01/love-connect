@@ -21,9 +21,6 @@ import {
 } from "lucide-react";
 
 import loveConnectLogo from "../../../assets/loveconnect.png";
-import meeraImg from "../../../assets/signup_hero_woman.jpg";
-import priyaImg from "../../../assets/priya_profile.jpg";
-import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getLikes, likeUser } from "../../../services/likesServices.js";
@@ -76,8 +73,6 @@ export default function DashboardLayout({
   hideRightSidebar = false,
   filterGender,
   setFilterGender,
-  filterVerified,
-  setFilterVerified,
   children,
 }) {
   const navigate = useNavigate();
@@ -120,11 +115,8 @@ export default function DashboardLayout({
     0;
   const completionDetails = getProfileCompletionDetails(completionPercentage);
   const [internalGender, setInternalGender] = useState("all");
-  const [internalVerified, setInternalVerified] = useState(false);
   const showGender = filterGender !== undefined ? filterGender : internalGender;
   const setShowGender = setFilterGender || setInternalGender;
-  const verifiedOnly = filterVerified !== undefined ? filterVerified : internalVerified;
-  const setVerifiedOnly = setFilterVerified || setInternalVerified;
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const userMenuRef = useRef(null)
   const [nearbyUsers, setNearbyUsers] = useState([]);
@@ -245,11 +237,16 @@ export default function DashboardLayout({
         <Link
           to="/"
           title="LoveConnect Home"
+          aria-label="LoveConnect Homepage"
           className="flex items-center gap-2 group shrink-0"
         >
           <img
             src={loveConnectLogo}
-            alt="LoveConnect"
+            alt="LoveConnect Dating Platform - Discover and Match"
+            width="160"
+            height="48"
+            loading="eager"
+            decoding="async"
             className="h-9 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
@@ -264,12 +261,17 @@ export default function DashboardLayout({
             <button
               type="button"
               onClick={() => setUserDropdownOpen((prev) => !prev)}
+              aria-label="Toggle profile menu"
               className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-100/90 transition-all bg-slate-50 p-1 pr-3 rounded-full border border-slate-200/60 focus:outline-none"
             >
               <img
                 src={currentUser?.profile_image || rheaImg}
-                alt={currentUser?.name || "User"}
-                className="w-8 h-8 rounded-full object-cover border-2 border-[#FF2D72] shadow-2xs"
+                alt={`${currentUser?.name || "User"}'s profile avatar`}
+                width="32"
+                height="32"
+                loading="eager"
+                decoding="async"
+                className="w-8 h-8 rounded-full object-cover object-top border-2 border-[#FF2D72] shadow-2xs"
               />
               <div className="hidden lg:flex flex-col text-left leading-tight">
                 <span className="text-xs font-extrabold text-[#17151A]">
@@ -294,7 +296,11 @@ export default function DashboardLayout({
                 <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2.5 mb-1">
                   <img
                     src={currentUser?.profile_image || rheaImg}
-                    alt={currentUser?.name || "User"}
+                    alt={`${currentUser?.name || "User"}'s profile avatar`}
+                    width="32"
+                    height="32"
+                    loading="lazy"
+                    decoding="async"
                     className="w-8 h-8 rounded-full object-cover border border-[#FF2D72]"
                   />
                   <div className="flex-1 min-w-0">
@@ -348,141 +354,134 @@ export default function DashboardLayout({
 
         <aside className="hidden lg:flex w-full h-full flex-col justify-between overflow-y-auto bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs [&_button]:text-sm scrollbar-none shrink-0">
 
-          <div className="space-y-2">
+          <nav aria-label="Dashboard Navigation" className="space-y-1.5">
             <div className="mb-3 flex items-center justify-between px-3 pt-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
+              <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
                 Workspace
               </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-[#FF2D72] shadow-[0_0_0_4px_#FFE7F0]" />
             </div>
-            <button
-              type="button"
-              onClick={() => navigate("/discover")}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            <Link
+              to="/discover"
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "discover"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3.5">
                 <Flame
-                  className={`w-4 h-4 ${activeTab === "discover" ? "fill-[#FFFFFF]" : ""}`}
+                  className={`w-5 h-5 ${activeTab === "discover" ? "fill-[#FFFFFF]" : ""}`}
                 />
                 <span>Discover</span>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/likes")}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            </Link>
+            <Link
+              to="/likes"
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "likes"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3.5">
                 <Heart
-                  className={`w-4 h-4 ${activeTab === "likes" ? "fill-[#FFFFFF]" : ""}`}
+                  className={`w-5 h-5 ${activeTab === "likes" ? "fill-[#FFFFFF]" : ""}`}
                 />
                 <span>Likes You</span>
               </div>
-            
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/matches")}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            </Link>
+            <Link
+              to="/matches"
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "matches"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4" />
+              <div className="flex items-center gap-3.5">
+                <Users className="w-5 h-5" />
                 <span>Matches</span>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/messages")}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            </Link>
+            <Link
+              to="/messages"
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "messages"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-4 h-4" />
+              <div className="flex items-center gap-3.5">
+                <MessageSquare className="w-5 h-5" />
                 <span>Messages</span>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/profile")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            </Link>
+            <Link
+              to="/profile"
+              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "profile"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs scale-[1.01]"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <User className="w-4 h-4" />
+              <User className="w-5 h-5" />
               <span>My Profile</span>
-            </button>
+            </Link>
 
             <div className="my-3 border-t border-slate-200/60" />
-            <button
-              type="button"
-              onClick={() => navigate("/#pricing")}
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A] transition-all cursor-pointer"
+            <Link
+              to="/#pricing"
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl text-[15px] font-bold text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A] transition-all cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <Crown className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]" />
+              <div className="flex items-center gap-3.5">
+                <Crown className="w-5 h-5 text-[#F59E0B] fill-[#F59E0B]" />
                 <span>Premium</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-[10px] font-bold">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#FFE7F0] text-[#FF2D72] text-xs font-bold">
                 Upgrade
               </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/help")}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+            </Link>
+            <Link
+              to="/help"
+              className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-[15px] font-bold transition-all cursor-pointer ${
                 activeTab === "help"
                   ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] shadow-xs"
                   : "text-slate-600 hover:bg-slate-100/80 hover:text-[#17151A]"
               }`}
             >
-              <HelpCircle className="w-4 h-4" />
+              <HelpCircle className="w-5 h-5" />
               <span>Help & Support</span>
-            </button>
+            </Link>
             <button
               type="button"
               onClick={async () => {
                 await logout();
                 navigate("/login");
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-[15px] font-bold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
             >
-              <LogOut className="w-4 h-4 text-rose-500" />
+              <LogOut className="w-5 h-5 text-rose-500" />
               <span>Log Out</span>
             </button>
-          </div>
-          <div className="relative overflow-hidden rounded-2xl border border-[#FFD0E0] bg-gradient-to-br from-[#FFF0F5] via-white to-[#F4F0FF] p-4 text-left shadow-2xs">
+          </nav>
+          <div className="relative overflow-hidden rounded-2xl border border-[#FFD0E0] bg-gradient-to-br from-[#FFF0F5] via-white to-[#F4F0FF] p-4.5 text-left shadow-2xs mt-3">
             <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#FF2D72]/10 blur-2xl" />
-            <div className="relative mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#FF2D72]">
-              <Crown className="w-4 h-4 text-[#FFFFFF] fill-[#FFFFFF]" />
+            <div className="relative mb-2.5 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#FF2D72]">
+              <Crown className="w-5 h-5 text-[#FFFFFF] fill-[#FFFFFF]" />
             </div>
-            <h4 className="relative text-xs font-extrabold text-[#17151A]">
+            <h4 className="relative text-sm sm:text-[15px] font-black text-[#17151A]">
               Upgrade to Premium
             </h4>
-            <p className="relative mt-1 text-[11px] leading-snug text-slate-500">
+            <p className="relative mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-500">
               Get unlimited likes, see secret admirers & boost profile 5x!
             </p>
             <Link
               to="/#pricing"
-              className="relative mt-3 flex w-full items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] px-3 py-2 text-xs font-bold text-[#FFFFFF] shadow-2xs transition-all hover:brightness-105"
+              className="relative mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] px-4 py-2.5 text-xs sm:text-sm font-bold text-[#FFFFFF] shadow-xs transition-all hover:brightness-105"
             >
               <span>Upgrade Now</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </aside>
@@ -553,7 +552,6 @@ export default function DashboardLayout({
                       type="button"
                       onClick={() => {
                         setShowGender("all");
-                        setVerifiedOnly(false);
                       }}
                       className="text-xs font-bold text-[#7C3AED] hover:underline cursor-pointer"
                     >
@@ -601,7 +599,11 @@ export default function DashboardLayout({
                           {user.img ? (
                             <img
                               src={user.img}
-                              alt={user.name}
+                              alt={`${user.name}${user.age ? `, ${user.age}` : ""} profile avatar`}
+                              width="44"
+                              height="44"
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -636,7 +638,7 @@ export default function DashboardLayout({
       </div>
 
       {/* MOBILE BOTTOM NAVIGATION BAR */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-[#FFE7F0] px-2 py-2 flex items-center justify-around shadow-lg">
+      <nav aria-label="Mobile Navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-[#FFE7F0] px-2 py-2 flex items-center justify-around shadow-lg">
         {[
           { id: "discover", label: "Discover", icon: Flame, path: "/discover" },
           {
@@ -661,20 +663,14 @@ export default function DashboardLayout({
             badge: "5",
           },
           { id: "profile", label: "Profile", icon: User, path: "/profile" },
-          {
-            id: "settings",
-            label: "Settings",
-            icon: Settings,
-            path: "/settings",
-          },
+         
         ].map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
-              onClick={() => navigate(item.path)}
+              to={item.path}
               className={`flex flex-col items-center gap-0.5 px-2 py-1 relative rounded-xl transition-all ${
                 isActive
                   ? "text-[#FF2D72] font-black"
@@ -685,14 +681,10 @@ export default function DashboardLayout({
                 <Icon
                   className={`w-5 h-5 ${isActive ? "stroke-[2.5px]" : "stroke-2"}`}
                 />
-                {item.badge && (
-                  <span className="absolute -top-1 -right-2 bg-[#FF2D72] text-white text-[9px] font-extrabold px-1 rounded-full leading-tight">
-                    {item.badge}
-                  </span>
-                )}
+               
               </div>
               <span className="text-[10px] tracking-tight">{item.label}</span>
-            </button>
+            </Link>
           );
         })}
       </nav>

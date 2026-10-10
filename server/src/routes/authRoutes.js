@@ -8,18 +8,25 @@ import {
   login,
   getAdminProfile,
   updateAdminProfile,
+  sendPhoneOtp,
+  verifyPhoneOtp,
 } from "../controllers/authController.js";
+import { googleLogin } from "../controllers/authController.js";
 import { protectAdmin, authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 router.post("/admin/create", adminCreate);
 router.post("/register", userRegister);
 router.post("/login", login);
+router.post("/send-otp", sendPhoneOtp);
+router.post("/verify-otp", verifyPhoneOtp);
 router.post("/forgot-password", forgetPassword);
 router.post("/verify-reset-otp", verifyResetOtp);
 router.post("/reset-password", resetPassword);
 router.get("/admin/profile", protectAdmin, getAdminProfile);
 router.put("/admin/profile", protectAdmin, updateAdminProfile);
+router.post("/google", googleLogin);
+router.post("/google-login", googleLogin);
 router.get("/check-status", authMiddleware, (req, res) => {
   return res.status(200).json({
     success: true,

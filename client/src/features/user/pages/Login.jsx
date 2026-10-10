@@ -14,10 +14,19 @@ import {
   Sparkles,
   LockKeyhole,
   AlertCircle,
+  CheckCircle2,
+  KeyRound,
+  RefreshCw,
 } from "lucide-react";
 import loginCoupleImg from "../../../assets/login_couple.jpg";
 import loveConnectLogo from "../../../assets/loveconnect.png";
-import { login as loginApi, register as registerApi } from "../../../services/authServices.js";
+import {
+  login as loginApi,
+  register as registerApi,
+  googleLogin as googleLoginApi,
+  sendOtp as sendOtpApi,
+  verifyOtp as verifyOtpApi,
+} from "../../../services/authServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function Login({ initialMode = "login" }) {
@@ -48,6 +57,7 @@ export default function Login({ initialMode = "login" }) {
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [focusedField, setFocusedField] = useState(null);
+  const googleBtnRef = React.useRef(null);
 
   const slides = [
     {
@@ -86,6 +96,124 @@ export default function Login({ initialMode = "login" }) {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  const googleClientId =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    import.meta.env.GOOGLE_CLIENT_ID;
+
+  const handleGoogleResponse = async (response) => {
+    if (!response?.credential) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await googleLoginApi(response.credential);
+      if (res.data?.token) {
+        setAuthLogin(res.data.token, res.data.user);
+        if (res.data.user?.role === "admin") {
+          const targetPath = location.state?.from || "/admin/dashboard";
+          navigate(targetPath, { replace: true });
+        } else if (res.data.isNewUser || !res.data.user?.has_profile) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate("/discover", { replace: true });
+        }
+      }
+    } catch (err) {
+      console.error("Google Auth error:", err);
+      setError(
+        err.response?.data?.message ||
+          "Google authentication failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!googleClientId) return;
+
+    const setupGoogle = () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleResponse,
+        });
+
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = "";
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            width: 300,
+            shape: "rectangular",
+            text: mode === "signup" ? "signup_with" : "continue_with",
+            logo_alignment: "left",
+          });
+        }
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      setupGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(timer);
+          setupGoogle();
+        }
+      }, 300);
+      return () => clearInterval(timer);
+    }
+  }, [mode, googleClientId]);
+
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpSuccessMessage, setOtpSuccessMessage] = useState("");
+
+  const handleSendOtp = async () => {
+    if (!formData.phone || formData.phone.length !== 10) {
+      setError("Please enter a valid 10-digit mobile number first.");
+      return;
+    }
+    setError("");
+    setSendingOtp(true);
+    setOtpSuccessMessage("");
+    try {
+      const res = await sendOtpApi({ phone: formData.phone });
+      setOtpSent(true);
+      setOtp("123456");
+      setOtpSuccessMessage(res.data?.message || "OTP sent! Demo OTP: 123456");
+    } catch (err) {
+      console.error("Send OTP error:", err);
+      setError(err.response?.data?.message || "Failed to send OTP.");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      setError("Please enter the 6-digit OTP.");
+      return;
+    }
+    setError("");
+    setVerifyingOtp(true);
+    try {
+      await verifyOtpApi({ phone: formData.phone, otp });
+      setIsPhoneVerified(true);
+      setOtpSent(false);
+      setOtpSuccessMessage("Mobile number verified successfully!");
+    } catch (err) {
+      console.error("Verify OTP error:", err);
+      setError(err.response?.data?.message || "Invalid OTP. (Demo OTP is 123456)");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -108,6 +236,12 @@ export default function Login({ initialMode = "login" }) {
           }
         }
       } else {
+        if (!isPhoneVerified) {
+          setError("Please verify your mobile number with OTP first.");
+          setLoading(false);
+          return;
+        }
+
         const res = await registerApi({
           name: formData.name,
           email: formData.email,
@@ -131,7 +265,7 @@ export default function Login({ initialMode = "login" }) {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-6 lg:py-0">
+    <main className="min-h-screen lg:h-screen w-full bg-[#FAFAFC] flex items-center justify-center p-3 sm:p-4 lg:p-6 relative overflow-y-auto lg:overflow-hidden font-poppins select-none py-6 lg:py-0">
       <div className="absolute -top-32 -left-32 w-[550px] h-[550px] bg-gradient-to-br from-[#FFE7F0] via-[#FF2D72]/10 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] bg-gradient-to-tl from-[#7C3AED]/15 via-[#FFE7F0]/60 to-transparent blur-3xl rounded-full pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-white/40 blur-3xl rounded-full pointer-events-none" />
@@ -150,10 +284,14 @@ export default function Login({ initialMode = "login" }) {
       </div>
 
       <div className="relative z-10 w-full max-w-6xl h-auto lg:max-h-[94vh] bg-white rounded-[28px] shadow-2xl shadow-purple-950/10 border border-[#FFE7F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300 my-auto">
-        <div className="lg:col-span-6 order-2 lg:order-1 relative min-h-[320px] sm:min-h-[380px] lg:min-h-0 flex flex-col justify-end p-5 sm:p-6 lg:p-7 overflow-hidden bg-[#17151A] group">
+        <section aria-label="LoveConnect Visual Presentation" className="lg:col-span-6 order-2 lg:order-1 relative min-h-[320px] sm:min-h-[380px] lg:min-h-0 flex flex-col justify-end p-5 sm:p-6 lg:p-7 overflow-hidden bg-[#17151A] group">
           <img
             src={loginCoupleImg}
-            alt="Romantic Couple Embrace"
+            alt="Romantic couple embracing in love on LoveConnect matchmaking platform"
+            width="600"
+            height="700"
+            loading="eager"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
           />
 
@@ -219,7 +357,11 @@ export default function Login({ initialMode = "login" }) {
             >
               <img
                 src={loveConnectLogo}
-                alt="LoveConnect Logo"
+                alt="LoveConnect Dating and Matchmaking platform logo"
+                width="140"
+                height="32"
+                loading="eager"
+                decoding="async"
                 className="h-7 sm:h-8 w-auto object-contain"
               />
             </Link>
@@ -280,9 +422,9 @@ export default function Login({ initialMode = "login" }) {
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="lg:col-span-6 order-1 lg:order-2 p-5 sm:p-7 lg:p-8 flex flex-col justify-center bg-white relative overflow-y-visible lg:overflow-y-auto lg:max-h-[94vh] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <section aria-labelledby="auth-heading" className="lg:col-span-6 order-1 lg:order-2 p-5 sm:p-7 lg:p-8 flex flex-col justify-center bg-white relative overflow-y-visible lg:overflow-y-auto lg:max-h-[94vh] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Subtle Top Right Floating Ambient Heart */}
           <div className="absolute top-4 right-4 text-pink-200/50 pointer-events-none">
             <Heart className="w-8 h-8 fill-pink-100 text-pink-200/60" />
@@ -297,11 +439,18 @@ export default function Login({ initialMode = "login" }) {
             >
               <img
                 src={loveConnectLogo}
-                alt="LoveConnect"
+                alt="LoveConnect Dating and Matchmaking platform logo"
+                width="160"
+                height="40"
+                loading="eager"
+                decoding="async"
                 className="h-10 sm:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
               />
             </Link>
-            <p className="text-[11px] sm:text-xs text-[#64748b] mt-1 font-normal">
+            <h1 id="auth-heading" className="text-xl sm:text-2xl font-black text-[#17151A] tracking-tight mt-1">
+              {mode === "login" ? "Welcome Back to LoveConnect" : "Join LoveConnect Today"}
+            </h1>
+            <p className="text-[11px] sm:text-xs text-[#64748b] mt-0.5 font-normal">
               {mode === "login"
                 ? "Sign in to continue your journey"
                 : "Create an account to start your love story"}
@@ -309,7 +458,7 @@ export default function Login({ initialMode = "login" }) {
           </div>
 
           {/* Segmented Tab Switcher (16px border-radius) */}
-          <div className="bg-[#FAFAFC] p-1 rounded-2xl border border-slate-200/90 flex items-center max-w-xs mx-auto w-full mb-3.5 shadow-2xs">
+          <nav aria-label="Authentication Type" className="bg-[#FAFAFC] p-1 rounded-2xl border border-slate-200/90 flex items-center max-w-xs mx-auto w-full mb-3.5 shadow-2xs">
             <Link
               to="/login"
               className={`flex-1 py-1.5 sm:py-2 text-center rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
@@ -330,7 +479,7 @@ export default function Login({ initialMode = "login" }) {
             >
               Sign Up
             </Link>
-          </div>
+          </nav>
 
           {/* Authentication Form */}
           <form
@@ -398,32 +547,122 @@ export default function Login({ initialMode = "login" }) {
 
             {/* If Sign Up: Phone Number Field */}
             {mode === "signup" && (
-              <div className="relative">
-                <div
-                  className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
-                    focusedField === "phone"
-                      ? "text-[#FF2D72]"
-                      : "text-slate-400"
-                  }`}
-                >
-                  <Phone className="w-4 h-4" />
+              <div className="space-y-2">
+                <div className="relative">
+                  <div
+                    className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors ${
+                      focusedField === "phone"
+                        ? "text-[#FF2D72]"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    disabled={isPhoneVerified}
+                    maxLength={10}
+                    placeholder="Mobile / Phone Number"
+                    value={formData.phone}
+                    onFocus={() => setFocusedField("phone")}
+                    onBlur={() => setFocusedField(null)}
+                    onChange={(e) => {
+                      const phone = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+                      setFormData({ ...formData, phone });
+                      if (isPhoneVerified) setIsPhoneVerified(false);
+                      if (otpSent) setOtpSent(false);
+                      setOtpSuccessMessage("");
+                    }}
+                    className={`w-full pl-10 pr-24 py-2.5 bg-[#FAFAFC] focus:bg-white border ${
+                      isPhoneVerified
+                        ? "border-emerald-400 bg-emerald-50/20"
+                        : "border-slate-200 hover:border-slate-300 focus:border-[#FF2D72]"
+                    } rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs`}
+                  />
+                  <div className="absolute inset-y-0 right-1.5 flex items-center">
+                    {isPhoneVerified ? (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg shadow-2xs">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Verified
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={formData.phone.length !== 10 || sendingOtp}
+                        onClick={handleSendOtp}
+                        className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                          formData.phone.length === 10 && !sendingOtp
+                            ? "bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white hover:brightness-105 shadow-2xs"
+                            : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        }`}
+                      >
+                        {sendingOtp ? (
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Sending...
+                          </span>
+                        ) : otpSent ? (
+                          "Resend OTP"
+                        ) : (
+                          "Send OTP"
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  placeholder="Mobile / Phone Number"
-                  value={formData.phone}
-                  onFocus={() => setFocusedField("phone")}
-                  onBlur={() => setFocusedField(null)}
-                  onChange={(e) => {
-                    const phone = e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 10);
-                    setFormData({ ...formData, phone });
-                  }}
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAFAFC] focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
-                />
+
+                {/* OTP Input Row when OTP is sent & not verified */}
+                {otpSent && !isPhoneVerified && (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#FF2D72]">
+                        <KeyRound className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="Enter 6-digit OTP (123456)"
+                        value={otp}
+                        onChange={(e) =>
+                          setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
+                        className="w-full pl-10 pr-24 py-2.5 bg-white border border-[#FF2D72]/50 focus:border-[#FF2D72] rounded-xl text-xs sm:text-sm text-[#17151A] placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-[#FFE7F0] transition-all shadow-2xs"
+                      />
+                      <div className="absolute inset-y-0 right-1.5 flex items-center">
+                        <button
+                          type="button"
+                          disabled={otp.length !== 6 || verifyingOtp}
+                          onClick={handleVerifyOtp}
+                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                            otp.length === 6 && !verifyingOtp
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
+                              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                          }`}
+                        >
+                          {verifyingOtp ? (
+                            <span className="flex items-center gap-1">
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                              Verifying...
+                            </span>
+                          ) : (
+                            "Verify OTP"
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status / Success Message */}
+                {otpSuccessMessage && (
+                  <p className="text-[11px] text-emerald-600 font-semibold px-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>{otpSuccessMessage}</span>
+                  </p>
+                )}
               </div>
             )}
 
@@ -507,33 +746,12 @@ export default function Login({ initialMode = "login" }) {
           </div>
 
           {/* Social Sign-In Buttons */}
-          <div className="space-y-2 max-w-xs mx-auto w-full">
-            {/* Google Login */}
-            <button
-              type="button"
-              onClick={() => alert("Google authentication triggered")}
-              className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-[#17151A] font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                />
-              </svg>
-              <span>Continue with Google</span>
-            </button>
+          <div className="space-y-2 max-w-xs mx-auto w-full flex flex-col items-center">
+            {/* Google Identity Services Render Container */}
+            <div
+              ref={googleBtnRef}
+              className="w-full flex justify-center min-h-[44px]"
+            />
           </div>
 
           {/* Bottom Switch Mode / Create Account Link */}
@@ -568,8 +786,8 @@ export default function Login({ initialMode = "login" }) {
             <LockKeyhole className="w-3 h-3 text-slate-400" />
             <span>256-bit Encrypted • Privacy Guaranteed</span>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

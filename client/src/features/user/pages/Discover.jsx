@@ -38,7 +38,6 @@ export default function Discover() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [filterGender, setFilterGender] = useState("all");
-  const [filterVerified, setFilterVerified] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dbProfiles, setDbProfiles] = useState([]);
@@ -191,9 +190,6 @@ export default function Discover() {
       if (item.gender === "female" || item.gender === "male") return false;
     }
 
-    if (filterVerified && !item.verified) {
-      return false;
-    }
     if (categoryFilter === "verified" && !item.verified) return false;
     if (categoryFilter === "nearby" && item.city && currentUser?.profile?.city) {
       if (
@@ -323,14 +319,12 @@ export default function Discover() {
       activeTab="discover"
       filterGender={filterGender}
       setFilterGender={setFilterGender}
-      filterVerified={filterVerified}
-      setFilterVerified={setFilterVerified}
     >
-      <div className="w-full flex flex-col items-center animate-fadeIn select-none">
+      <section aria-labelledby="discover-heading" className="w-full flex flex-col items-center animate-fadeIn select-none">
         {/* HEADER SECTION */}
         <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
+            <h1 id="discover-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-[#17151A] tracking-tight flex items-center gap-2">
               <span>Discover</span>
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF2D72] animate-pulse" />
             </h1>
@@ -429,12 +423,14 @@ export default function Discover() {
             {/* Scrollable Content Body */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
               {/* Cover Photo & Avatar Header */}
-              <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden shrink-0">
+              <div className="relative h-72 sm:h-80 md:h-[350px] w-full bg-slate-900 overflow-hidden shrink-0">
                 {profileModal.image ? (
                   <img
                     src={profileModal.image}
-                    alt={profileModal.name}
-                    className="w-full h-full object-cover object-center"
+                    alt={`${profileModal.name}${profileModal.age ? `, ${profileModal.age}` : ""} profile picture on LoveConnect`}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover object-top"
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
@@ -653,7 +649,7 @@ export default function Discover() {
             <div className="absolute w-[95%] h-[345px] sm:h-[425px] md:h-[500px] bg-slate-300/60 rounded-2xl sm:rounded-[32px] transform rotate-3 scale-98 opacity-75 shadow-lg pointer-events-none" />
 
             {/* Top Active Profile Card */}
-            <div
+            <article
               className={`relative w-full h-[360px] sm:h-[440px] md:h-[520px] rounded-2xl sm:rounded-[32px] overflow-hidden bg-[#17151A] shadow-2xl shadow-purple-950/20 border-2 border-[#FFFFFF]/90 transition-all duration-300 ${
                 swipeDirection === "right"
                   ? "translate-x-full rotate-12 opacity-0"
@@ -668,7 +664,9 @@ export default function Discover() {
               {currentProfile.image ? (
                 <img
                   src={currentProfile.image}
-                  alt={currentProfile.name}
+                  alt={`${currentProfile.name}${currentProfile.age ? `, ${currentProfile.age}` : ""} - LoveConnect Profile`}
+                  loading="eager"
+                  decoding="async"
                   className="w-full h-full object-cover object-top"
                 />
               ) : (
@@ -771,7 +769,7 @@ export default function Discover() {
                   </p>
                 ) : null}
               </div>
-            </div>
+            </article>
           </div>
         )}
 
@@ -863,13 +861,21 @@ export default function Discover() {
                 <div className="flex items-center justify-center gap-3 py-2">
                   <img
                     src={currentUser?.profile_image || rheaImg}
-                    alt="You"
+                    alt={`${currentUser?.name || "Your"} profile avatar`}
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    decoding="async"
                     className="w-16 h-16 rounded-full object-cover border-4 border-[#FF2D72] shadow-md"
                   />
 
                   <img
                     src={matchModal.image}
-                    alt={matchModal.name}
+                    alt={`${matchModal.name} match avatar`}
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = ananyaImg;
@@ -909,7 +915,7 @@ export default function Discover() {
           reportedUser={reportingUser}
           onSuccess={handleReportSuccess}
         />
-      </div>
+      </section>
     </DashboardLayout>
   );
 }

@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Heart, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import priyaProfileImg from "../../../assets/priya_profile.jpg";
+import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import priyaProfileWebp from "../../../assets/priya_profile.webp";
+import karanProfileWebp from "../../../assets/karan_profile.webp";
+import snehaProfileWebp from "../../../assets/sneha_profile.webp";
+import rahulProfileWebp from "../../../assets/rahul_profile.webp";
+import nehaProfileWebp from "../../../assets/neha_profile.webp";
 
 export default function Features() {
-  const [likedProfiles, setLikedProfiles] = useState({});
   const [activeSlide, setActiveSlide] = useState(0);
 
   const profiles = [
@@ -12,7 +15,7 @@ export default function Features() {
       name: "Priya",
       age: 25,
       location: "Noida, India",
-      image: priyaProfileImg,
+      image: priyaProfileWebp,
       online: true,
     },
     {
@@ -20,8 +23,7 @@ export default function Features() {
       name: "Karan",
       age: 27,
       location: "Bangalore, India",
-      image:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80",
+      image: karanProfileWebp,
       online: true,
     },
     {
@@ -29,8 +31,7 @@ export default function Features() {
       name: "Sneha",
       age: 26,
       location: "Delhi, India",
-      image:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
+      image: snehaProfileWebp,
       online: true,
     },
     {
@@ -38,8 +39,7 @@ export default function Features() {
       name: "Rahul",
       age: 29,
       location: "Pune, India",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
+      image: rahulProfileWebp,
       online: true,
     },
     {
@@ -47,18 +47,10 @@ export default function Features() {
       name: "Neha",
       age: 24,
       location: "Mumbai, India",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
+      image: nehaProfileWebp,
       online: true,
     },
   ];
-
-  const toggleLike = (id) => {
-    setLikedProfiles((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
 
   return (
     <section
@@ -103,10 +95,8 @@ export default function Features() {
           {/* Cards Grid / Carousel */}
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-4.5">
             {profiles.map((profile) => {
-              const isLiked = likedProfiles[profile.id];
-
               return (
-                <div
+                <article
                   key={profile.id}
                   className="bg-white rounded-3xl p-3 border border-[#FFE7F0] hover:border-[#FF2D72]/40 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1.5 flex flex-col justify-between"
                 >
@@ -114,7 +104,11 @@ export default function Features() {
                   <div className="relative rounded-2xl overflow-hidden aspect-[4/5] w-full bg-slate-100 mb-3">
                     <img
                       src={profile.image}
-                      alt={profile.name}
+                      alt={`${profile.name}, ${profile.age} from ${profile.location} on LoveConnect`}
+                      loading="lazy"
+                      decoding="async"
+                      width="240"
+                      height="300"
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                     />
 
@@ -122,7 +116,7 @@ export default function Features() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                   </div>
 
-                  {/* Card Bottom: Name, Age, Location & Like Heart Button */}
+                  {/* Card Bottom: Name, Age, Location & Details */}
                   <div className="flex items-center justify-between px-1 pb-1">
                     <div>
                       <h3 className="font-bold text-[#17151A] text-sm sm:text-base leading-tight">
@@ -133,7 +127,7 @@ export default function Features() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>

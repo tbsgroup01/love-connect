@@ -184,9 +184,7 @@ export default function ActivityLogs() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF2D72]/15 to-[#7C3AED]/15 flex items-center justify-center text-[#FF2D72] shadow-xs">
-                  <History className="w-5 h-5" />
-                </div>
+              
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                     Activity Logs
@@ -211,10 +209,7 @@ export default function ActivityLogs() {
               </button>
             </div>
           </div>
-
-          {/* MAIN ACTIVITY LOGS TABLE CONTAINER */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {/* SEARCH & FILTER CONTROLS BAR */}
             <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="relative w-full sm:w-80">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

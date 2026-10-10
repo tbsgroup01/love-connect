@@ -95,6 +95,7 @@ app.use("/api/chats", chatsRoutes);
 app.use("/api/calls", callsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 
+
 const server = http.createServer(app);
 initializeSocket(server);
 

@@ -9,7 +9,7 @@ export const initialPlansData = [
     price: 0.0,
     duration: 0,
     description:
-      "10 Daily Likes aur 1 Chat conversation. Profile create karein, local members dekhein aur basic matching shuru karein.",
+      "10 Daily Likes aur 1 Chat conversation.",
     features: [
       { id: "profile", name: "Create & Edit Profile", included: true },
       { id: "browse", name: "Browse & Discover Matches", included: true },
@@ -26,7 +26,7 @@ export const initialPlansData = [
     price: 499.0,
     duration: 30,
     description:
-      "Full Unlimited Access (30 Din): Unlimited Likes, Unlimited Chat, Video Calling, See Who Likes You, Rewind Swipes & Super Likes.",
+      "Full Unlimited Access (30 Days)",
     features: [
       { id: "profile", name: "Create & Edit Profile", included: true },
       { id: "browse", name: "Browse & Discover Matches", included: true },
@@ -44,7 +44,7 @@ export const initialPlansData = [
     price: 3899.0,
     duration: 365,
     description:
-      "Full Unlimited Access (365 Din) with 35% savings: Sabhi features unlocked, Worldwide Passport Mode, Rewind Swipes aur VIP Support.",
+      "Full Unlimited Access (365 Days)",
     features: [
       { id: "profile", name: "Create & Edit Profile", included: true },
       { id: "browse", name: "Browse & Discover Matches", included: true },
