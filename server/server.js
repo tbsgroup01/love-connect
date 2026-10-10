@@ -36,37 +36,31 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const app = express();
-app.set("trust proxy", 1);
 const PORT = process.env.PORT;
-const corsOptionsDelegate = (req, callback) => {
-    const origin = req.headers.origin;
-    const corsOptions = {
-        origin: origin || "*",
-        credentials: Boolean(origin),
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-        allowedHeaders: req.headers["access-control-request-headers"] || [
-            "Origin",
-            "X-Requested-With",
-            "Content-Type",
-            "Accept",
-            "Authorization",
-            "X-Custom-Header",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers",
-        ],
-        exposedHeaders: [
-            "Authorization",
-            "Content-Disposition",
-            "Content-Length",
-            "X-Total-Count",
-        ],
-        optionsSuccessStatus: 200,
-        preflightContinue: false,
-    };
-    callback(null, corsOptions);
-};
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+      "HEAD",
+    ],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "X-Custom-Header",
+    ],
+  })
+);
 
-app.use(cors(corsOptionsDelegate));
 app.use(morgan("dev"));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
