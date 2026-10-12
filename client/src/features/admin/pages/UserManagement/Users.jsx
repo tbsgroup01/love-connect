@@ -35,6 +35,8 @@ import {
   updateUserStatus,
 } from "../../../../services/usersServices";
 
+import { getImageUrl } from "../../../../services/uploadServices";
+
 const COLORS = {
   pink: "#FF2D72",
   lightPink: "#FFE7F0",
@@ -55,11 +57,15 @@ const normalizeUser = (u) => {
       ? u.subscriptions[0]?.plan?.name || "Free"
       : "Free");
 
-  const avatar =
-    u.avatar ||
-    u.profile_image ||
+  const rawPic =
     u.profile?.profile_picture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || "User")}&background=FF2D72&color=fff`;
+    u.profile_image ||
+    u.avatar ||
+    null;
+
+  const avatar = rawPic
+    ? getImageUrl(rawPic)
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || "User")}&background=FF2D72&color=fff`;
 
   const location =
     u.location ||
@@ -607,6 +613,7 @@ export default function AdminUsers() {
                                 <img
                                   src={user.avatar}
                                   alt={user.name}
+                                  referrerPolicy="no-referrer"
                                   className="w-9 h-9 rounded-full object-cover border"
                                   style={{
                                     borderColor: isSelected
@@ -793,6 +800,7 @@ export default function AdminUsers() {
                     <img
                       src={currentSelectedUser.avatar}
                       alt={currentSelectedUser.name}
+                      referrerPolicy="no-referrer"
                       className="w-20 h-20 rounded-full object-cover border-4 shadow-sm"
                       style={{ borderColor: COLORS.pink }}
                       onError={(e) => {

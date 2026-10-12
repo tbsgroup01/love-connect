@@ -4,11 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
   Users,
-  MessageSquare,
   Heart,
-  Sparkles,
   MapPin,
-  ShieldCheck,
   Send,
   Crown,
   Briefcase,
@@ -27,6 +24,8 @@ import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getUserConversations } from "../../../services/chatsServices.js";
 import snehaImg from "../../../assets/hero_woman.jpg";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getImageUrl } from "../../../services/uploadServices.js";
+import { getSocket } from "../../../services/socket.js";
 
 export default function MatchesPage() {
   const navigate = useNavigate();
@@ -49,7 +48,6 @@ export default function MatchesPage() {
     return Math.abs(ageDt.getUTCFullYear() - 1970);
   };
 
-  // Check user subscription and load existing conversations
   useEffect(() => {
     if (!currentUser?.id) return;
     getUserById(currentUser.id)
@@ -69,7 +67,6 @@ export default function MatchesPage() {
       .catch(() => {});
   }, [currentUser?.id]);
 
-  // Handle chat initiation with 1 user conversation limit
   const handleStartChat = (match) => {
     if (!hasPaidPlan && userConversations.length >= 1) {
       const isExistingConv = userConversations.some(
@@ -96,7 +93,6 @@ export default function MatchesPage() {
     });
   };
 
-  // Fetch only THIS user's real matches from the database (User-side only)
   const fetchUserMatches = useCallback(async () => {
     setLoading(true);
     try {
@@ -110,7 +106,6 @@ export default function MatchesPage() {
 
       const formatted = rawMatches
         .map((m) => {
-          // Identify the match partner (the other user, not currentUser)
           const isUserOne = m.user_one_id === currentUserId;
           const partner = isUserOne ? m.userTwo : m.userOne;
           if (!partner) return null;
@@ -153,14 +148,13 @@ export default function MatchesPage() {
             partner.age ||
             (p.date_of_birth ? calculateAge(p.date_of_birth) : null) ||
             24;
-          const partnerImg = p.profile_picture || partner.profile_image || null;
+          const partnerImg = getImageUrl(p.profile_picture || partner.profile_image || null);
 
           let location = "";
           if (p.city && p.country) location = `${p.city}, ${p.country}`;
           else if (p.city) location = p.city;
           else if (p.country) location = p.country;
           else location = "India";
-
           const profession =
             partnerPrefs.profession || p.about_me?.slice(0, 30) || "Member";
 
@@ -192,7 +186,7 @@ export default function MatchesPage() {
           const up = u.profile || {};
           const uAge =
             u.age || (up.date_of_birth ? calculateAge(up.date_of_birth) : null) || 24;
-          const uImg = up.profile_picture || u.profile_image || null;
+          const uImg = getImageUrl(up.profile_picture || u.profile_image || null);
           return {
             id: u.id,
             name: up.full_name || u.name || "User",
@@ -212,6 +206,30 @@ export default function MatchesPage() {
 
   useEffect(() => {
     fetchUserMatches();
+  }, [fetchUserMatches]);
+
+  // Real-time listener for incoming matches
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let socket = null;
+    if (token) {
+      socket = getSocket(token);
+      if (socket) {
+        const handleUpdate = () => fetchUserMatches();
+        socket.on("new_match", handleUpdate);
+        socket.on("new_notification", handleUpdate);
+      }
+    }
+    const handleCustom = () => fetchUserMatches();
+    window.addEventListener("new_notification_received", handleCustom);
+
+    return () => {
+      if (socket) {
+        socket.off("new_match");
+        socket.off("new_notification");
+      }
+      window.removeEventListener("new_notification_received", handleCustom);
+    };
   }, [fetchUserMatches]);
 
   // Custom Right Sidebar matching design
@@ -391,7 +409,7 @@ export default function MatchesPage() {
             </div>
             <Link
               to="/discover"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-bold text-xs sm:text-sm shadow-md hover:brightness-105 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-semibold text-xs sm:text-sm shadow-md hover:brightness-105 transition-all"
             >
               <span>Explore Discover Feed</span>
               <ArrowRight className="w-4 h-4" />

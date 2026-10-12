@@ -358,9 +358,7 @@ export const sendMessage = async (req, res) => {
       content: textContent,
       messageType,
     });
-
     await conversation.update({ lastMessageAt: new Date() });
-
     const messageWithSender = await Messages.findByPk(newMessage.id, {
       include: [
         {
@@ -390,12 +388,10 @@ export const sendMessage = async (req, res) => {
     } catch (socketErr) {
       console.warn("Socket broadcast error:", socketErr);
     }
-
     const receiverId =
       Number(conversation.user_one_id) === Number(userId)
         ? conversation.user_two_id
         : conversation.user_one_id;
-
     try {
       await notifyMessage({
         senderId: userId,
@@ -412,7 +408,6 @@ export const sendMessage = async (req, res) => {
     });
   } catch (error) {
     console.error("Send message error:", error);
-
     return res.status(500).json({
       message: "Server error",
     });
@@ -423,27 +418,22 @@ export const markMessagesAsRead = async (req, res) => {
   try {
     const userId = req.user.id;
     const { conversation_id } = req.params;
-
     const conversation = await Conversation.findByPk(
       conversation_id
     );
-
     if (!conversation) {
       return res.status(404).json({
         message: "Conversation not found",
       });
     }
-
     const isParticipant =
       Number(conversation.user_one_id) === Number(userId) ||
       Number(conversation.user_two_id) === Number(userId);
-
     if (!isParticipant) {
       return res.status(403).json({
         message: "You are not part of this conversation",
       });
     }
-
     await Messages.update(
       {
         readAt: new Date(),
@@ -458,7 +448,6 @@ export const markMessagesAsRead = async (req, res) => {
         },
       }
     );
-
     try {
       await Notifications.destroy({
         where: {
@@ -471,13 +460,11 @@ export const markMessagesAsRead = async (req, res) => {
     } catch (notifErr) {
       console.warn("Clean up chat notifications error:", notifErr.message);
     }
-
     return res.status(200).json({
       message: "Messages marked as read",
     });
   } catch (error) {
     console.error("Mark messages as read error:", error);
-
     return res.status(500).json({
       message: "Server error",
     });

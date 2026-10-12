@@ -464,7 +464,6 @@ export default function VideoCall() {
         }
       });
 
-      // Handle Remote Offer
       socket.on("webrtc_offer", async (data) => {
         if (!data || !data.sdp || isAnsweringOffer.current) return;
         isAnsweringOffer.current = true;
@@ -477,7 +476,6 @@ export default function VideoCall() {
           } else {
             await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
           }
-
           if (pc.signalingState === "have-remote-offer") {
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
@@ -531,7 +529,6 @@ export default function VideoCall() {
               offerToReceiveVideo: true,
             });
             await pc.setLocalDescription(offer);
-
             socket.emit("webrtc_offer", {
               target_user_id: otherUserId,
               sdp: offer,

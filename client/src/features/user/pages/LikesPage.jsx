@@ -25,6 +25,8 @@ import { getLikes, likeUser, removeLike } from "../../../services/likesServices.
 import { getUserById } from "../../../services/usersServices.js";
 import { getUserConversations } from "../../../services/chatsServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getImageUrl } from "../../../services/uploadServices.js";
+import { getSocket } from "../../../services/socket.js";
 
 export default function LikesPage() {
   const navigate = useNavigate();
@@ -93,6 +95,31 @@ export default function LikesPage() {
 
   useEffect(() => {
     fetchLikes();
+  }, [fetchLikes]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let socket = null;
+    if (token) {
+      socket = getSocket(token);
+      if (socket) {
+        const handleUpdate = () => fetchLikes();
+        socket.on("new_notification", handleUpdate);
+        socket.on("new_like", handleUpdate);
+        socket.on("new_match", handleUpdate);
+      }
+    }
+    const handleCustom = () => fetchLikes();
+    window.addEventListener("new_notification_received", handleCustom);
+
+    return () => {
+      if (socket) {
+        socket.off("new_notification");
+        socket.off("new_like");
+        socket.off("new_match");
+      }
+      window.removeEventListener("new_notification_received", handleCustom);
+    };
   }, [fetchLikes]);
 
   const handleLikeBack = async (targetUser) => {
@@ -214,7 +241,7 @@ export default function LikesPage() {
 
             <Link
               to="/#pricing"
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-black text-xs shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-[#FFFFFF] font-semibold text-sm shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shrink-0"
             >
               <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
               <span>Upgrade to Premium</span>
@@ -252,7 +279,7 @@ export default function LikesPage() {
             </div>
             <Link
               to="/discover"
-              className="mt-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-extrabold text-xs shadow-md shadow-pink-500/20 hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
+              className="mt-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white font-semibold text-sm shadow-md shadow-pink-500/20 hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Flame className="w-4 h-4 fill-white" />
               <span>Explore Discover</span>
@@ -263,7 +290,7 @@ export default function LikesPage() {
             {likesList.map((item, index) => {
               const user = item.user || {};
               const profile = user.profile || {};
-              const image = profile.profile_picture || user.profile_image || null;
+              const image = getImageUrl(profile.profile_picture || user.profile_image || null);
               const age = user.age || calculateAge(profile.date_of_birth) || null;
               const name = profile.full_name || user.name || "Admirer";
               const location = profile.city

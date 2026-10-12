@@ -18,6 +18,7 @@ import {
   Calendar,
   Lock,
 } from "lucide-react";
+import { getImageUrl } from "../../../services/uploadServices.js";
 
 export default function UserProfileDrawer({
   isOpen,
@@ -64,7 +65,7 @@ export default function UserProfileDrawer({
 
   const name = profile.full_name || user.name || "Member";
   const age = user.age || calculateAge(profile.date_of_birth) || null;
-  const image = profile.profile_picture || user.profile_image || user.img || null;
+  const image = getImageUrl(profile.profile_picture || user.profile_image || user.img || null);
   const gender = profile.gender || user.gender || "";
 
   let prefs = {};

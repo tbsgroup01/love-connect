@@ -165,7 +165,7 @@ export default function AdminSidebar({
       items: [
         { name: "Matches", icon: Heart, path: "/admin/matches" },
         { name: "Chat Management", icon: MessageSquare, path: "/admin/chats" },
-        { name: "Video Call Logs", icon: Video, path: "/admin/video-calls" },
+        { name: "Call Logs", icon: Video, path: "/admin/calls" },
       ],
     },
     {

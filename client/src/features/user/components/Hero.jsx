@@ -35,6 +35,11 @@ export default function Hero() {
           try {
             localStorage.setItem("active_hero_banner", JSON.stringify(banners[0]));
           } catch {}
+        } else {
+          setBanner(null);
+          try {
+            localStorage.removeItem("active_hero_banner");
+          } catch {}
         }
       } catch (err) {
         console.error("Failed to fetch published banner for Hero section:", err);
@@ -66,14 +71,6 @@ export default function Hero() {
     ? getImageUrl(banner.mobileImage)
     : desktopImgSrc;
 
-  const getWebpVariant = (url) => {
-    if (!url || typeof url !== "string") return null;
-    if (url.endsWith(".webp")) return url;
-    if (/\.(jpe?g|png)$/i.test(url)) {
-      return url.replace(/\.(jpe?g|png)$/i, ".webp");
-    }
-    return null;
-  };
 
   const renderHeadline = (text) => {
     const words = text.trim().split(" ");
@@ -110,9 +107,9 @@ export default function Hero() {
       </div>
       <div className="relative w-full min-h-[580px] sm:min-h-[640px] overflow-hidden flex flex-col justify-end lg:hidden">
         <picture className="absolute inset-0 w-full h-full block">
-          {getWebpVariant(mobileImgSrc) && (
+          {!banner?.mobileImage && heroBannerWebp && (
             <source
-              srcSet={getWebpVariant(mobileImgSrc)}
+              srcSet={heroBannerWebp}
               type="image/webp"
             />
           )}
@@ -120,6 +117,12 @@ export default function Hero() {
             src={mobileImgSrc}
             alt={banner?.headline ? `${banner.headline} - LoveConnect Dating App` : "Couple in romantic embrace - Find your perfect match on LoveConnect"}
             onError={(e) => {
+              e.currentTarget.onerror = null;
+              const parent = e.currentTarget.parentElement;
+              if (parent && parent.tagName === "PICTURE") {
+                const sources = parent.querySelectorAll("source");
+                sources.forEach((s) => s.removeAttribute("srcset"));
+              }
               e.currentTarget.src = heroBannerWebp || heroBannerImg;
             }}
             width="600"
@@ -223,9 +226,9 @@ export default function Hero() {
           {/* Couple Image Layer: Connected dynamically with DB banner (Desktop) */}
           <div className="relative z-10 w-full h-full flex items-center justify-end overflow-hidden">
             <picture className="w-full h-full block">
-              {getWebpVariant(desktopImgSrc) && (
+              {!banner?.desktopImage && heroBannerWebp && (
                 <source
-                  srcSet={getWebpVariant(desktopImgSrc)}
+                  srcSet={heroBannerWebp}
                   type="image/webp"
                 />
               )}
@@ -233,6 +236,12 @@ export default function Hero() {
                 src={desktopImgSrc}
                 alt={banner?.headline ? `${banner.headline} - Romantic Couple on LoveConnect Dating App` : "Couple in romantic embrace - Find your perfect match on LoveConnect"}
                 onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  const parent = e.currentTarget.parentElement;
+                  if (parent && parent.tagName === "PICTURE") {
+                    const sources = parent.querySelectorAll("source");
+                    sources.forEach((s) => s.removeAttribute("srcset"));
+                  }
                   e.currentTarget.src = heroBannerWebp || heroBannerImg;
                 }}
                 width="1200"

@@ -31,7 +31,7 @@ const Calls = sequelize.define(
     },
 
     status: {
-      type: DataTypes.ENUM("completed", "missed", "rejected"),
+      type: DataTypes.ENUM("accepted", "ongoing", "completed", "missed", "rejected"),
       allowNull: false,
       defaultValue: "missed",
     },

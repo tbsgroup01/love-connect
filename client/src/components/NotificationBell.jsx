@@ -23,6 +23,7 @@ import {
   clearAllNotifications,
 } from "../services/notificationsServices.js";
 import { getSocket } from "../services/socket.js";
+import { getImageUrl } from "../services/uploadServices.js";
 
 const formatTimeAgo = (dateString) => {
   if (!dateString) return "";
@@ -123,6 +124,7 @@ export default function NotificationBell({ isAdmin = false, iconClass = "w-4 h-4
         if (exists) return prev;
         return [newNotif, ...prev];
       });
+      window.dispatchEvent(new CustomEvent("new_notification_received", { detail: newNotif }));
     };
     socket.on("new_notification", handleNewNotification);
     return () => {
@@ -394,7 +396,7 @@ export default function NotificationBell({ isAdmin = false, iconClass = "w-4 h-4
                       {avatar ? (
                         <div className="relative shrink-0">
                           <img
-                            src={avatar}
+                            src={getImageUrl(avatar)}
                             alt={notif.sender?.name || "User"}
                             className="w-10 h-10 rounded-full object-cover border border-slate-200"
                           />

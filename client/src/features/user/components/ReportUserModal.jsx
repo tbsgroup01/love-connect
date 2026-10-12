@@ -178,7 +178,7 @@ export default function ReportUserModal({
               <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-2">
                 Why are you reporting this user?
               </label>
-              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {REPORT_REASONS.map((r) => {
                   const Icon = r.icon;
                   const isSelected = selectedReason === r.id;

@@ -651,7 +651,7 @@ export default function ProfilePage() {
             {/* CARD 1: ABOUT ME */}
             <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 space-y-4 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </span>
@@ -726,7 +726,7 @@ export default function ProfilePage() {
             {/* CARD 2: INTERESTS */}
             <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 space-y-4 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
-                <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
                     <Sparkles className="w-4 h-4" />
                   </span>
@@ -826,7 +826,7 @@ export default function ProfilePage() {
               className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 space-y-4 shadow-xs"
             >
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
                     <SlidersHorizontal className="w-4 h-4" />
                   </span>
@@ -1190,7 +1190,7 @@ export default function ProfilePage() {
             {/* CARD 4: LIFESTYLE */}
             <div className="bg-[#FFFFFF] rounded-3xl p-6 border border-slate-200/80 space-y-4 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-base font-black text-[#17151A] flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#17151A] flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-[#FFE7F0] text-[#FF2D72] flex items-center justify-center">
                     <Heart className="w-4 h-4" />
                   </span>

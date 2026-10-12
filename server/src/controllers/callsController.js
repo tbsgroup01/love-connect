@@ -1,34 +1,28 @@
 import { Calls, Users, Profiles, Conversation } from "../models/index.js";
 import { Op } from "sequelize";
 
-// Create a new call
 export const createCall = async (req, res) => {
   try {
     const { receiver_id, call_type, conversation_id } = req.body;
     const caller_id = req.user.id;
-
     if (!receiver_id || !call_type) {
       return res.status(400).json({
         success: false,
         message: "Receiver ID and call type are required",
       });
     }
-
     if (!["voice", "video"].includes(call_type)) {
       return res.status(400).json({
         success: false,
         message: "Invalid call type. Must be 'voice' or 'video'",
       });
     }
-
     if (Number(caller_id) === Number(receiver_id)) {
       return res.status(400).json({
         success: false,
         message: "You cannot call yourself",
       });
     }
-
-    // Verify receiver exists
     const receiver = await Users.findByPk(receiver_id, {
       include: [
         {
@@ -39,15 +33,12 @@ export const createCall = async (req, res) => {
         },
       ],
     });
-
     if (!receiver) {
       return res.status(404).json({
         success: false,
         message: "Receiver not found",
       });
     }
-
-    // Resolve conversation_id if not explicitly provided
     let convId = conversation_id ? Number(conversation_id) : null;
     if (!convId) {
       const conv = await Conversation.findOne({
@@ -119,28 +110,23 @@ export const createCall = async (req, res) => {
   }
 };
 
-// Accept an incoming call
 export const acceptCall = async (req, res) => {
   try {
     const { call_id } = req.body;
     const userId = req.user.id;
-
     if (!call_id) {
       return res.status(400).json({
         success: false,
         message: "call_id is required",
       });
     }
-
     const call = await Calls.findByPk(call_id);
-
     if (!call) {
       return res.status(404).json({
         success: false,
         message: "Call not found",
       });
     }
-
     if (Number(call.receiver_id) !== Number(userId)) {
       return res.status(403).json({
         success: false,
@@ -167,7 +153,6 @@ export const acceptCall = async (req, res) => {
   }
 };
 
-// Reject an incoming call
 export const rejectCall = async (req, res) => {
   try {
     const { call_id } = req.body;
@@ -219,7 +204,6 @@ export const rejectCall = async (req, res) => {
   }
 };
 
-// End an ongoing or active call
 export const endCall = async (req, res) => {
   try {
     const { call_id } = req.body;
@@ -285,7 +269,6 @@ export const endCall = async (req, res) => {
   }
 };
 
-// Get all calls (Admin / Logs) with filtering, pagination, and KPI stats
 export const getAllCalls = async (req, res) => {
   try {
     const { status, search, page = 1, limit = 50 } = req.query;
@@ -335,8 +318,6 @@ export const getAllCalls = async (req, res) => {
       limit: Number(limit),
       offset: Number(offset),
     });
-
-    // Compute KPI stats for admin dashboard
     const allCalls = await Calls.findAll({
       attributes: ["id", "caller_id", "receiver_id", "status", "duration"],
     });
@@ -383,7 +364,6 @@ export const getAllCalls = async (req, res) => {
   }
 };
 
-// Get current user's call history
 export const getUserCalls = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -438,7 +418,6 @@ export const getUserCalls = async (req, res) => {
   }
 };
 
-// Delete a call log (Admin)
 export const deleteCall = async (req, res) => {
   try {
     const { id } = req.params;
@@ -467,7 +446,6 @@ export const deleteCall = async (req, res) => {
   }
 };
 
-// Bulk delete call logs (Admin)
 export const deleteBulkCalls = async (req, res) => {
   try {
     const { ids } = req.body;

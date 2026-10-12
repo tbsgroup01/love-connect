@@ -667,7 +667,7 @@ export default function MessagesPage() {
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-700">
+                  <p className="text-sm font-semibold text-slate-700">
                     {searchQuery
                       ? "No matching conversations"
                       : "No conversations yet"}
@@ -681,7 +681,7 @@ export default function MessagesPage() {
                 {!searchQuery && (
                   <Link
                     to="/matches"
-                    className="mt-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-xs font-bold shadow-xs hover:brightness-105 transition-all cursor-pointer flex items-center gap-1.5"
+                    className="mt-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-sm font-semibold shadow-xs hover:brightness-105 transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     <Heart className="w-3.5 h-3.5 fill-white" />
                     <span>View Matches</span>
@@ -974,7 +974,7 @@ export default function MessagesPage() {
               </div>
               <Link
                 to="/matches"
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-xs font-black shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2D72] to-[#7C3AED] text-white text-sm font-semibold shadow-xs hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Find New Matches</span>
                 <ArrowRight className="w-3.5 h-3.5" />

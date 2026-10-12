@@ -22,25 +22,19 @@ export const initializeSocket = (server) => {
   io.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
-
       if (!token) {
         return next(new Error("Authentication required"));
       }
-
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
       socket.userId = decoded.id;
       socket.role = decoded.role || "user";
-
       next();
     } catch (error) {
       next(new Error("Invalid token"));
     }
   });
-
   io.on("connection", (socket) => {
     console.log("User connected to socket:", socket.userId);
-
     socket.join(`user_${socket.userId}`);
     if (socket.role === "admin") {
       socket.join(`admin_${socket.userId}`);
@@ -49,25 +43,20 @@ export const initializeSocket = (server) => {
     socket.on("join_conversation", async (conversationId) => {
       try {
         const conversation = await Conversation.findByPk(conversationId);
-
         if (!conversation) {
           return;
         }
-
         const isParticipant =
           Number(conversation.user_one_id) === Number(socket.userId) ||
           Number(conversation.user_two_id) === Number(socket.userId);
-
         if (!isParticipant) {
-          return;
+          return; 
         }
-
         socket.join(`conversation_${conversationId}`);
       } catch (error) {
         console.error("Join conversation error:", error);
       }
     });
-
     socket.on("send_message", async (data) => {
       try {
         const {
@@ -76,51 +65,39 @@ export const initializeSocket = (server) => {
           message,
           messageType = "text",
         } = data;
-
         const textContent = (content || message || "").trim();
-
         if (!conversation_id || !textContent) {
           return;
         }
-
         const conversation = await Conversation.findByPk(conversation_id);
-
         if (!conversation) {
           return;
         }
-
         const isParticipant =
           Number(conversation.user_one_id) === Number(socket.userId) ||
           Number(conversation.user_two_id) === Number(socket.userId);
-
         if (!isParticipant) {
           return;
         }
-
         const permission = await validateUserChatPermission(
           socket.userId,
           conversation_id
         );
-
         if (!permission.allowed) {
           socket.emit("error_message", {
             message: permission.message,
           });
-
           return;
         }
-
         const newMessage = await Messages.create({
           conversation_id,
           sender_id: socket.userId,
           content: textContent,
           messageType,
         });
-
         await conversation.update({
           lastMessageAt: new Date(),
         });
-
         const messageWithSender = await Messages.findByPk(newMessage.id, {
           include: [
             {
@@ -293,7 +270,6 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // WebRTC Signaling: Offer
     socket.on("webrtc_offer", (data) => {
       try {
         const { target_user_id, sdp, call_id } = data;
@@ -308,7 +284,6 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // WebRTC Signaling: Answer
     socket.on("webrtc_answer", (data) => {
       try {
         const { target_user_id, sdp, call_id } = data;
@@ -323,7 +298,6 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // WebRTC Signaling: ICE Candidate
     socket.on("webrtc_ice_candidate", (data) => {
       try {
         const { target_user_id, candidate, call_id } = data;

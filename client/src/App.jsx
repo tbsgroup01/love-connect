@@ -193,7 +193,7 @@ function App() {
             <Route path="reports" element={<AdminReportsModeration />} />
             <Route path="matches" element={<AdminMatches />} />
             <Route path="chats" element={<AdminChatManagement />} />
-            <Route path="video-calls" element={<AdminVideoCallLogs />} />
+            <Route path="calls" element={<AdminVideoCallLogs />} />
             <Route path="plans" element={<AdminPlans />} />
             <Route path="transactions" element={<AdminTransactions />} />
             <Route path="revenue" element={<AdminRevenueReports />} />

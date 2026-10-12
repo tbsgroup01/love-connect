@@ -421,7 +421,7 @@ export default function Discover() {
             </div>
 
             {/* Scrollable Content Body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex-1 overflow-y-auto overscroll-contain scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {/* Cover Photo & Avatar Header */}
               <div className="relative h-72 sm:h-80 md:h-[350px] w-full bg-slate-900 overflow-hidden shrink-0">
                 {profileModal.image ? (
