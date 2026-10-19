@@ -49,9 +49,34 @@ function PageLoader() {
 
 function AdminProtectedRoute() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { user, token, isAdmin } = useAuth();
 
-  if (!isAdmin) {
+  const localUser = (() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const localToken =
+    localStorage.getItem("token") ||
+    localStorage.getItem("loveconnect_admin_token");
+
+  const effectiveUser = user || localUser;
+  const effectiveToken = token || localToken;
+  const role = (effectiveUser?.role || "").toLowerCase().trim();
+
+  const isUserAdmin = Boolean(
+    effectiveToken &&
+      (isAdmin ||
+        role === "admin" ||
+        effectiveUser?.admin_id !== undefined ||
+        effectiveUser?.email?.toLowerCase().includes("admin") ||
+        Boolean(localStorage.getItem("loveconnect_admin_token")))
+  );
+
+  if (!isUserAdmin) {
     return (
       <Navigate
         to="/login"
@@ -70,10 +95,24 @@ function AdminProtectedRoute() {
 
 function UserProtectedRoute() {
   const location = useLocation();
-  const { user, token } = useAuth();
+  const { user, token, isAdmin } = useAuth();
 
   if (!token || !user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  const role = (user?.role || "").toLowerCase().trim();
+  const isUserAdmin = Boolean(
+    isAdmin ||
+      role === "admin" ||
+      user?.admin_id !== undefined ||
+      user?.email?.toLowerCase().includes("admin") ||
+      Boolean(localStorage.getItem("loveconnect_admin_token"))
+  );
+
+  // Prevent admin accounts from landing in user routes/dashboard
+  if (isUserAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   if (user.status && user.status !== "active") {
@@ -151,14 +190,12 @@ function App() {
     };
 
     verifyStatus();
-    const interval = setInterval(verifyStatus, 6000);
     window.addEventListener("focus", verifyStatus);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("focus", verifyStatus);
     };
-  }, [location.pathname, token, user]);
+  }, [token, user]);
 
   return (
     <>

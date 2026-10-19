@@ -23,6 +23,7 @@ import {
   deleteBulkReports as apiDeleteBulkReports,
 } from "../../../../services/reportsServices.js";
 import { updateUserStatus } from "../../../../services/usersServices.js";
+import { getImageUrl } from "../../../../services/uploadServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -108,13 +109,13 @@ export default function ReportsModeration() {
               age: reportedAge || 26,
               location: reportedP.city || "Unknown",
               fullLocation: reportedP.city ? `${reportedP.city}, India` : "India",
-              avatar: reportedP.profile_picture || DEFAULT_AVATAR,
+              avatar: getImageUrl(reportedP.profile_picture) || DEFAULT_AVATAR,
               status: r.reportedUser?.status || "active",
             },
             reportedBy: {
               rawId: r.reporter_id,
               name: reporterP.full_name || r.reporter?.name || "Anonymous",
-              avatar: reporterP.profile_picture || null,
+              avatar: getImageUrl(reporterP.profile_picture) || null,
             },
             reason: r.reason || "General",
             reasonBg: "#FFE7F0",

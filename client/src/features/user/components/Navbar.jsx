@@ -13,6 +13,7 @@ import LogoWebp from "../../../assets/loveconnect.webp";
 import LogoWebp2x from "../../../assets/loveconnect@2x.webp";
 import LogoPng from "../../../assets/loveconnect.png";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getImageUrl } from "../../../services/uploadServices.js";
 
 export default function Navbar() {
   const location = useLocation();
@@ -121,12 +122,17 @@ export default function Navbar() {
     (currentUser?.email ? currentUser.email.split("@")[0] : "") ||
     (currentUser?.role === "admin" ? "Admin" : "User");
 
-  const userAvatar =
+  const rawAvatar =
+    currentUser?.profile_image ||
     currentUser?.avatar ||
     currentUser?.profile_picture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      userName
-    )}&background=FF2D72&color=fff&bold=true`;
+    currentUser?.profile?.profile_picture;
+
+  const userAvatar = rawAvatar
+    ? getImageUrl(rawAvatar)
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        userName
+      )}&background=FF2D72&color=fff&bold=true`;
 
   return (
     <header className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-[#FFE7F0] font-poppins">
@@ -221,7 +227,9 @@ export default function Navbar() {
           ) : (
             /* Logged In State: Hide Login & Signup, Show Dashboard & User Menu */
             <>
-              {currentUser.role === "admin" ? (
+              {(currentUser.role === "admin" ||
+                currentUser.admin_id !== undefined ||
+                currentUser.email?.toLowerCase().includes("admin")) ? (
                 <Link
                   to="/admin/dashboard"
                   className="px-3.5 sm:px-4.5 py-2 rounded-full bg-[#17151A] hover:bg-[#2b2733] text-white font-semibold text-xs sm:text-sm transition-all duration-200 shadow-md shadow-black/15 cursor-pointer flex items-center gap-1.5 shrink-0"
@@ -258,6 +266,12 @@ export default function Navbar() {
                     loading="lazy"
                     decoding="async"
                     className="w-8 h-8 rounded-full object-cover border-2 border-[#FF2D72]"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        userName
+                      )}&background=FF2D72&color=fff&bold=true`;
+                    }}
                   />
                   <span className="hidden md:inline text-xs font-bold text-[#17151A] max-w-[110px] truncate">
                     {userName}
@@ -292,7 +306,9 @@ export default function Navbar() {
 
                     {/* Menu items */}
                     <div className="py-1">
-                      {currentUser.role === "admin" ? (
+                      {(currentUser.role === "admin" ||
+                        currentUser.admin_id !== undefined ||
+                        currentUser.email?.toLowerCase().includes("admin")) ? (
                         <>
                           <Link
                             to="/admin/dashboard"

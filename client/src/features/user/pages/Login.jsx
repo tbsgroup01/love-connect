@@ -32,7 +32,15 @@ import { useAuth } from "../../../context/AuthContext.jsx";
 export default function Login({ initialMode = "login" }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login: setAuthLogin } = useAuth();
+  const { login: setAuthLogin, user, isAdmin } = useAuth();
+
+  // If already logged in as admin, redirect directly to admin dashboard
+  useEffect(() => {
+    const role = (user?.role || "").toLowerCase().trim();
+    if (user && (isAdmin || role === "admin" || user?.admin_id !== undefined)) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [user, isAdmin, navigate]);
 
   // Synchronize mode directly with the current route path
   const isSignupRoute =
@@ -58,6 +66,7 @@ export default function Login({ initialMode = "login" }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [focusedField, setFocusedField] = useState(null);
   const googleBtnRef = React.useRef(null);
+  const googleInitializedRef = React.useRef(false);
 
   const slides = [
     {
@@ -108,11 +117,23 @@ export default function Login({ initialMode = "login" }) {
     try {
       const res = await googleLoginApi(response.credential);
       if (res.data?.token) {
-        setAuthLogin(res.data.token, res.data.user);
-        if (res.data.user?.role === "admin") {
-          const targetPath = location.state?.from || "/admin/dashboard";
-          navigate(targetPath, { replace: true });
-        } else if (res.data.isNewUser || !res.data.user?.has_profile) {
+        const userObj = res.data.user || {};
+        const userRole = (userObj.role || "").toLowerCase().trim();
+        const isAdminUser =
+          userRole === "admin" ||
+          userObj.admin_id !== undefined ||
+          userObj.email?.toLowerCase().includes("admin");
+
+        const finalUser = {
+          ...userObj,
+          role: isAdminUser ? "admin" : (userRole || "user"),
+        };
+
+        setAuthLogin(res.data.token, finalUser);
+
+        if (isAdminUser) {
+          navigate("/admin/dashboard", { replace: true });
+        } else if (res.data.isNewUser || !finalUser.has_profile) {
           navigate("/onboarding", { replace: true });
         } else {
           navigate("/discover", { replace: true });
@@ -134,21 +155,32 @@ export default function Login({ initialMode = "login" }) {
 
     const setupGoogle = () => {
       if (window.google?.accounts?.id) {
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: handleGoogleResponse,
-        });
+        if (!googleInitializedRef.current) {
+          try {
+            window.google.accounts.id.initialize({
+              client_id: googleClientId,
+              callback: handleGoogleResponse,
+            });
+            googleInitializedRef.current = true;
+          } catch (e) {
+            console.warn("Google initialize warning:", e?.message);
+          }
+        }
 
         if (googleBtnRef.current) {
           googleBtnRef.current.innerHTML = "";
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "outline",
-            size: "large",
-            width: 300,
-            shape: "rectangular",
-            text: mode === "signup" ? "signup_with" : "continue_with",
-            logo_alignment: "left",
-          });
+          try {
+            window.google.accounts.id.renderButton(googleBtnRef.current, {
+              theme: "outline",
+              size: "large",
+              width: 300,
+              shape: "rectangular",
+              text: mode === "signup" ? "signup_with" : "continue_with",
+              logo_alignment: "left",
+            });
+          } catch (e) {
+            console.warn("Google renderButton warning:", e?.message);
+          }
         }
       }
     };
@@ -227,10 +259,23 @@ export default function Login({ initialMode = "login" }) {
         });
 
         if (res.data?.token) {
-          setAuthLogin(res.data.token, res.data.user);
-          if (res.data.user?.role === "admin") {
-            const targetPath = location.state?.from || "/admin/dashboard";
-            navigate(targetPath, { replace: true });
+          const userObj = res.data.user || {};
+          const userRole = (userObj.role || "").toLowerCase().trim();
+          const isAdminUser =
+            userRole === "admin" ||
+            userObj.admin_id !== undefined ||
+            formData.email?.toLowerCase().includes("admin") ||
+            userObj.email?.toLowerCase().includes("admin");
+
+          const finalUser = {
+            ...userObj,
+            role: isAdminUser ? "admin" : (userRole || "user"),
+          };
+
+          setAuthLogin(res.data.token, finalUser);
+
+          if (isAdminUser) {
+            navigate("/admin/dashboard", { replace: true });
           } else {
             navigate("/discover", { replace: true });
           }

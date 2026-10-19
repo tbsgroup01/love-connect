@@ -36,6 +36,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { updateUserProfile, getUserById, uploadProfileImage } from "../../../services/usersServices.js";
+import { getImageUrl } from "../../../services/uploadServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
 
 export default function ProfileCreation() {
@@ -109,7 +110,7 @@ export default function ProfileCreation() {
           setBasicInfo((prev) => ({ ...prev, name: currentUser.name }));
         }
         if (currentUser.profile_image) {
-          setPhoto(currentUser.profile_image);
+          setPhoto(getImageUrl(currentUser.profile_image));
         }
         if (currentUser.id) {
           getUserById(currentUser.id)
@@ -117,9 +118,9 @@ export default function ProfileCreation() {
               const u = res.data?.user || res.data;
               if (u) {
                 if (u.profile_image) {
-                  setPhoto(u.profile_image);
+                  setPhoto(getImageUrl(u.profile_image));
                 } else if (u.profile?.profile_picture) {
-                  setPhoto(u.profile.profile_picture);
+                  setPhoto(getImageUrl(u.profile.profile_picture));
                 }
                 if (u.name) setBasicInfo((prev) => ({ ...prev, name: u.name }));
                 if (u.gender) {
@@ -267,13 +268,27 @@ export default function ProfileCreation() {
     setUploadingPhoto(true);
 
     try {
-      const userId = currentUser?.id || 3;
+      const effectiveUser =
+        currentUser ||
+        (() => {
+          try {
+            const u = localStorage.getItem("user");
+            return u ? JSON.parse(u) : null;
+          } catch {
+            return null;
+          }
+        })();
+      const userId = effectiveUser?.id || effectiveUser?.user_id;
+
+      if (!userId) {
+        setUploadError("Please login to upload your profile photo.");
+        setUploadingPhoto(false);
+        return;
+      }
 
       const fd = new FormData();
       fd.append("profile", file);
-      if (userId) {
-        fd.append("userId", String(userId));
-      }
+      fd.append("userId", String(userId));
 
       // 1. Upload file to backend server
       const res = await uploadProfileImage(fd);
@@ -367,7 +382,22 @@ export default function ProfileCreation() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      const userId = currentUser?.id || 3;
+      const effectiveUser =
+        currentUser ||
+        (() => {
+          try {
+            const u = localStorage.getItem("user");
+            return u ? JSON.parse(u) : null;
+          } catch {
+            return null;
+          }
+        })();
+      const userId = effectiveUser?.id || effectiveUser?.user_id;
+
+      if (!userId) {
+        navigate("/login");
+        return;
+      }
 
       let cityName = basicInfo.location || "Mumbai";
       let stateName = "Maharashtra";
@@ -592,7 +622,7 @@ export default function ProfileCreation() {
                       {/* Single Photo Showcase Card */}
                       <div className="relative w-64 h-72 sm:w-72 sm:h-80 rounded-3xl overflow-hidden border-2 border-[#FF2D72] shadow-xl shadow-[#FF2D72]/15 ring-4 ring-[#FFE7F0] group">
                         <img
-                          src={photo}
+                          src={getImageUrl(photo)}
                           alt="Uploaded LoveConnect profile picture preview"
                           width="288"
                           height="320"

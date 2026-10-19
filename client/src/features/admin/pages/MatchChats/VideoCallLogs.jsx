@@ -19,6 +19,7 @@ import {
   deleteCall as apiDeleteCall,
   deleteBulkCalls as apiDeleteBulkCalls,
 } from "../../../../services/callsServices.js";
+import { getImageUrl } from "../../../../services/uploadServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -87,13 +88,13 @@ export default function VideoCallLogs() {
               name: callerP.full_name || c.caller?.name || "Caller",
               age: callerAge ? `${callerAge}` : "",
               location: callerP.city || "Unknown",
-              avatar: callerP.profile_picture || DEFAULT_AVATAR,
+              avatar: getImageUrl(callerP.profile_picture) || DEFAULT_AVATAR,
             },
             receiver: {
               name: receiverP.full_name || c.receiver?.name || "Receiver",
               age: receiverAge ? `${receiverAge}` : "",
               location: receiverP.city || "Unknown",
-              avatar: receiverP.profile_picture || DEFAULT_AVATAR,
+              avatar: getImageUrl(receiverP.profile_picture) || DEFAULT_AVATAR,
             },
             callType: c.call_type === "voice" ? "Voice Call" : "Video Call",
             duration: durationStr,
@@ -129,8 +130,8 @@ export default function VideoCallLogs() {
               : isRejected
               ? "#D97706"
               : "#0284C7",
-            previewImage: receiverP.profile_picture || DEFAULT_AVATAR,
-            pipImage: callerP.profile_picture || DEFAULT_AVATAR,
+            previewImage: getImageUrl(receiverP.profile_picture) || DEFAULT_AVATAR,
+            pipImage: getImageUrl(callerP.profile_picture) || DEFAULT_AVATAR,
           };
         });
 

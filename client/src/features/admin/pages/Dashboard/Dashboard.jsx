@@ -455,11 +455,12 @@ export default function AdminDashboard() {
       .map((u) => {
         const p = u.profile || {};
         const name = p.full_name || u.name || "User";
-        const avatar =
-          p.profile_picture ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            name
-          )}&background=FF2D72&color=fff&size=100`;
+        const rawPic = p.profile_picture || u.profile_image || u.avatar;
+        const avatar = rawPic
+          ? getImageUrl(rawPic)
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              name
+            )}&background=FF2D72&color=fff&size=100`;
 
         const statusCapitalized = u.status
           ? u.status.charAt(0).toUpperCase() + u.status.slice(1)
@@ -506,16 +507,18 @@ export default function AdminDashboard() {
         const p1Name = p1.full_name || u1.name || "Member 1";
         const p2Name = p2.full_name || u2.name || "Member 2";
 
-        const p1Img =
-          p1.profile_picture ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            p1Name
-          )}&background=FF2D72&color=fff&size=100`;
-        const p2Img =
-          p2.profile_picture ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            p2Name
-          )}&background=7C3AED&color=fff&size=100`;
+        const rawP1 = p1.profile_picture || u1.profile_image;
+        const rawP2 = p2.profile_picture || u2.profile_image;
+        const p1Img = rawP1
+          ? getImageUrl(rawP1)
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              p1Name
+            )}&background=FF2D72&color=fff&size=100`;
+        const p2Img = rawP2
+          ? getImageUrl(rawP2)
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              p2Name
+            )}&background=7C3AED&color=fff&size=100`;
 
         return {
           id: m.id,
@@ -540,11 +543,12 @@ export default function AdminDashboard() {
         const reportedName =
           repProfile.full_name || reported.name || "Reported User";
 
-        const avatar =
-          repProfile.profile_picture ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            reportedName
-          )}&background=EF4444&color=fff&size=100`;
+        const rawAvatar = repProfile.profile_picture || reported.profile_image;
+        const avatar = rawAvatar
+          ? getImageUrl(rawAvatar)
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              reportedName
+            )}&background=EF4444&color=fff&size=100`;
 
         const statusMap = {
           pending: {

@@ -33,6 +33,7 @@ import { likeUser } from "../../../services/likesServices.js";
 import ananyaImg from "../../../assets/hero_woman.jpg";
 import rheaImg from "../../../assets/hero_woman_exact.png";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getImageUrl } from "../../../services/uploadServices.js";
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ export default function Discover() {
 
             // 2. Profile Image (STRICT DB ONLY)
             const rawImg = p.profile_picture || u.profile_image || null;
+            const resolvedImg = rawImg ? getImageUrl(rawImg) : null;
 
             // 3. Age (STRICT DB ONLY)
             const calculatedAge =
@@ -137,7 +139,7 @@ export default function Discover() {
               name: p.full_name || u.name || "",
               age: calculatedAge,
               gender: userGender,
-              image: rawImg,
+              image: resolvedImg,
               profession: prefs.profession || "",
               education: prefs.education || "",
               location: locString,
@@ -292,7 +294,7 @@ export default function Discover() {
           name: p.full_name || u.name || profile.name,
           age: calculatedAge ?? profile.age,
           gender: (p.gender || u.gender || profile.gender || "").toLowerCase(),
-          image: p.profile_picture || u.profile_image || profile.image,
+          image: getImageUrl(p.profile_picture || u.profile_image || profile.image) || null,
           profession: prefs.profession || profile.profession || "",
           education: prefs.education || profile.education || "",
           location: locString || profile.location,
@@ -431,6 +433,12 @@ export default function Discover() {
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        profileModal.name || "User"
+                      )}&background=FF2D72&color=fff&size=400`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">
@@ -668,6 +676,12 @@ export default function Discover() {
                   loading="eager"
                   decoding="async"
                   className="w-full h-full object-cover object-top"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      currentProfile.name || "User"
+                    )}&background=FF2D72&color=fff&size=500`;
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#17151A] via-[#2D1B36] to-[#17151A] text-white">

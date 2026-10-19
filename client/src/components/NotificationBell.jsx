@@ -99,12 +99,10 @@ export default function NotificationBell({ isAdmin = false, iconClass = "w-4 h-4
     window.addEventListener("loveconnect_auth_change", handleSync);
     window.addEventListener("storage", handleSync);
     window.addEventListener("focus", handleSync);
-    const interval = setInterval(fetchUnreadCount, 15000);
     return () => {
       window.removeEventListener("loveconnect_auth_change", handleSync);
       window.removeEventListener("storage", handleSync);
       window.removeEventListener("focus", handleSync);
-      clearInterval(interval);
     };
   }, [fetchUnreadCount]);
   useEffect(() => {

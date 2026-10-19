@@ -25,6 +25,7 @@ import rheaImg from "../../../assets/hero_woman_exact.png";
 import { getAllUsers, getUserById } from "../../../services/usersServices.js";
 import { getLikes, likeUser } from "../../../services/likesServices.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { getImageUrl } from "../../../services/uploadServices.js";
 import NotificationBell from "../../../components/NotificationBell.jsx";
 import UserProfileDrawer from "./UserProfileDrawer.jsx";
 import ReportUserModal from "./ReportUserModal.jsx";
@@ -204,7 +205,7 @@ export default function DashboardLayout({
                 id: u.id,
                 name: p.full_name || u.name || "User",
                 age: calcAge || "",
-                img: p.profile_picture || u.profile_image || null,
+                img: getImageUrl(p.profile_picture || u.profile_image || null),
                 raw: u,
               };
             });
@@ -265,13 +266,23 @@ export default function DashboardLayout({
               className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-100/90 transition-all bg-slate-50 p-1 pr-3 rounded-full border border-slate-200/60 focus:outline-none"
             >
               <img
-                src={currentUser?.profile_image || rheaImg}
+                src={
+                  getImageUrl(
+                    currentUser?.profile_image ||
+                      currentUser?.avatar ||
+                      currentUser?.profile?.profile_picture
+                  ) || rheaImg
+                }
                 alt={`${currentUser?.name || "User"}'s profile avatar`}
                 width="32"
                 height="32"
                 loading="eager"
                 decoding="async"
                 className="w-8 h-8 rounded-full object-cover object-top border-2 border-[#FF2D72] shadow-2xs"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = rheaImg;
+                }}
               />
               <div className="hidden lg:flex flex-col text-left leading-tight">
                 <span className="text-xs font-extrabold text-[#17151A]">
@@ -295,13 +306,23 @@ export default function DashboardLayout({
                 {/* User Header */}
                 <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2.5 mb-1">
                   <img
-                    src={currentUser?.profile_image || rheaImg}
+                    src={
+                      getImageUrl(
+                        currentUser?.profile_image ||
+                          currentUser?.avatar ||
+                          currentUser?.profile?.profile_picture
+                      ) || rheaImg
+                    }
                     alt={`${currentUser?.name || "User"}'s profile avatar`}
                     width="32"
                     height="32"
                     loading="lazy"
                     decoding="async"
                     className="w-8 h-8 rounded-full object-cover border border-[#FF2D72]"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = rheaImg;
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-black text-[#17151A] truncate">
@@ -605,6 +626,12 @@ export default function DashboardLayout({
                               loading="lazy"
                               decoding="async"
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  user.name || "User"
+                                )}&background=FF2D72&color=fff&size=100`;
+                              }}
                             />
                           ) : (
                             <span className="font-extrabold text-xs text-slate-500">

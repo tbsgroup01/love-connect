@@ -19,6 +19,7 @@ import {
   getActivities,
   deleteActivity,
 } from "../../../../services/activitiesServices.js";
+import { getImageUrl } from "../../../../services/uploadServices.js";
 
 export default function ActivityLogs() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,9 +50,9 @@ export default function ActivityLogs() {
         const actorEmail =
           actor?.email || (isUser ? "user@loveconnect.com" : "admin@loveconnect.com");
         const actorRole = isUser ? "User" : actor?.role || "Admin";
+        const rawPic = actor?.profile_image || actor?.profile?.profile_picture;
         const actorAvatar =
-          actor?.profile_image ||
-          actor?.profile?.profile_picture ||
+          getImageUrl(rawPic) ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(actorName)}&background=FFE7F0&color=FF2D72&bold=true`;
 
         const timestamp = item.loginAt || item.logoutAt || item.createdAt;

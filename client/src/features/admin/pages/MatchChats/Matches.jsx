@@ -19,6 +19,7 @@ import {
 import AdminNavbar from "../../components/Navbar";
 import AdminSidebar from "../../components/Sidebar";
 import { getAllMatches, deleteMatch } from "../../../../services/matchesServices.js";
+import { getImageUrl } from "../../../../services/uploadServices.js";
 
 const COLORS = {
   pink: "#FF2D72",
@@ -118,6 +119,13 @@ export default function AdminMatches() {
             })
           : "";
 
+        const avatarA =
+          getImageUrl(pA.profile_picture || uA.profile_image) ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(pA.full_name || uA.name || "User A")}&background=FFE7F0&color=FF2D72&bold=true`;
+        const avatarB =
+          getImageUrl(pB.profile_picture || uB.profile_image) ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(pB.full_name || uB.name || "User B")}&background=FFE7F0&color=7C3AED&bold=true`;
+
         return {
           id: m.id,
           matchId: `MCH-${String(m.id).padStart(6, "0")}`,
@@ -130,7 +138,7 @@ export default function AdminMatches() {
             location: pA.city
               ? `${pA.city}, ${pA.country || "India"}`
               : pA.country || "India",
-            avatar: pA.profile_picture || uA.profile_image || defaultAvatar,
+            avatar: avatarA,
             interests: interestsA,
           },
           userB: {
@@ -141,7 +149,7 @@ export default function AdminMatches() {
             location: pB.city
               ? `${pB.city}, ${pB.country || "India"}`
               : pB.country || "India",
-            avatar: pB.profile_picture || uB.profile_image || defaultAvatar,
+            avatar: avatarB,
             interests: interestsB,
           },
           matchDate: formattedDate,
@@ -501,6 +509,12 @@ export default function AdminMatches() {
                                   src={item.userA.avatar}
                                   alt={item.userA.name}
                                   className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                      item.userA.name || "User A"
+                                    )}&background=FFE7F0&color=FF2D72&bold=true`;
+                                  }}
                                 />
                                 <div>
                                   <div className="font-bold text-gray-900">
@@ -523,6 +537,12 @@ export default function AdminMatches() {
                                   src={item.userB.avatar}
                                   alt={item.userB.name}
                                   className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                      item.userB.name || "User B"
+                                    )}&background=FFE7F0&color=7C3AED&bold=true`;
+                                  }}
                                 />
                                 <div>
                                   <div className="font-bold text-gray-900">
@@ -681,6 +701,12 @@ export default function AdminMatches() {
                         src={currentSelected.userA.avatar}
                         alt={currentSelected.userA.name}
                         className="w-14 h-14 rounded-full object-cover ring-3 ring-white shadow-xs"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            currentSelected.userA.name || "User A"
+                          )}&background=FFE7F0&color=FF2D72&bold=true`;
+                        }}
                       />
                       <span className="font-bold text-xs text-gray-900 mt-1.5">
                         {currentSelected.userA.name}
@@ -706,6 +732,12 @@ export default function AdminMatches() {
                         src={currentSelected.userB.avatar}
                         alt={currentSelected.userB.name}
                         className="w-14 h-14 rounded-full object-cover ring-3 ring-white shadow-xs"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            currentSelected.userB.name || "User B"
+                          )}&background=FFE7F0&color=7C3AED&bold=true`;
+                        }}
                       />
                       <span className="font-bold text-xs text-gray-900 mt-1.5">
                         {currentSelected.userB.name}

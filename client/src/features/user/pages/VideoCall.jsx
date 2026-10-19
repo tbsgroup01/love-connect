@@ -142,7 +142,9 @@ export default function VideoCall() {
         ctx.fill();
         ctx.restore();
 
+        ctx.textAlign = "center";
         ctx.font = "bold 20px sans-serif";
+        ctx.fillStyle = "#FFFFFF";
         ctx.fillText(name || "You", 320, 300);
         ctx.font = "normal 14px sans-serif";
         ctx.fillStyle = "#94A3B8";
@@ -541,7 +543,7 @@ export default function VideoCall() {
       });
 
       // Handle Incoming Call while on page (Receiver side confirmation)
-      socket.on("call-user", () => {
+      const handleIncomingCallNotification = () => {
         if (!isCaller && socket && otherUserId) {
           socket.emit("accept-call", {
             call_id: callId,
@@ -552,7 +554,10 @@ export default function VideoCall() {
           });
           setCallStatus("connected");
         }
-      });
+      };
+
+      socket.on("call-user", handleIncomingCallNotification);
+      socket.on("incoming-call", handleIncomingCallNotification);
 
       // Handle Call Rejection
       socket.on("call-rejected", () => {

@@ -51,14 +51,30 @@ export function AuthProvider({ children }) {
   const login = useCallback((newToken, newUser) => {
     if (newToken) {
       localStorage.setItem(TOKEN_KEY, newToken);
-      if (newUser?.role === "admin") {
+      const userRole = (newUser?.role || "").toLowerCase().trim();
+      const isAdminRole =
+        userRole === "admin" ||
+        newUser?.admin_id !== undefined ||
+        newUser?.email?.toLowerCase().includes("admin");
+
+      if (isAdminRole) {
         localStorage.setItem(ADMIN_TOKEN_KEY, newToken);
       }
       setToken(newToken);
     }
     if (newUser) {
-      localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-      setUser(newUser);
+      const userRole = (newUser?.role || "").toLowerCase().trim();
+      const isAdminRole =
+        userRole === "admin" ||
+        newUser?.admin_id !== undefined ||
+        newUser?.email?.toLowerCase().includes("admin");
+
+      const normalizedUser = {
+        ...newUser,
+        role: isAdminRole ? "admin" : (userRole || "user"),
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+      setUser(normalizedUser);
     }
     window.dispatchEvent(new Event("loveconnect_auth_change"));
   }, []);
@@ -114,7 +130,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isAuthenticated = Boolean(token && user);
-  const isAdmin = Boolean(token && user?.role === "admin");
+  const userRole = (user?.role || "").toLowerCase().trim();
+  const isAdmin = Boolean(
+    token &&
+      (userRole === "admin" ||
+        user?.admin_id !== undefined ||
+        user?.email?.toLowerCase().includes("admin") ||
+        Boolean(localStorage.getItem(ADMIN_TOKEN_KEY)))
+  );
 
   const value = {
     user,
