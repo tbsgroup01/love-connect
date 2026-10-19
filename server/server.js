@@ -39,7 +39,13 @@ const app = express();
 const PORT = process.env.PORT;
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:4010", "http://localhost:4000", "https://app.loveconnect.com", "https://app.loveconnect.com/api/"],
+    origin: [ "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:4010",
+  "http://localhost:4000",
+  "http://192.168.29.207:5173",
+  "https://app.loveconnect.com",
+  "https://loveconnect.towsindia.com",],
     credentials: true,
     methods: [
       "GET",
@@ -93,6 +99,14 @@ app.use("/api/notifications", notificationsRoutes);
 const server = http.createServer(app);
 initializeSocket(server);
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
 const startServer = async () => {
   try {
     await sequelize.authenticate();
@@ -104,6 +118,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error("Database connection failed:", error.message);
+     process.exit(1);
   }
 };
 

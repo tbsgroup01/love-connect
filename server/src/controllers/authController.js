@@ -187,7 +187,8 @@ const login = async (req, res) => {
       });
     }
     const identifier = email.trim();
-    let user = await Users.findOne({
+    let role = "admin";
+    let user = await Admin.findOne({
       where: {
         [Op.or]: [
           { email: identifier.toLowerCase() },
@@ -195,10 +196,9 @@ const login = async (req, res) => {
         ],
       },
     });
-    let role = "user";
 
     if (!user) {
-      const admin = await Admin.findOne({
+      user = await Users.findOne({
         where: {
           [Op.or]: [
             { email: identifier.toLowerCase() },
@@ -206,10 +206,7 @@ const login = async (req, res) => {
           ],
         },
       });
-      if (admin) {
-        user = admin;
-        role = "admin";
-      }
+      role = "user";
     }
 
     if (!user) {

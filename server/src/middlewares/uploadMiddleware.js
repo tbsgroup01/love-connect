@@ -2,6 +2,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,29 +12,35 @@ if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
 
   filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const safeExt = /^\.(jpe?g|png|webp)$/i.test(ext) ? ext : ".jpg";
+    const randomHex = crypto.randomBytes(8).toString("hex");
+    const uniqueName = `${Date.now()}-${randomHex}${safeExt}`;
     cb(null, uniqueName);
   },
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedExtensions = /jpeg|jpg|png|webp|svg|ico|gif|jfif|avif|heic|bmp|tiff/;
-  const extension = path.extname(file.originalname).toLowerCase().replace(".", "");
-  const isImageMime = file.mimetype && file.mimetype.startsWith("image/");
+  const allowedExtensions = /^(jpe?g|png|webp)$/i;
+  const extension = path.extname(file.originalname || "").toLowerCase().replace(".", "");
+  const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
+
+  const isAllowedMime = file.mimetype && allowedMimes.includes(file.mimetype.toLowerCase());
   const isAllowedExt = allowedExtensions.test(extension);
 
-  if (isImageMime || isAllowedExt) {
+  if (isAllowedMime && isAllowedExt) {
     cb(null, true);
   } else {
     cb(
       new Error(
-        "Only image files (JPG, JPEG, PNG, WEBP, GIF, JFIF, SVG, AVIF, HEIC) are allowed."
+        "Invalid file type. Only secure image files (JPG, JPEG, PNG, WEBP) are allowed."
       )
     );
   }
